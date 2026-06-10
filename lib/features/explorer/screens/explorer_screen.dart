@@ -9,6 +9,8 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/toast.dart';
 import '../../database/providers/database_provider.dart';
+import '../../settings/providers/settings_provider.dart';
+import '../../sync/providers/sync_provider.dart';
 import '../providers/explorer_provider.dart';
 
 class ExplorerScreen extends ConsumerWidget {
@@ -432,10 +434,18 @@ class _WideLayout extends StatelessWidget {
                       PopupMenuButton<String>(
                         icon: Icon(Icons.more_vert, size: 20, color: colorScheme.onSurfaceVariant),
                         onSelected: (v) {
-                          if (v == 'close') onClose();
+                          switch (v) {
+                            case 'sync_up': _syncToCloud(context);
+                            case 'sync_down': _syncFromCloud(context);
+                            case 'settings': context.push('/settings');
+                            case 'close': onClose();
+                          }
                         },
                         itemBuilder: (_) => [
-                          const PopupMenuItem(value: 'close', child: Text('关闭数据库')),
+                          const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
+                          const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
+                          const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+                          const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
                     ],
@@ -543,6 +553,9 @@ class _NarrowLayout extends StatelessWidget {
                 case 'add_entry': onAddEntry?.call();
                 case 'add_group': onAddGroup?.call();
                 case 'save': onSave();
+                case 'sync_up': _syncToCloud(context);
+                case 'sync_down': _syncFromCloud(context);
+                case 'settings': context.push('/settings');
                 case 'close': onClose();
               }
             },
@@ -552,6 +565,9 @@ class _NarrowLayout extends StatelessWidget {
               if (onAddGroup != null)
                 const PopupMenuItem(value: 'add_group', child: ListTile(leading: Icon(Icons.create_new_folder_rounded), title: Text('添加分组'), dense: true, contentPadding: EdgeInsets.zero)),
               const PopupMenuItem(value: 'save', child: ListTile(leading: Icon(Icons.save_outlined), title: Text('保存'), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
               const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
             ],
           ),
@@ -1060,4 +1076,131 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
     refreshExplorerLists(widget.ref);
     if (mounted) Navigator.pop(context);
   }
+}
+
+// ─── Sync helpers ───────────────────────────────────────────────────────
+
+Future<void> _syncToCloud(BuildContext context) async {
+  final container = ProviderScope.containerOf(context);
+  final config = await container.read(webDavSettingsServiceProvider).getConfig();
+  if (config == null || !config.enabled) {
+    if (context.mounted) {
+      showToast(context, '请先在设置中配置 WebDAV', isError: true);
+      context.push('/settings');
+    }
+    return;
+  }
+  if (!context.mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Dialog(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            SizedBox(height: 16),
+            Text('正在同步到云端...', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    ),
+  );
+  try {
+    final syncService = container.read(syncServiceProvider);
+    final dbService = container.read(databaseServiceProvider);
+    await syncService.ensureRemoteDirectory(config);
+    final bytes = await dbService.saveToBytes();
+    await syncService.uploadDatabase(config, bytes);
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      showToast(context, '已同步到云端');
+    }
+  } catch (e) {
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      showToast(context, '同步失败: $e', isError: true);
+    }
+  }
+}
+
+Future<void> _syncFromCloud(BuildContext context) async {
+  final container = ProviderScope.containerOf(context);
+  final config = await container.read(webDavSettingsServiceProvider).getConfig();
+  if (config == null || !config.enabled) {
+    if (context.mounted) {
+      _showSyncErrorDialog(context, '请先在设置中配置 WebDAV');
+    }
+    return;
+  }
+  if (!context.mounted) return;
+  final syncService = container.read(syncServiceProvider);
+  final exists = await syncService.remoteFileExists(config);
+  if (!exists) {
+    if (context.mounted) {
+      _showSyncErrorDialog(context, '云端还没有数据库，请先保存本地数据库后同步');
+    }
+    return;
+  }
+  if (!context.mounted) return;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Dialog(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            SizedBox(height: 16),
+            Text('正在从云端下载...', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    ),
+  );
+  try {
+    final localPath = await syncService.downloadToLocal(config);
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      context.push('/unlock?path=${Uri.encodeComponent(localPath)}');
+    }
+  } catch (e) {
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      _showSyncErrorDialog(context, '下载失败: $e');
+    }
+  }
+}
+
+void _showSyncErrorDialog(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text('取消'),
+          ),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(ctx).pop();
+            context.push('/settings');
+          },
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: const Text('去设置'),
+        ),
+      ],
+    ),
+  );
 }

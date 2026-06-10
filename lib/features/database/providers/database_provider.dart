@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
+import '../../settings/providers/settings_provider.dart';
+import '../../sync/providers/sync_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
@@ -46,6 +48,20 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<void> save() async {
     await _service.save();
+    // Sync to WebDAV if enabled
+    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    if (config != null && config.enabled) {
+      _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
+      try {
+        final syncService = _ref.read(syncServiceProvider);
+        await syncService.ensureRemoteDirectory(config);
+        final bytes = await _service.saveToBytes();
+        await syncService.uploadDatabase(config, bytes);
+        _ref.read(syncStateProvider.notifier).state = SyncState.success;
+      } catch (e) {
+        _ref.read(syncStateProvider.notifier).state = SyncState.error;
+      }
+    }
   }
 
   Future<void> saveAs(String newPath) async {

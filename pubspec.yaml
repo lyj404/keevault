@@ -41,6 +41,7 @@ dependencies:
   logger: ^2.5.0
 
   cupertino_icons: ^1.0.8
+  webdav_client: ^1.2.2
 
 dev_dependencies:
   flutter_test:
