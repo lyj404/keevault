@@ -24,7 +24,8 @@ final appRouter = GoRouter(
       path: '/unlock',
       builder: (context, state) {
         final filePath = state.uri.queryParameters['path'] ?? '';
-        return UnlockScreen(filePath: filePath);
+        final isCloud = state.uri.queryParameters['cloud'] == 'true';
+        return UnlockScreen(filePath: filePath, isCloud: isCloud);
       },
     ),
     GoRoute(
