@@ -5,6 +5,7 @@ import 'package:kpasslib/kpasslib.dart';
 class DatabaseService {
   KdbxDatabase? _db;
   String? _filePath;
+  String? _password;
   bool _dirty = false;
 
   KdbxDatabase? get db => _db;
@@ -22,6 +23,7 @@ class DatabaseService {
     );
     _db = await KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
     _filePath = filePath;
+    _password = password;
     _dirty = false;
     _localizeRecycleBin();
     return _db!;
@@ -33,9 +35,21 @@ class DatabaseService {
     );
     _db = KdbxDatabase.create(credentials: credentials, name: name);
     _filePath = filePath;
+    _password = password;
     _dirty = true;
     _localizeRecycleBin();
     await save();
+    return _db!;
+  }
+
+  Future<KdbxDatabase> reloadFromBytes(Uint8List bytes) async {
+    if (_password == null) throw Exception('无密码信息，无法重新加载');
+    final credentials = KdbxCredentials(
+      password: ProtectedData.fromString(_password!),
+    );
+    _db = await KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
+    _dirty = false;
+    _localizeRecycleBin();
     return _db!;
   }
 
@@ -146,6 +160,7 @@ class DatabaseService {
   void close() {
     _db = null;
     _filePath = null;
+    _password = null;
     _dirty = false;
   }
 }

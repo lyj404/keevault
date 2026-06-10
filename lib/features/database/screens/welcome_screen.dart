@@ -127,11 +127,18 @@ class WelcomeScreen extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              ...files.map((path) => _RecentFileTile(
-                                    filePath: path,
-                                    onTap: () => context.push('/unlock?path=${Uri.encodeComponent(path)}'),
+                              ...files.map((file) => _RecentFileTile(
+                                    recentFile: file,
+                                    onTap: () {
+                                      if (file.isCloud) {
+                                        ref.read(openedFromCloudProvider.notifier).state = true;
+                                        _downloadFromWebDav(context, ref);
+                                      } else {
+                                        context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
+                                      }
+                                    },
                                     onRemove: () async {
-                                      await ref.read(recentFilesServiceProvider).removeRecentFile(path);
+                                      await ref.read(recentFilesServiceProvider).removeRecentFile(file.path);
                                       ref.invalidate(recentFilesProvider);
                                     },
                                   )),
@@ -210,7 +217,8 @@ class WelcomeScreen extends ConsumerWidget {
       final localPath = await syncService.downloadToLocal(config);
       if (context.mounted) {
         Navigator.of(context).pop();
-        context.push('/unlock?path=${Uri.encodeComponent(localPath)}');
+        ref.read(openedFromCloudProvider.notifier).state = true;
+        context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true');
       }
     } catch (e) {
       if (context.mounted) {
@@ -277,15 +285,15 @@ class _SyncLoadingDialog extends StatelessWidget {
 }
 
 class _RecentFileTile extends StatelessWidget {
-  final String filePath;
+  final RecentFile recentFile;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
-  const _RecentFileTile({required this.filePath, required this.onTap, required this.onRemove});
+  const _RecentFileTile({required this.recentFile, required this.onTap, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
-    final name = filePath.split(Platform.pathSeparator).last;
+    final name = recentFile.path.split(Platform.pathSeparator).last;
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
 
@@ -313,7 +321,11 @@ class _RecentFileTile extends StatelessWidget {
                       brightness: brightness,
                       radius: 12,
                     ),
-                    child: Icon(Icons.description_rounded, size: 18, color: colorScheme.primary),
+                    child: Icon(
+                      recentFile.isCloud ? Icons.cloud_rounded : Icons.description_rounded,
+                      size: 18,
+                      color: recentFile.isCloud ? Colors.teal : colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -328,7 +340,7 @@ class _RecentFileTile extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          filePath,
+                          recentFile.isCloud ? '云端 · ${recentFile.path}' : recentFile.path,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),

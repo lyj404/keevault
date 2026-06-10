@@ -50,6 +50,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> {
     final isWide = MediaQuery.sizeOf(context).width >= 700;
     final service = ref.read(databaseServiceProvider);
     final isRecycleBin = currentGroup?.icon == KdbxIcon.trashBin;
+    final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
 
     if (isWide) {
       return _WideLayout(
@@ -57,6 +58,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> {
         currentGroup: currentGroup,
         entries: entries,
         isRecycleBin: isRecycleBin,
+        isOpenedFromCloud: isOpenedFromCloud,
         onGroupTap: (group) {
           final path = service.getGroupPath(group);
           ref.read(currentGroupPathProvider.notifier).state = path;
@@ -87,6 +89,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> {
       currentGroup: currentGroup,
       entries: entries,
       isRecycleBin: isRecycleBin,
+      isOpenedFromCloud: isOpenedFromCloud,
       onEntryTap: (entry) {
         final idx = currentGroup?.entries.indexOf(entry) ?? 0;
         final path = service.getGroupPath(currentGroup!);
@@ -292,6 +295,7 @@ class _WideLayout extends StatelessWidget {
   final KdbxGroup? currentGroup;
   final List<KdbxEntry> entries;
   final bool isRecycleBin;
+  final bool isOpenedFromCloud;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntryTap;
   final ValueChanged<KdbxEntry> onDeleteEntry;
@@ -311,6 +315,7 @@ class _WideLayout extends StatelessWidget {
     required this.currentGroup,
     required this.entries,
     required this.isRecycleBin,
+    required this.isOpenedFromCloud,
     required this.onGroupTap,
     required this.onEntryTap,
     required this.onDeleteEntry,
@@ -430,8 +435,11 @@ class _WideLayout extends StatelessWidget {
                       const Spacer(),
                       _ToolbarButton(icon: Icons.add_rounded, tooltip: '添加条目', onPressed: currentGroup != null ? onAddEntry : null),
                       _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: '添加分组', onPressed: currentGroup != null ? onAddGroup : null),
+                      if (isOpenedFromCloud)
+                        _ToolbarButton(icon: Icons.sync_rounded, tooltip: '从云端同步', onPressed: () => _syncFromCloud(context)),
                       _ToolbarButton(icon: Icons.save_outlined, tooltip: '保存', onPressed: onSave),
                       PopupMenuButton<String>(
+                        tooltip: '更多',
                         icon: Icon(Icons.more_vert, size: 20, color: colorScheme.onSurfaceVariant),
                         onSelected: (v) {
                           switch (v) {
@@ -442,9 +450,11 @@ class _WideLayout extends StatelessWidget {
                           }
                         },
                         itemBuilder: (_) => [
-                          const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
-                          const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
-                          const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+                          if (isOpenedFromCloud) ...[
+                            const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
+                            const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
+                            const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+                          ],
                           const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
@@ -509,6 +519,7 @@ class _NarrowLayout extends StatelessWidget {
   final KdbxGroup? currentGroup;
   final List<KdbxEntry> entries;
   final bool isRecycleBin;
+  final bool isOpenedFromCloud;
   final ValueChanged<KdbxEntry> onEntryTap;
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
@@ -525,6 +536,7 @@ class _NarrowLayout extends StatelessWidget {
     required this.currentGroup,
     required this.entries,
     required this.isRecycleBin,
+    required this.isOpenedFromCloud,
     required this.onEntryTap,
     required this.onDeleteEntry,
     this.onRestoreEntry,
@@ -546,8 +558,11 @@ class _NarrowLayout extends StatelessWidget {
             ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: onPop)
             : null,
         actions: [
+          if (isOpenedFromCloud)
+            IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: '从云端同步', onPressed: () => _syncFromCloud(context)),
           IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: '搜索', onPressed: onSearch),
           PopupMenuButton<String>(
+            tooltip: '更多',
             onSelected: (v) {
               switch (v) {
                 case 'add_entry': onAddEntry?.call();
@@ -565,9 +580,11 @@ class _NarrowLayout extends StatelessWidget {
               if (onAddGroup != null)
                 const PopupMenuItem(value: 'add_group', child: ListTile(leading: Icon(Icons.create_new_folder_rounded), title: Text('添加分组'), dense: true, contentPadding: EdgeInsets.zero)),
               const PopupMenuItem(value: 'save', child: ListTile(leading: Icon(Icons.save_outlined), title: Text('保存'), dense: true, contentPadding: EdgeInsets.zero)),
-              const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
-              const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
-              const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+              if (isOpenedFromCloud) ...[
+                const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
+                const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+              ],
               const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
             ],
           ),
@@ -1163,15 +1180,18 @@ Future<void> _syncFromCloud(BuildContext context) async {
     ),
   );
   try {
-    final localPath = await syncService.downloadToLocal(config);
+    final container = ProviderScope.containerOf(context);
+    await container.read(databaseProvider.notifier).reloadFromCloud();
+    final group = container.read(currentGroupProvider);
+    container.read(entriesProvider.notifier).state = [...?group?.entries];
     if (context.mounted) {
       Navigator.of(context).pop();
-      context.push('/unlock?path=${Uri.encodeComponent(localPath)}');
+      showToast(context, '已从云端同步');
     }
   } catch (e) {
     if (context.mounted) {
       Navigator.of(context).pop();
-      _showSyncErrorDialog(context, '下载失败: $e');
+      _showSyncErrorDialog(context, '同步失败: $e');
     }
   }
 }

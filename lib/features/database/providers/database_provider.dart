@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
+export '../data/recent_files_service.dart' show RecentFile;
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 
@@ -24,11 +25,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   DatabaseService get _service => _ref.read(databaseServiceProvider);
 
-  Future<void> openFile(String filePath, String password) async {
+  Future<void> openFile(String filePath, String password, {bool isCloud = false}) async {
     state = const AsyncValue.loading();
     try {
       final db = await _service.openFile(filePath, password);
-      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath);
+      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud);
       state = AsyncValue.data(db);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -71,12 +72,29 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   void close() {
     _service.close();
     state = const AsyncValue.data(null);
+    _ref.read(openedFromCloudProvider.notifier).state = false;
+  }
+
+  Future<void> reloadFromCloud() async {
+    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    if (config == null || !config.enabled) throw Exception('请先配置 WebDAV');
+    final syncService = _ref.read(syncServiceProvider);
+    final bytes = await syncService.downloadDatabase(config);
+    if (bytes == null) throw Exception('云端数据库不存在');
+    final db = await _service.reloadFromBytes(bytes);
+    state = AsyncValue.data(db);
+    if (_service.filePath != null) {
+      await _ref.read(recentFilesServiceProvider).addRecentFile(_service.filePath!, isCloud: true);
+    }
   }
 
   void markDirty() => _service.markDirty();
   bool get isDirty => _service.isDirty;
 }
 
-final recentFilesProvider = FutureProvider<List<String>>((ref) async {
+final recentFilesProvider = FutureProvider<List<RecentFile>>((ref) async {
   return ref.read(recentFilesServiceProvider).getRecentFiles();
 });
+
+/// Whether the current database was opened from WebDAV (cloud).
+final openedFromCloudProvider = StateProvider<bool>((ref) => false);
