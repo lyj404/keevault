@@ -1,0 +1,109 @@
+# Claude Code
+.claude/
+CLAUDE.md
+.metadata
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio related
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+.gradle
+/local.properties
+*.hprof
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# VS Code related
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+pubspec.lock
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Android
+/android/.gradle
+/android/captures/
+/android/gradlew
+/android/gradlew.bat
+/android/local.properties
+/android/**/GeneratedPluginRegistrant.java
+/android/key.properties
+*.jks
+*.keystore
+
+# iOS
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/ephemeral/
+/ios/Flutter/app.flx
+/ios/Flutter/engine/
+/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+/macos/Pods/
+/macos/Flutter/GeneratedPluginRegistrant.swift
+/macos/Flutter/ephemeral/
+
+# Linux
+/linux/flutter/ephemeral/
+
+# Windows
+/windows/flutter/ephemeral/
+/windows/flutter/generated_plugins.cmake
+
+# Web
+/web/favicon.png
+
+# Coverage
+coverage/
+
+# Exceptions
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/Gemfile.lock
+!**/ios-google/**/GeneratedPluginRegistrant.*
+!**/ios-legacy/**/GeneratedPluginRegistrant.*
+!**/ios/**/GeneratedPluginRegistrant.*
+!**/macos/**/GeneratedPluginRegistrant.*
+!**/android/**/GeneratedPluginRegistrant.*

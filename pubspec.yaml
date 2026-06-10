@@ -1,0 +1,52 @@
+name: keevault
+description: "A KeePass-compatible password manager built with Flutter."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # KDBX library
+  kpasslib: ^1.1.2
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Routing
+  go_router: ^14.8.1
+
+  # File picking
+  file_picker: ^8.1.7
+
+  # Platform paths
+  path_provider: ^2.1.5
+
+  # Secure storage (recent files only, never passwords)
+  flutter_secure_storage: ^9.2.4
+
+  # Password generation
+  crypto: ^3.0.6
+
+  # UI helpers
+  flutter_slidable: ^3.1.1
+
+  # Icons
+  material_design_icons_flutter: ^7.0.7296
+
+  # Logging
+  logger: ^2.5.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
