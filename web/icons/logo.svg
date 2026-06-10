@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0175C2"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </linearGradient>
+    <linearGradient id="shackle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E0E0E0"/>
+      <stop offset="50%" stop-color="#BDBDBD"/>
+      <stop offset="100%" stop-color="#9E9E9E"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2DD4BF"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Flutter "F" wing shape - subtle in background -->
+  <path d="M 320 60 L 380 160 L 340 160 L 340 420 L 300 420 L 300 200 L 260 200 L 260 420 L 220 420 L 220 200 L 180 200 L 180 160 L 300 160 Z"
+        fill="#fff" opacity="0.08"/>
+
+  <!-- Lock shackle - silver metallic -->
+  <path d="M 172 248 V 196 C 172 120 208 68 256 68 C 304 68 340 120 340 196 V 248"
+        stroke="url(#shackle)" stroke-width="44" stroke-linecap="round" fill="none"/>
+
+  <!-- Shackle highlight -->
+  <path d="M 180 248 V 200 C 180 128 212 80 256 80 C 300 80 332 128 332 200 V 248"
+        stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.35"/>
+
+  <!-- Lock body -->
+  <rect x="140" y="244" width="232" height="184" rx="28" fill="url(#body)"/>
+
+  <!-- Body left shadow -->
+  <rect x="140" y="244" width="16" height="184" rx="8" fill="#0D9488" opacity="0.5"/>
+
+  <!-- Body top highlight -->
+  <rect x="164" y="256" width="180" height="6" rx="3" fill="#fff" opacity="0.2"/>
+
+  <!-- Keyhole circle -->
+  <circle cx="256" cy="320" r="34" fill="#0F766E"/>
+
+  <!-- Keyhole slot -->
+  <rect x="243" y="320" width="26" height="64" rx="6" fill="#0F766E"/>
+
+  <!-- Keyhole inner dot -->
+  <circle cx="256" cy="314" r="10" fill="#134E4A" opacity="0.5"/>
+
+  <!-- Shackle joints -->
+  <circle cx="172" cy="248" r="16" fill="#9E9E9E"/>
+  <circle cx="172" cy="248" r="10" fill="#BDBDBD"/>
+  <circle cx="340" cy="248" r="16" fill="#9E9E9E"/>
+  <circle cx="340" cy="248" r="10" fill="#BDBDBD"/>
+
+  <!-- Small Flutter bird silhouette near bottom right -->
+  <g transform="translate(390, 400) scale(0.6)" opacity="0.2">
+    <path d="M 0 0 C 10 -20 30 -30 50 -20 C 40 -10 30 0 20 10 Z" fill="#fff"/>
+  </g>
+</svg>

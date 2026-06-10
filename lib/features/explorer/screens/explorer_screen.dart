@@ -355,27 +355,6 @@ class _WideLayout extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [ClayColors.primary, ClayColors.tertiary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ClayColors.primary.withValues(alpha: 0.25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(Icons.shield_rounded, size: 18, color: Colors.white),
-                      ),
-                      const SizedBox(width: 10),
                       Text(
                         'KeeVault',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(

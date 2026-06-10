@@ -25,33 +25,6 @@ class WelcomeScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Clay logo
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [ClayColors.primary, ClayColors.tertiary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ClayColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: ClayColors.primary.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.shield_rounded, size: 44, color: Colors.white),
-                ),
-                const SizedBox(height: 28),
                 Text(
                   AppConstants.appName,
                   style: textTheme.headlineSmall?.copyWith(
