@@ -24,3 +24,12 @@ target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+
+# Copy the application icon to the bundle data directory during build
+add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/data"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/app_icon.png"
+    "${CMAKE_BINARY_DIR}/bundle/data/app_icon.png"
+  COMMENT "Copying application icon to bundle..."
+)
