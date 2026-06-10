@@ -8,6 +8,7 @@ import '../../features/entry/screens/entry_detail_screen.dart';
 import '../../features/entry/screens/entry_edit_screen.dart';
 import '../../features/group/screens/group_edit_screen.dart';
 import '../../features/search/screens/search_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -63,6 +64,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/search',
       builder: (context, state) => const SearchScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
 );
