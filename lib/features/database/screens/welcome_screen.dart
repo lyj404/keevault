@@ -60,7 +60,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (!mounted) return;
     if (remoteInfo != null) {
-      // Download fresh copy — explorer screen will handle conflict detection on open
+      // Compare eTag: skip download if local cache is already up-to-date
+      final lastETag = lastFile.lastSyncedETag;
+      if (lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
+        // Local cache is current, open directly without downloading
+        ref.read(openedFromCloudProvider.notifier).state = true;
+        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+        return;
+      }
+      // Remote has changed or no cached eTag — download fresh copy
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -68,6 +76,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       );
       try {
         final localPath = await syncService.downloadToLocal(config);
+        // Persist eTag immediately so next launch can skip download
+        if (remoteInfo.eTag != null) {
+          final recentService = ref.read(recentFilesServiceProvider);
+          await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
+          await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
+        }
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
@@ -291,6 +305,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
     try {
       final localPath = await syncService.downloadToLocal(config);
+      // Persist eTag so auto-open can skip redundant downloads
+      final remoteInfo = await syncService.getRemoteFileInfo(config);
+      if (remoteInfo?.eTag != null) {
+        final recentService = ref.read(recentFilesServiceProvider);
+        await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo!.eTag);
+        await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
+      }
       if (context.mounted) {
         Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;
