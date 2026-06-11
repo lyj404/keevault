@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../sync/data/sync_service.dart';
 
@@ -71,11 +71,7 @@ class DatabaseService {
   Future<void> save() async {
     if (_db == null || _filePath == null) return;
     final bytes = await _db!.save();
-    if (kIsWeb) {
-      // Web: handled by caller via download
-    } else {
-      await File(_filePath!).writeAsBytes(bytes);
-    }
+    await File(_filePath!).writeAsBytes(bytes);
     _dirty = false;
   }
 

@@ -48,16 +48,67 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux --release
 
-      - name: Package
+      - name: Package tar.gz
         run: |
           tag="${{ github.ref_name }}"
           tag="${tag//\//-}"
           tar -czf "KeeVault-${tag}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
 
+      - name: Package deb
+        run: |
+          tag="${{ github.ref_name }}"
+          version="${tag#v}"
+          pkg_dir="keevault_${version}_amd64"
+          mkdir -p "$pkg_dir/DEBIAN"
+          mkdir -p "$pkg_dir/opt/keevault"
+          mkdir -p "$pkg_dir/usr/share/applications"
+          mkdir -p "$pkg_dir/usr/share/icons/hicolor/256x256/apps"
+          mkdir -p "$pkg_dir/usr/bin"
+
+          # Control file
+          cat > "$pkg_dir/DEBIAN/control" << 'CTRL'
+          Package: keevault
+          Version: VERSION_PLACEHOLDER
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: KeeVault
+          Description: A KeePass-compatible password manager
+          CTRL
+          sed -i 's/^          //' "$pkg_dir/DEBIAN/control"
+          sed -i "s/VERSION_PLACEHOLDER/$version/" "$pkg_dir/DEBIAN/control"
+
+          # Copy build files
+          cp -r build/linux/x64/release/bundle/* "$pkg_dir/opt/keevault/"
+
+          # Symlink to /usr/bin
+          ln -s /opt/keevault/keevault "$pkg_dir/usr/bin/keevault"
+
+          # Desktop entry
+          cat > "$pkg_dir/usr/share/applications/keevault.desktop" << 'DESKTOP'
+          [Desktop Entry]
+          Name=KeeVault
+          Comment=A KeePass-compatible password manager
+          Exec=/opt/keevault/keevault
+          Icon=keevault
+          Type=Application
+          Categories=Utility;
+          DESKTOP
+          sed -i 's/^          //' "$pkg_dir/usr/share/applications/keevault.desktop"
+
+          # Icon (use linux/flutter/icon.png if available, otherwise skip)
+          if [ -f linux/flutter/icon.png ]; then
+            cp linux/flutter/icon.png "$pkg_dir/usr/share/icons/hicolor/256x256/apps/keevault.png"
+          fi
+
+          dpkg-deb --build "$pkg_dir"
+
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: KeeVault-*.tar.gz
+          path: |
+            KeeVault-*.tar.gz
+            keevault_*.deb
 
   build-android:
     runs-on: ubuntu-latest
@@ -74,13 +125,16 @@ jobs:
           channel: stable
 
       - run: flutter pub get
-      - run: flutter build apk --release
+      - run: flutter build apk --release --split-per-abi
 
       - name: Package
         run: |
           tag="${{ github.ref_name }}"
           tag="${tag//\//-}"
-          cp build/app/outputs/flutter-apk/app-release.apk "KeeVault-${tag}-android.apk"
+          for apk in build/app/outputs/flutter-apk/app-*-release.apk; do
+            abi=$(basename "$apk" | sed 's/app-//;s/-release.apk//')
+            cp "$apk" "KeeVault-${tag}-android-${abi}.apk"
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -101,3 +155,4 @@ jobs:
           generate_release_notes: true
           files: |
             KeeVault-*
+            keevault_*
