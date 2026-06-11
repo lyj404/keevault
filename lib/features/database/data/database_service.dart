@@ -1,12 +1,18 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:kpasslib/kpasslib.dart';
+import '../../sync/data/sync_service.dart';
 
 class DatabaseService {
   KdbxDatabase? _db;
   String? _filePath;
   String? _password;
   bool _dirty = false;
+
+  /// Last known remote file metadata, used for conflict detection.
+  RemoteFileInfo? _lastSyncedRemoteInfo;
+  RemoteFileInfo? get lastSyncedRemoteInfo => _lastSyncedRemoteInfo;
+  void setLastSyncedRemoteInfo(RemoteFileInfo? info) => _lastSyncedRemoteInfo = info;
 
   KdbxDatabase? get db => _db;
   String? get filePath => _filePath;
@@ -162,5 +168,6 @@ class DatabaseService {
     _filePath = null;
     _password = null;
     _dirty = false;
+    _lastSyncedRemoteInfo = null;
   }
 }

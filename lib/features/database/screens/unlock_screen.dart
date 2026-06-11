@@ -88,7 +88,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.filePath,
+                    widget.isCloud ? '云端数据库' : widget.filePath,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                     maxLines: 2,

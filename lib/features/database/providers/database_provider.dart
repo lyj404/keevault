@@ -29,7 +29,17 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     state = const AsyncValue.loading();
     try {
       final db = await _service.openFile(filePath, password);
-      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud);
+      String? remotePath;
+      if (isCloud) {
+        final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+        if (config != null && config.enabled) {
+          final info = await _ref.read(syncServiceProvider).getRemoteFileInfo(config);
+          _service.setLastSyncedRemoteInfo(info);
+          remotePath = config.remoteFilePath;
+        }
+      }
+      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath);
+      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath);
       state = AsyncValue.data(db);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -41,27 +51,60 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     try {
       final db = await _service.createDatabase(name, password, filePath);
       await _ref.read(recentFilesServiceProvider).addRecentFile(filePath);
+      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath);
       state = AsyncValue.data(db);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
-  Future<void> save() async {
+  /// Saves locally and syncs to WebDAV if enabled.
+  /// Returns true on success, false if a conflict was detected (caller should show dialog).
+  Future<bool> save() async {
     await _service.save();
-    // Sync to WebDAV if enabled
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     if (config != null && config.enabled) {
       _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
       try {
         final syncService = _ref.read(syncServiceProvider);
+        // Conflict detection: check if remote changed since last sync
+        final remoteInfo = await syncService.getRemoteFileInfo(config);
+        final lastInfo = _service.lastSyncedRemoteInfo;
+        if (remoteInfo != null && lastInfo != null &&
+            remoteInfo.eTag != null && lastInfo.eTag != null &&
+            remoteInfo.eTag != lastInfo.eTag) {
+          _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
+          return false;
+        }
         await syncService.ensureRemoteDirectory(config);
         final bytes = await _service.saveToBytes();
         await syncService.uploadDatabase(config, bytes);
+        // Store the remote metadata after successful upload
+        final newInfo = await syncService.getRemoteFileInfo(config);
+        _service.setLastSyncedRemoteInfo(newInfo);
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
       } catch (e) {
         _ref.read(syncStateProvider.notifier).state = SyncState.error;
       }
+    }
+    return true;
+  }
+
+  /// Force upload, ignoring conflict detection (used after user chooses to overwrite).
+  Future<void> forceUpload() async {
+    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    if (config == null || !config.enabled) return;
+    _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
+    try {
+      final syncService = _ref.read(syncServiceProvider);
+      await syncService.ensureRemoteDirectory(config);
+      final bytes = await _service.saveToBytes();
+      await syncService.uploadDatabase(config, bytes);
+      final newInfo = await syncService.getRemoteFileInfo(config);
+      _service.setLastSyncedRemoteInfo(newInfo);
+      _ref.read(syncStateProvider.notifier).state = SyncState.success;
+    } catch (e) {
+      _ref.read(syncStateProvider.notifier).state = SyncState.error;
     }
   }
 
@@ -73,19 +116,35 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _service.close();
     state = const AsyncValue.data(null);
     _ref.read(openedFromCloudProvider.notifier).state = false;
+    _ref.read(recentFilesServiceProvider).clearLastOpenedFile();
   }
 
   Future<void> reloadFromCloud() async {
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) throw Exception('请先配置 WebDAV');
     final syncService = _ref.read(syncServiceProvider);
-    final bytes = await syncService.downloadDatabase(config);
-    if (bytes == null) throw Exception('云端数据库不存在');
-    final db = await _service.reloadFromBytes(bytes);
+    final result = await syncService.downloadWithInfo(config);
+    if (result == null) throw Exception('云端数据库不存在');
+    final db = await _service.reloadFromBytes(result.bytes);
+    _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
     if (_service.filePath != null) {
-      await _ref.read(recentFilesServiceProvider).addRecentFile(_service.filePath!, isCloud: true);
+      await _ref.read(recentFilesServiceProvider).addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath);
+      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath);
     }
+  }
+
+  /// Checks if the remote file has changed since last sync.
+  /// Returns true if remote has newer changes (conflict).
+  Future<bool> checkRemoteChanges() async {
+    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    if (config == null || !config.enabled) return false;
+    final syncService = _ref.read(syncServiceProvider);
+    final remoteInfo = await syncService.getRemoteFileInfo(config);
+    final lastInfo = _service.lastSyncedRemoteInfo;
+    if (remoteInfo == null || lastInfo == null) return false;
+    return remoteInfo.eTag != null && lastInfo.eTag != null &&
+           remoteInfo.eTag != lastInfo.eTag;
   }
 
   void markDirty() => _service.markDirty();
