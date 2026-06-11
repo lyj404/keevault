@@ -5,6 +5,7 @@ import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
 
@@ -60,12 +61,13 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? '编辑条目' : '新建条目'),
+        title: Text(_isEdit ? l10n.editEntry : l10n.newEntry),
         actions: [
-          TextButton(onPressed: _save, child: const Text('保存')),
+          TextButton(onPressed: _save, child: Text(l10n.save)),
         ],
       ),
       body: Form(
@@ -78,27 +80,27 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               children: [
                 TextFormField(
                   controller: _titleCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '标题',
-                    prefixIcon: Icon(Icons.title_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.title,
+                    prefixIcon: const Icon(Icons.title_rounded),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     filled: false,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
                 Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
                 TextFormField(
                   controller: _usernameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '用户名',
-                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.username,
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     filled: false,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ],
@@ -109,7 +111,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               children: [
                 PasswordTextField(
                   controller: _passwordCtrl,
-                  labelText: '密码',
+                  labelText: l10n.password,
                 ),
                 const SizedBox(height: 4),
                 Align(
@@ -122,7 +124,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                       }
                     },
                     icon: const Icon(Icons.casino_outlined, size: 16),
-                    label: const Text('生成密码'),
+                    label: Text(l10n.generatePassword),
                     style: TextButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                     ),
@@ -136,27 +138,27 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               children: [
                 TextFormField(
                   controller: _urlCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '网址',
-                    prefixIcon: Icon(Icons.link_rounded),
+                  decoration: InputDecoration(
+                    labelText: l10n.url,
+                    prefixIcon: const Icon(Icons.link_rounded),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     filled: false,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
                 Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
                 TextFormField(
                   controller: _notesCtrl,
-                  decoration: const InputDecoration(
-                    labelText: '备注',
-                    prefixIcon: Icon(Icons.note_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.notes,
+                    prefixIcon: const Icon(Icons.note_outlined),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     filled: false,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   maxLines: 4,
                 ),

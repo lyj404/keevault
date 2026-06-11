@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
 
@@ -26,12 +27,13 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('新建分组'),
+        title: Text(l10n.newGroup),
         actions: [
-          TextButton(onPressed: _save, child: const Text('保存')),
+          TextButton(onPressed: _save, child: Text(l10n.save)),
         ],
       ),
       body: Center(
@@ -72,11 +74,11 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
                   TextFormField(
                     controller: _nameCtrl,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: '分组名称',
-                      prefixIcon: Icon(Icons.folder_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.groupName,
+                      prefixIcon: const Icon(Icons.folder_outlined),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? '请输入名称' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterName : null,
                   ),
                 ],
               ),

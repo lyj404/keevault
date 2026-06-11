@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/database_provider.dart';
 
 class UnlockScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   Widget build(BuildContext context) {
     final dbState = ref.watch(databaseProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     ref.listen(databaseProvider, (prev, next) {
       next.whenOrNull(
@@ -39,13 +41,13 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           if (db != null) context.go('/explorer');
         },
         error: (e, _) {
-          setState(() => _error = _friendlyError(e));
+          setState(() => _error = _friendlyError(e, l10n));
         },
       );
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('解锁数据库')),
+      appBar: AppBar(title: Text(l10n.unlockDatabase)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -88,7 +90,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.isCloud ? '云端数据库' : widget.filePath,
+                    widget.isCloud ? l10n.cloudDatabase : widget.filePath,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -97,9 +99,9 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                   const SizedBox(height: 32),
                   PasswordTextField(
                     controller: _passwordController,
-                    labelText: '主密码',
+                    labelText: l10n.masterPassword,
                     autofocus: true,
-                    validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                     onFieldSubmitted: (_) => _unlock(),
                   ),
                   if (_error != null) ...[
@@ -142,7 +144,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              '正在解密，首次打开可能较慢...',
+                              l10n.decryptingFirstTimeSlow,
                               style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
                             ),
                           ],
@@ -164,7 +166,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                               minimumSize: const Size.fromHeight(50),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                             ),
-                            child: const Text('解锁'),
+                            child: Text(l10n.unlock),
                           ),
                         ),
                 ],
@@ -182,14 +184,14 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud);
   }
 
-  String _friendlyError(Object e) {
+  String _friendlyError(Object e, AppLocalizations l10n) {
     final msg = e.toString();
     if (msg.contains('InvalidCredentials') || msg.contains('invalid key')) {
-      return '密码错误';
+      return l10n.passwordError;
     }
     if (msg.contains('corrupt') || msg.contains('bad version')) {
-      return '文件格式不正确或已损坏';
+      return l10n.fileFormatIncorrect;
     }
-    return '打开失败: $msg';
+    return l10n.openFailed(msg);
   }
 }

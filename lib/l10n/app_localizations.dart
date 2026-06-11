@@ -1,0 +1,1064 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_zh.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('zh'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'KeeVault'**
+  String get appTitle;
+
+  /// No description provided for @appSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'KeePass 兼容的密码管理器'**
+  String get appSubtitle;
+
+  /// No description provided for @openLocalDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开本地数据库'**
+  String get openLocalDatabase;
+
+  /// No description provided for @createNewDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建新数据库'**
+  String get createNewDatabase;
+
+  /// No description provided for @openCloudDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开云端数据库'**
+  String get openCloudDatabase;
+
+  /// No description provided for @recentOpened.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近打开'**
+  String get recentOpened;
+
+  /// No description provided for @cloudPrefix.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端'**
+  String get cloudPrefix;
+
+  /// No description provided for @syncingCloudDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在同步云端数据库...'**
+  String get syncingCloudDatabase;
+
+  /// No description provided for @downloadingFromCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在从云端下载...'**
+  String get downloadingFromCloud;
+
+  /// No description provided for @uploadingToCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在同步到云端...'**
+  String get uploadingToCloud;
+
+  /// No description provided for @downloadingFromCloudShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在从云端下载...'**
+  String get downloadingFromCloudShort;
+
+  /// No description provided for @pleaseConfigureWebDAV.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先在设置中配置 WebDAV'**
+  String get pleaseConfigureWebDAV;
+
+  /// No description provided for @cloudNoDatabaseCreateFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端还没有数据库，请先在本地创建并保存后同步'**
+  String get cloudNoDatabaseCreateFirst;
+
+  /// No description provided for @cloudNoDatabaseSaveFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端还没有数据库，请先保存本地数据库后同步'**
+  String get cloudNoDatabaseSaveFirst;
+
+  /// No description provided for @downloadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载失败: {error}'**
+  String downloadFailed(Object error);
+
+  /// No description provided for @syncFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步失败: {error}'**
+  String syncFailedWithError(Object error);
+
+  /// No description provided for @cancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get cancel;
+
+  /// No description provided for @goToSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'去设置'**
+  String get goToSettings;
+
+  /// No description provided for @save.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get delete;
+
+  /// No description provided for @confirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定'**
+  String get confirm;
+
+  /// No description provided for @move.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动'**
+  String get move;
+
+  /// No description provided for @close.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get close;
+
+  /// No description provided for @unlockDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'解锁数据库'**
+  String get unlockDatabase;
+
+  /// No description provided for @cloudDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端数据库'**
+  String get cloudDatabase;
+
+  /// No description provided for @masterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'主密码'**
+  String get masterPassword;
+
+  /// No description provided for @pleaseEnterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入密码'**
+  String get pleaseEnterPassword;
+
+  /// No description provided for @decryptingFirstTimeSlow.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在解密，首次打开可能较慢...'**
+  String get decryptingFirstTimeSlow;
+
+  /// No description provided for @unlock.
+  ///
+  /// In zh, this message translates to:
+  /// **'解锁'**
+  String get unlock;
+
+  /// No description provided for @passwordError.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码错误'**
+  String get passwordError;
+
+  /// No description provided for @fileFormatIncorrect.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件格式不正确或已损坏'**
+  String get fileFormatIncorrect;
+
+  /// No description provided for @openFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开失败: {msg}'**
+  String openFailed(Object msg);
+
+  /// No description provided for @createDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建数据库'**
+  String get createDatabase;
+
+  /// No description provided for @databaseName.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据库名称'**
+  String get databaseName;
+
+  /// No description provided for @pleaseEnterName.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入名称'**
+  String get pleaseEnterName;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认密码'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsNotMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'两次密码不一致'**
+  String get passwordsNotMatch;
+
+  /// No description provided for @selectSaveLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择保存位置'**
+  String get selectSaveLocation;
+
+  /// No description provided for @create.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建'**
+  String get create;
+
+  /// No description provided for @saveDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存数据库'**
+  String get saveDatabase;
+
+  /// No description provided for @myDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的数据库'**
+  String get myDatabase;
+
+  /// No description provided for @error.
+  ///
+  /// In zh, this message translates to:
+  /// **'错误: {e}'**
+  String error(Object e);
+
+  /// No description provided for @cloudNewVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端有新版本'**
+  String get cloudNewVersion;
+
+  /// No description provided for @cloudModifiedSyncLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测到云端数据库已被其他设备修改，是否同步最新版本？'**
+  String get cloudModifiedSyncLatest;
+
+  /// No description provided for @ignore.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略'**
+  String get ignore;
+
+  /// No description provided for @sync.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步'**
+  String get sync;
+
+  /// No description provided for @deleteEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除条目'**
+  String get deleteEntry;
+
+  /// No description provided for @moveToRecycleBin.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定将此条目移至回收站？'**
+  String get moveToRecycleBin;
+
+  /// No description provided for @permanentDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'永久删除'**
+  String get permanentDelete;
+
+  /// No description provided for @permanentDeleteConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'此操作不可撤销，确定删除？'**
+  String get permanentDeleteConfirm;
+
+  /// No description provided for @movedToRecycleBin.
+  ///
+  /// In zh, this message translates to:
+  /// **'已移至回收站'**
+  String get movedToRecycleBin;
+
+  /// No description provided for @permanentlyDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已永久删除'**
+  String get permanentlyDeleted;
+
+  /// No description provided for @restored.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复'**
+  String get restored;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复失败：找不到原始分组'**
+  String get restoreFailed;
+
+  /// No description provided for @moved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已移动'**
+  String get moved;
+
+  /// No description provided for @cannotDeleteNonEmptyGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'不能删除非空分组'**
+  String get cannotDeleteNonEmptyGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除分组'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除分组「{name}」？'**
+  String deleteGroupConfirm(Object name);
+
+  /// No description provided for @renameGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名分组'**
+  String get renameGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In zh, this message translates to:
+  /// **'分组名称'**
+  String get groupName;
+
+  /// No description provided for @saved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存'**
+  String get saved;
+
+  /// No description provided for @syncConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步冲突'**
+  String get syncConflict;
+
+  /// No description provided for @syncConflictMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。'**
+  String get syncConflictMessage;
+
+  /// No description provided for @downloadCloudVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载云端版本'**
+  String get downloadCloudVersion;
+
+  /// No description provided for @overwriteCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'覆盖云端'**
+  String get overwriteCloud;
+
+  /// No description provided for @overwrittenToCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'已覆盖同步到云端'**
+  String get overwrittenToCloud;
+
+  /// No description provided for @syncFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步失败'**
+  String get syncFailed;
+
+  /// No description provided for @search.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get search;
+
+  /// No description provided for @back.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回'**
+  String get back;
+
+  /// No description provided for @addEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加条目'**
+  String get addEntry;
+
+  /// No description provided for @addGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加分组'**
+  String get addGroup;
+
+  /// No description provided for @syncFromCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'从云端同步'**
+  String get syncFromCloud;
+
+  /// No description provided for @more.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多'**
+  String get more;
+
+  /// No description provided for @syncToCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步到云端'**
+  String get syncToCloud;
+
+  /// No description provided for @downloadFromCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'从云端下载'**
+  String get downloadFromCloud;
+
+  /// No description provided for @syncSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步设置'**
+  String get syncSettings;
+
+  /// No description provided for @closeDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭数据库'**
+  String get closeDatabase;
+
+  /// No description provided for @rootDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'根目录'**
+  String get rootDirectory;
+
+  /// No description provided for @thisGroupIsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'此分组为空'**
+  String get thisGroupIsEmpty;
+
+  /// No description provided for @newEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建条目'**
+  String get newEntry;
+
+  /// No description provided for @title.
+  ///
+  /// In zh, this message translates to:
+  /// **'标题'**
+  String get title;
+
+  /// No description provided for @username.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名'**
+  String get username;
+
+  /// No description provided for @password.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get password;
+
+  /// No description provided for @url.
+  ///
+  /// In zh, this message translates to:
+  /// **'网址'**
+  String get url;
+
+  /// No description provided for @notes.
+  ///
+  /// In zh, this message translates to:
+  /// **'备注'**
+  String get notes;
+
+  /// No description provided for @generatePassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'生成密码'**
+  String get generatePassword;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建分组'**
+  String get newGroup;
+
+  /// No description provided for @rename.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名'**
+  String get rename;
+
+  /// No description provided for @syncedToCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'已同步到云端'**
+  String get syncedToCloud;
+
+  /// No description provided for @syncedFromCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'已从云端同步'**
+  String get syncedFromCloud;
+
+  /// No description provided for @copyUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制用户名'**
+  String get copyUsername;
+
+  /// No description provided for @copyPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制密码'**
+  String get copyPassword;
+
+  /// No description provided for @entry.
+  ///
+  /// In zh, this message translates to:
+  /// **'条目'**
+  String get entry;
+
+  /// No description provided for @entryNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到该条目'**
+  String get entryNotFound;
+
+  /// No description provided for @entryDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'条目详情'**
+  String get entryDetail;
+
+  /// No description provided for @edit.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑'**
+  String get edit;
+
+  /// No description provided for @restore.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复'**
+  String get restore;
+
+  /// No description provided for @permanentDeleteTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'永久删除'**
+  String get permanentDeleteTooltip;
+
+  /// No description provided for @deleteTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get deleteTooltip;
+
+  /// No description provided for @editEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑条目'**
+  String get editEntry;
+
+  /// No description provided for @untitled.
+  ///
+  /// In zh, this message translates to:
+  /// **'(未命名)'**
+  String get untitled;
+
+  /// No description provided for @copy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get copy;
+
+  /// No description provided for @copiedField.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制{label}'**
+  String copiedField(Object label);
+
+  /// No description provided for @copiedPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制密码'**
+  String get copiedPassword;
+
+  /// No description provided for @copiedUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制用户名'**
+  String get copiedUsername;
+
+  /// No description provided for @hide.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏'**
+  String get hide;
+
+  /// No description provided for @show.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示'**
+  String get show;
+
+  /// No description provided for @searchEntries.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索条目...'**
+  String get searchEntries;
+
+  /// No description provided for @enterKeywords.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词搜索'**
+  String get enterKeywords;
+
+  /// No description provided for @noResults.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到匹配结果'**
+  String get noResults;
+
+  /// No description provided for @webdavSync.
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 同步'**
+  String get webdavSync;
+
+  /// No description provided for @autoSyncOnSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存时自动同步到云端'**
+  String get autoSyncOnSave;
+
+  /// No description provided for @serverAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器地址'**
+  String get serverAddress;
+
+  /// No description provided for @serverAddressHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'https://example.com/dav/'**
+  String get serverAddressHint;
+
+  /// No description provided for @serverAddressHelper.
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 服务地址，不含文件名'**
+  String get serverAddressHelper;
+
+  /// No description provided for @pleaseEnterServerAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入服务器地址'**
+  String get pleaseEnterServerAddress;
+
+  /// No description provided for @pleaseEnterUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入用户名'**
+  String get pleaseEnterUsername;
+
+  /// No description provided for @appPasswordHelper.
+  ///
+  /// In zh, this message translates to:
+  /// **'部分服务（如坚果云）需要使用应用专用密码而非账号密码'**
+  String get appPasswordHelper;
+
+  /// No description provided for @remotePathOptional.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程路径（可选）'**
+  String get remotePathOptional;
+
+  /// No description provided for @remotePathHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如 /keepass，留空则保存在根目录'**
+  String get remotePathHint;
+
+  /// No description provided for @filename.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名'**
+  String get filename;
+
+  /// No description provided for @testConnection.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试连接'**
+  String get testConnection;
+
+  /// No description provided for @testing.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试中...'**
+  String get testing;
+
+  /// No description provided for @connectionSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功'**
+  String get connectionSuccess;
+
+  /// No description provided for @connectionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败'**
+  String get connectionFailed;
+
+  /// No description provided for @moveToGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动到分组'**
+  String get moveToGroup;
+
+  /// No description provided for @generatePasswordTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'生成密码'**
+  String get generatePasswordTitle;
+
+  /// No description provided for @copied.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get copied;
+
+  /// No description provided for @regenerate.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新生成'**
+  String get regenerate;
+
+  /// No description provided for @passwordLength.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码长度'**
+  String get passwordLength;
+
+  /// No description provided for @characterTypes.
+  ///
+  /// In zh, this message translates to:
+  /// **'字符类型'**
+  String get characterTypes;
+
+  /// No description provided for @uppercaseAZ.
+  ///
+  /// In zh, this message translates to:
+  /// **'大写字母 A-Z'**
+  String get uppercaseAZ;
+
+  /// No description provided for @lowercaseaz.
+  ///
+  /// In zh, this message translates to:
+  /// **'小写字母 a-z'**
+  String get lowercaseaz;
+
+  /// No description provided for @digits09.
+  ///
+  /// In zh, this message translates to:
+  /// **'数字 0-9'**
+  String get digits09;
+
+  /// No description provided for @symbols.
+  ///
+  /// In zh, this message translates to:
+  /// **'符号 !@#\$%^&*'**
+  String get symbols;
+
+  /// No description provided for @hyphen.
+  ///
+  /// In zh, this message translates to:
+  /// **'减号 -'**
+  String get hyphen;
+
+  /// No description provided for @underscore.
+  ///
+  /// In zh, this message translates to:
+  /// **'下划线 _'**
+  String get underscore;
+
+  /// No description provided for @parentheses.
+  ///
+  /// In zh, this message translates to:
+  /// **'括号 ()'**
+  String get parentheses;
+
+  /// No description provided for @space.
+  ///
+  /// In zh, this message translates to:
+  /// **'空格'**
+  String get space;
+
+  /// No description provided for @customSymbols.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义符号'**
+  String get customSymbols;
+
+  /// No description provided for @customSymbolsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入额外要包含的符号'**
+  String get customSymbolsHint;
+
+  /// No description provided for @useThisPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用此密码'**
+  String get useThisPassword;
+
+  /// No description provided for @recycleBin.
+  ///
+  /// In zh, this message translates to:
+  /// **'回收站'**
+  String get recycleBin;
+
+  /// No description provided for @noPasswordCannotReload.
+  ///
+  /// In zh, this message translates to:
+  /// **'无密码信息，无法重新加载'**
+  String get noPasswordCannotReload;
+
+  /// No description provided for @authFailedCheckCredentials.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证失败，请检查用户名和密码'**
+  String get authFailedCheckCredentials;
+
+  /// No description provided for @serverConnectedPathNotAccessible.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器已连接，但路径「{path}」不可访问'**
+  String serverConnectedPathNotAccessible(Object path);
+
+  /// No description provided for @connectionFailedMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败: {msg}'**
+  String connectionFailedMsg(Object msg);
+
+  /// No description provided for @networkFailedCheckServer.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接失败，请检查服务器地址'**
+  String get networkFailedCheckServer;
+
+  /// No description provided for @remoteDatabaseNotExist.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程数据库不存在'**
+  String get remoteDatabaseNotExist;
+
+  /// No description provided for @pleaseConfigureWebDAVFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先配置 WebDAV'**
+  String get pleaseConfigureWebDAVFirst;
+
+  /// No description provided for @cloudDatabaseNotExist.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端数据库不存在'**
+  String get cloudDatabaseNotExist;
+
+  /// No description provided for @language.
+  ///
+  /// In zh, this message translates to:
+  /// **'语言'**
+  String get language;
+
+  /// No description provided for @followSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随系统'**
+  String get followSystem;
+
+  /// No description provided for @chinese.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文'**
+  String get chinese;
+
+  /// No description provided for @english.
+  ///
+  /// In zh, this message translates to:
+  /// **'English'**
+  String get english;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'zh'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'zh':
+      return AppLocalizationsZh();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

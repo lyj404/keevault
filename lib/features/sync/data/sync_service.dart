@@ -24,7 +24,8 @@ class SyncService {
     return client;
   }
 
-  /// Tests WebDAV connection. Returns null on success, error message on failure.
+  /// Tests WebDAV connection. Returns null on success, error key on failure.
+  /// Error keys: 'auth_failed', 'path_not_accessible', 'connection_failed', 'network_failed'
   Future<String?> testConnection(WebDavConfig config) async {
     try {
       final client = _buildClient(config, debug: true);
@@ -34,29 +35,28 @@ class SyncService {
       } catch (e) {
         final msg = e.toString();
         if (msg.contains('401') || msg.contains('403')) {
-          return '认证失败，请检查用户名和密码';
+          return 'auth_failed';
         }
         if (msg.contains('404') || msg.contains('409')) {
-          // Path doesn't exist yet — will be created on first upload
           return null;
         }
         try {
           await client.ping();
-          return '服务器已连接，但路径 "$remotePath" 不可访问';
+          return 'path_not_accessible:$remotePath';
         } catch (_) {
-          return '连接失败: $msg';
+          return 'connection_failed:$msg';
         }
       }
       return null;
     } catch (e) {
       final msg = e.toString();
       if (msg.contains('401') || msg.contains('403')) {
-        return '认证失败，请检查用户名和密码';
+        return 'auth_failed';
       }
       if (msg.contains('SocketException') || msg.contains('Connection')) {
-        return '网络连接失败，请检查服务器地址';
+        return 'network_failed';
       }
-      return '连接失败: $msg';
+      return 'connection_failed:$msg';
     }
   }
 
@@ -114,7 +114,7 @@ class SyncService {
 
   Future<String> downloadToLocal(WebDavConfig config) async {
     final bytes = await downloadDatabase(config);
-    if (bytes == null) throw Exception('远程数据库不存在');
+    if (bytes == null) throw Exception('remote_database_not_exist');
     final dir = await getApplicationDocumentsDirectory();
     final cacheDir = Directory('${dir.path}/keevault_cloud_cache');
     if (!await cacheDir.exists()) {

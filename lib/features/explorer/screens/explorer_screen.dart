@@ -10,6 +10,8 @@ import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/toast.dart';
+import '../../../core/providers/locale_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
@@ -30,8 +32,8 @@ class ExplorerScreen extends ConsumerWidget {
         }
         return const _ExplorerBody();
       },
-      loading: () => Scaffold(body: Center(child: CircularProgressIndicator(strokeWidth: 2.5))),
-      error: (e, _) => Scaffold(body: Center(child: Text('错误: $e'))),
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator(strokeWidth: 2.5))),
+      error: (e, _) => Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.error(e.toString())))),
     );
   }
 }
@@ -71,13 +73,13 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       final username = selected.fields['UserName']?.text ?? '';
       if (username.isNotEmpty) {
         copyToClipboardWithAutoClear(username);
-        if (mounted) showToast(context, '已复制用户名');
+        if (mounted) showToast(context, AppLocalizations.of(context)!.copiedUsername);
       }
     } else if (event.logicalKey == LogicalKeyboardKey.keyC) {
       final password = selected.fields['Password']?.text ?? '';
       if (password.isNotEmpty) {
         copyToClipboardWithAutoClear(password);
-        if (mounted) showToast(context, '已复制密码');
+        if (mounted) showToast(context, AppLocalizations.of(context)!.copiedPassword);
       }
     }
   }
@@ -99,22 +101,23 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _showAutoSyncDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('云端有新版本'),
-        content: const Text('检测到云端数据库已被其他设备修改，是否同步最新版本？'),
+        title: Text(l10n.cloudNewVersion),
+        content: Text(l10n.cloudModifiedSyncLatest),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('忽略'),
+            child: Text(l10n.ignore),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _syncFromCloud(context);
             },
-            child: const Text('同步'),
+            child: Text(l10n.sync),
           ),
         ],
       ),
@@ -214,13 +217,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除条目'),
-        content: const Text('确定将此条目移至回收站？'),
+        title: Text(l10n.deleteEntry),
+        content: Text(l10n.moveToRecycleBin),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -230,9 +234,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
               ref.read(databaseServiceProvider).deleteItem(entry);
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
-              if (context.mounted) showToast(context, '已移至回收站');
+              if (context.mounted) showToast(context, l10n.movedToRecycleBin);
             },
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -240,13 +244,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _permanentDeleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('永久删除'),
-        content: const Text('此操作不可撤销，确定删除？'),
+        title: Text(l10n.permanentDelete),
+        content: Text(l10n.permanentDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -260,9 +265,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
               }
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
-              if (context.mounted) showToast(context, '已永久删除');
+              if (context.mounted) showToast(context, l10n.permanentlyDeleted);
             },
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -272,11 +277,12 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   void _restoreEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
     final service = ref.read(databaseServiceProvider);
     final success = service.restoreItem(entry);
+    final l10n = AppLocalizations.of(context)!;
     if (success) {
       refreshExplorerLists(ref);
-      showToast(context, '已恢复');
+      showToast(context, l10n.restored);
     } else {
-      showToast(context, '恢复失败：找不到原始分组', isError: true);
+      showToast(context, l10n.restoreFailed, isError: true);
     }
   }
 
@@ -288,22 +294,23 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     ref.read(databaseServiceProvider).moveItem(entry, target);
     refreshExplorerLists(ref);
     if (context.mounted) {
-      showToast(context, '已移动');
+      showToast(context, AppLocalizations.of(context)!.moved);
     }
   }
 
   void _deleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
     if (group.entries.isNotEmpty || group.groups.isNotEmpty) {
-      showToast(context, '不能删除非空分组', isError: true);
+      showToast(context, l10n.cannotDeleteNonEmptyGroup, isError: true);
       return;
     }
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除分组'),
-        content: Text('确定删除分组"${group.name}"？'),
+        title: Text(l10n.deleteGroup),
+        content: Text(l10n.deleteGroupConfirm(group.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -313,9 +320,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
               ref.read(databaseServiceProvider).deleteItem(group);
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
-              if (context.mounted) showToast(context, '已移至回收站');
+              if (context.mounted) showToast(context, l10n.movedToRecycleBin);
             },
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -323,18 +330,19 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _renameGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: group.name);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('重命名分组'),
+        title: Text(l10n.renameGroup),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          decoration: const InputDecoration(labelText: '分组名称'),
+          decoration: InputDecoration(labelText: l10n.groupName),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             onPressed: () {
               final newName = ctrl.text.trim();
@@ -344,7 +352,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
             },
-            child: const Text('确定'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -362,10 +370,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _save(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     ref.read(databaseProvider.notifier).save().then((success) {
       if (!context.mounted) return;
       if (success) {
-        showToast(context, '已保存');
+        showToast(context, l10n.saved);
       } else {
         _showConflictDialog(context, ref);
       }
@@ -373,29 +382,30 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _showConflictDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('同步冲突'),
-        content: const Text('云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。'),
+        title: Text(l10n.syncConflict),
+        content: Text(l10n.syncConflictMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           OutlinedButton(
             onPressed: () {
               Navigator.pop(ctx);
               _syncFromCloud(context);
             },
-            child: const Text('下载云端版本'),
+            child: Text(l10n.downloadCloudVersion),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               _forceUpload(context, ref);
             },
-            child: const Text('覆盖云端'),
+            child: Text(l10n.overwriteCloud),
           ),
         ],
       ),
@@ -403,13 +413,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   void _forceUpload(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     ref.read(databaseProvider.notifier).forceUpload().then((_) {
       if (context.mounted) {
         final syncState = ref.read(syncStateProvider);
         if (syncState == SyncState.success) {
-          showToast(context, '已覆盖同步到云端');
+          showToast(context, l10n.overwrittenToCloud);
         } else if (syncState == SyncState.error) {
-          showToast(context, '同步失败', isError: true);
+          showToast(context, l10n.syncFailed, isError: true);
         }
       }
     });
@@ -490,6 +501,7 @@ class _WideLayout extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: isDark ? ClayColors.surfaceDark : ClayColors.surfaceLight,
@@ -533,7 +545,7 @@ class _WideLayout extends StatelessWidget {
                         ),
                         child: IconButton(
                           icon: Icon(Icons.search_rounded, size: 18, color: colorScheme.onSurfaceVariant),
-                          tooltip: '搜索',
+                          tooltip: l10n.search,
                           onPressed: onSearch,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(34, 34),
@@ -577,7 +589,7 @@ class _WideLayout extends StatelessWidget {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                            tooltip: '返回',
+                            tooltip: l10n.back,
                             onPressed: onPop,
                             style: IconButton.styleFrom(
                               minimumSize: const Size(34, 34),
@@ -587,29 +599,31 @@ class _WideLayout extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(child: _BreadcrumbBar(breadcrumbs: breadcrumbs)),
                       const Spacer(),
-                      _ToolbarButton(icon: Icons.add_rounded, tooltip: '添加条目', onPressed: currentGroup != null ? onAddEntry : null),
-                      _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: '添加分组', onPressed: currentGroup != null ? onAddGroup : null),
+                      _ToolbarButton(icon: Icons.add_rounded, tooltip: l10n.addEntry, onPressed: currentGroup != null ? onAddEntry : null),
+                      _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: l10n.addGroup, onPressed: currentGroup != null ? onAddGroup : null),
                       if (isOpenedFromCloud)
-                        _ToolbarButton(icon: Icons.sync_rounded, tooltip: '从云端同步', onPressed: () => _syncFromCloud(context)),
-                      _ToolbarButton(icon: Icons.save_outlined, tooltip: '保存', onPressed: onSave),
+                        _ToolbarButton(icon: Icons.sync_rounded, tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
+                      _ToolbarButton(icon: Icons.save_outlined, tooltip: l10n.save, onPressed: onSave),
                       PopupMenuButton<String>(
-                        tooltip: '更多',
+                        tooltip: l10n.more,
                         icon: Icon(Icons.more_vert, size: 20, color: colorScheme.onSurfaceVariant),
                         onSelected: (v) {
                           switch (v) {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
                             case 'settings': context.push('/settings');
+                            case 'language': _showLanguageDialog(context);
                             case 'close': onClose();
                           }
                         },
                         itemBuilder: (_) => [
                           if (isOpenedFromCloud) ...[
-                            const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
-                            const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
-                            const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+                            PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                            PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                            PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.syncSettings), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
-                          const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'language', child: ListTile(leading: const Icon(Icons.language_rounded), title: Text(l10n.language), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
                     ],
@@ -714,6 +728,8 @@ class _NarrowLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         title: _BreadcrumbBar(breadcrumbs: breadcrumbs),
@@ -722,10 +738,10 @@ class _NarrowLayout extends StatelessWidget {
             : null,
         actions: [
           if (isOpenedFromCloud)
-            IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: '从云端同步', onPressed: () => _syncFromCloud(context)),
-          IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: '搜索', onPressed: onSearch),
+            IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
+          IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: onSearch),
           PopupMenuButton<String>(
-            tooltip: '更多',
+            tooltip: l10n.more,
             onSelected: (v) {
               switch (v) {
                 case 'add_entry': onAddEntry?.call();
@@ -734,21 +750,23 @@ class _NarrowLayout extends StatelessWidget {
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
                 case 'settings': context.push('/settings');
+                case 'language': _showLanguageDialog(context);
                 case 'close': onClose();
               }
             },
             itemBuilder: (_) => [
               if (onAddEntry != null)
-                const PopupMenuItem(value: 'add_entry', child: ListTile(leading: Icon(Icons.add_rounded), title: Text('添加条目'), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'add_entry', child: ListTile(leading: const Icon(Icons.add_rounded), title: Text(l10n.addEntry), dense: true, contentPadding: EdgeInsets.zero)),
               if (onAddGroup != null)
-                const PopupMenuItem(value: 'add_group', child: ListTile(leading: Icon(Icons.create_new_folder_rounded), title: Text('添加分组'), dense: true, contentPadding: EdgeInsets.zero)),
-              const PopupMenuItem(value: 'save', child: ListTile(leading: Icon(Icons.save_outlined), title: Text('保存'), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'add_group', child: ListTile(leading: const Icon(Icons.create_new_folder_rounded), title: Text(l10n.addGroup), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'save', child: ListTile(leading: const Icon(Icons.save_outlined), title: Text(l10n.save), dense: true, contentPadding: EdgeInsets.zero)),
               if (isOpenedFromCloud) ...[
-                const PopupMenuItem(value: 'sync_up', child: ListTile(leading: Icon(Icons.cloud_upload_rounded), title: Text('同步到云端'), dense: true, contentPadding: EdgeInsets.zero)),
-                const PopupMenuItem(value: 'sync_down', child: ListTile(leading: Icon(Icons.cloud_download_rounded), title: Text('从云端下载'), dense: true, contentPadding: EdgeInsets.zero)),
-                const PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_rounded), title: Text('同步设置'), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.syncSettings), dense: true, contentPadding: EdgeInsets.zero)),
               ],
-              const PopupMenuItem(value: 'close', child: ListTile(leading: Icon(Icons.close_rounded), title: Text('关闭数据库'), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'language', child: ListTile(leading: const Icon(Icons.language_rounded), title: Text(l10n.language), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
             ],
           ),
         ],
@@ -773,7 +791,7 @@ class _NarrowLayout extends StatelessWidget {
       floatingActionButton: currentGroup != null && onAddEntry != null
           ? FloatingActionButton(
               onPressed: onAddEntry,
-              tooltip: '添加条目',
+              tooltip: l10n.addEntry,
               child: const Icon(Icons.add_rounded),
             )
           : null,
@@ -901,6 +919,7 @@ class _GroupTreeView extends ConsumerWidget {
   }
 
   void _showContextMenu(BuildContext context, Offset globalPos, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final screenSize = overlay.size;
@@ -914,13 +933,13 @@ class _GroupTreeView extends ConsumerWidget {
       context: context,
       position: position,
       items: [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'rename',
-          child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('重命名'), dense: true, contentPadding: EdgeInsets.zero),
+          child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename), dense: true, contentPadding: EdgeInsets.zero),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
-          child: ListTile(leading: Icon(Icons.delete_outline_rounded), title: Text('删除分组'), dense: true, contentPadding: EdgeInsets.zero),
+          child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
         ),
       ],
     ).then((value) {
@@ -949,7 +968,8 @@ class _BreadcrumbBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final displayNames = [for (final b in breadcrumbs) b == 'Root' ? '根目录' : b];
+    final l10n = AppLocalizations.of(context)!;
+    final displayNames = [for (final b in breadcrumbs) b == 'Root' ? l10n.rootDirectory : b];
     return Row(
       children: [
         for (int i = 0; i < displayNames.length; i++) ...[
@@ -996,7 +1016,7 @@ class _EntryListBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return const EmptyState(icon: Icons.folder_open_rounded, message: '此分组为空');
+      return EmptyState(icon: Icons.folder_open_rounded, message: AppLocalizations.of(context)!.thisGroupIsEmpty);
     }
 
     return ListView.builder(
@@ -1052,6 +1072,8 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
       child: DraggableScrollableSheet(
@@ -1088,9 +1110,9 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                         child: Icon(Icons.add_rounded, size: 16, color: colorScheme.primary),
                       ),
                       const SizedBox(width: 10),
-                      const Text('新建条目', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(l10n.newEntry, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       const Spacer(),
-                      TextButton(onPressed: _save, child: const Text('保存')),
+                      TextButton(onPressed: _save, child: Text(l10n.save)),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close_rounded, size: 20),
@@ -1111,19 +1133,19 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                   TextField(
                     controller: _titleCtrl,
                     autofocus: true,
-                    decoration: const InputDecoration(labelText: '标题', prefixIcon: Icon(Icons.title_rounded)),
+                    decoration: InputDecoration(labelText: l10n.title, prefixIcon: const Icon(Icons.title_rounded)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _usernameCtrl,
-                    decoration: const InputDecoration(labelText: '用户名', prefixIcon: Icon(Icons.person_outline_rounded)),
+                    decoration: InputDecoration(labelText: l10n.username, prefixIcon: const Icon(Icons.person_outline_rounded)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordCtrl,
                     obscureText: _obscure,
                     decoration: InputDecoration(
-                      labelText: '密码',
+                      labelText: l10n.password,
                       prefixIcon: const Icon(Icons.lock_outline_rounded),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1134,7 +1156,7 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.casino_outlined, size: 18),
-                            tooltip: '生成密码',
+                            tooltip: l10n.generatePassword,
                             onPressed: () async {
                               final password = await showPasswordGeneratorDialog(context);
                               if (password != null) {
@@ -1149,13 +1171,13 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _urlCtrl,
-                    decoration: const InputDecoration(labelText: '网址', prefixIcon: Icon(Icons.link_rounded)),
+                    decoration: InputDecoration(labelText: l10n.url, prefixIcon: const Icon(Icons.link_rounded)),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _notesCtrl,
                     maxLines: 3,
-                    decoration: const InputDecoration(labelText: '备注', prefixIcon: Icon(Icons.note_outlined)),
+                    decoration: InputDecoration(labelText: l10n.notes, prefixIcon: const Icon(Icons.note_outlined)),
                   ),
                 ],
               ),
@@ -1204,6 +1226,8 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
       child: Column(
@@ -1235,9 +1259,9 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
                       child: Icon(Icons.create_new_folder_rounded, size: 16, color: colorScheme.primary),
                     ),
                     const SizedBox(width: 10),
-                    const Text('新建分组', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(l10n.newGroup, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     const Spacer(),
-                    TextButton(onPressed: _save, child: const Text('保存')),
+                    TextButton(onPressed: _save, child: Text(l10n.save)),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close_rounded, size: 20),
@@ -1253,9 +1277,9 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
             child: TextField(
               controller: _nameCtrl,
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '分组名称',
-                prefixIcon: Icon(Icons.folder_outlined),
+              decoration: InputDecoration(
+                labelText: l10n.groupName,
+                prefixIcon: const Icon(Icons.folder_outlined),
               ),
               onSubmitted: (_) => _save(),
             ),
@@ -1285,6 +1309,7 @@ class _ShortcutHintBar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final username = entry.fields['UserName']?.text ?? '';
     final password = entry.fields['Password']?.text ?? '';
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: double.infinity,
@@ -1300,15 +1325,15 @@ class _ShortcutHintBar extends StatelessWidget {
           Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
           if (username.isNotEmpty) ...[
-            _KeyChip(label: 'Ctrl+B'),
+            const _KeyChip(label: 'Ctrl+B'),
             const SizedBox(width: 4),
-            Text('复制用户名', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(l10n.copyUsername, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
             const SizedBox(width: 16),
           ],
           if (password.isNotEmpty) ...[
-            _KeyChip(label: 'Ctrl+C'),
+            const _KeyChip(label: 'Ctrl+C'),
             const SizedBox(width: 4),
-            Text('复制密码', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(l10n.copyPassword, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
           ],
         ],
       ),
@@ -1338,14 +1363,52 @@ class _KeyChip extends StatelessWidget {
   }
 }
 
+// ─── Language dialog ────────────────────────────────────────────────────
+
+void _showLanguageDialog(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final container = ProviderScope.containerOf(context);
+  final currentLocale = container.read(localeProvider);
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.language),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _languageOption(ctx, container, null, l10n.followSystem, currentLocale),
+          _languageOption(ctx, container, const Locale('zh'), '中文', currentLocale),
+          _languageOption(ctx, container, const Locale('en'), 'English', currentLocale),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _languageOption(BuildContext ctx, ProviderContainer container, Locale? locale, String label, Locale? currentLocale) {
+  return RadioListTile<Locale?>(
+    value: locale,
+    groupValue: currentLocale,
+    onChanged: (v) {
+      container.read(localeProvider.notifier).setLocale(locale);
+      Navigator.pop(ctx);
+    },
+    title: Text(label),
+    dense: true,
+    contentPadding: EdgeInsets.zero,
+    activeColor: Theme.of(ctx).colorScheme.primary,
+  );
+}
+
 // ─── Sync helpers ───────────────────────────────────────────────────────
 
 Future<void> _syncToCloud(BuildContext context) async {
   final container = ProviderScope.containerOf(context);
+  final l10n = AppLocalizations.of(context)!;
   final config = await container.read(webDavSettingsServiceProvider).getConfig();
   if (config == null || !config.enabled) {
     if (context.mounted) {
-      showToast(context, '请先在设置中配置 WebDAV', isError: true);
+      showToast(context, l10n.pleaseConfigureWebDAV, isError: true);
       context.push('/settings');
     }
     return;
@@ -1354,15 +1417,15 @@ Future<void> _syncToCloud(BuildContext context) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Dialog(
+    builder: (_) => Dialog(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            SizedBox(height: 16),
-            Text('正在同步到云端...', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            const SizedBox(height: 16),
+            Text(l10n.uploadingToCloud, style: const TextStyle(fontSize: 14)),
           ],
         ),
       ),
@@ -1374,25 +1437,26 @@ Future<void> _syncToCloud(BuildContext context) async {
       Navigator.of(context).pop();
       final syncState = container.read(syncStateProvider);
       if (syncState == SyncState.success) {
-        showToast(context, '已同步到云端');
+        showToast(context, l10n.syncedToCloud);
       } else {
-        showToast(context, '同步失败', isError: true);
+        showToast(context, l10n.syncFailed, isError: true);
       }
     }
   } catch (e) {
     if (context.mounted) {
       Navigator.of(context).pop();
-      showToast(context, '同步失败: $e', isError: true);
+      showToast(context, l10n.syncFailedWithError(e.toString()), isError: true);
     }
   }
 }
 
 Future<void> _syncFromCloud(BuildContext context) async {
   final container = ProviderScope.containerOf(context);
+  final l10n = AppLocalizations.of(context)!;
   final config = await container.read(webDavSettingsServiceProvider).getConfig();
   if (config == null || !config.enabled) {
     if (context.mounted) {
-      _showSyncErrorDialog(context, '请先在设置中配置 WebDAV');
+      _showSyncErrorDialog(context, l10n.pleaseConfigureWebDAV);
     }
     return;
   }
@@ -1401,7 +1465,7 @@ Future<void> _syncFromCloud(BuildContext context) async {
   final exists = await syncService.remoteFileExists(config);
   if (!exists) {
     if (context.mounted) {
-      _showSyncErrorDialog(context, '云端还没有数据库，请先保存本地数据库后同步');
+      _showSyncErrorDialog(context, l10n.cloudNoDatabaseSaveFirst);
     }
     return;
   }
@@ -1409,15 +1473,15 @@ Future<void> _syncFromCloud(BuildContext context) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Dialog(
+    builder: (_) => Dialog(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            SizedBox(height: 16),
-            Text('正在从云端下载...', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            const SizedBox(height: 16),
+            Text(l10n.downloadingFromCloudShort, style: const TextStyle(fontSize: 14)),
           ],
         ),
       ),
@@ -1430,17 +1494,26 @@ Future<void> _syncFromCloud(BuildContext context) async {
     container.read(entriesProvider.notifier).state = [...?group?.entries];
     if (context.mounted) {
       Navigator.of(context).pop();
-      showToast(context, '已从云端同步');
+      showToast(context, l10n.syncedFromCloud);
     }
   } catch (e) {
     if (context.mounted) {
       Navigator.of(context).pop();
-      _showSyncErrorDialog(context, '同步失败: $e');
+      _showSyncErrorDialog(context, _translateSyncError(e, l10n));
     }
   }
 }
 
+String _translateSyncError(Object e, AppLocalizations l10n) {
+  final msg = e.toString().replaceFirst('Exception: ', '');
+  if (msg == 'please_configure_webdav') return l10n.pleaseConfigureWebDAVFirst;
+  if (msg == 'cloud_database_not_exist') return l10n.cloudDatabaseNotExist;
+  if (msg == 'remote_database_not_exist') return l10n.remoteDatabaseNotExist;
+  return l10n.syncFailedWithError(msg);
+}
+
 void _showSyncErrorDialog(BuildContext context, String message) {
+  final l10n = AppLocalizations.of(context)!;
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -1448,9 +1521,9 @@ void _showSyncErrorDialog(BuildContext context, String message) {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text('取消'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(l10n.cancel),
           ),
         ),
         FilledButton(
@@ -1462,7 +1535,7 @@ void _showSyncErrorDialog(BuildContext context, String message) {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('去设置'),
+          child: Text(l10n.goToSettings),
         ),
       ],
     ),

@@ -1,0 +1,492 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Chinese (`zh`).
+class AppLocalizationsZh extends AppLocalizations {
+  AppLocalizationsZh([String locale = 'zh']) : super(locale);
+
+  @override
+  String get appTitle => 'KeeVault';
+
+  @override
+  String get appSubtitle => 'KeePass 兼容的密码管理器';
+
+  @override
+  String get openLocalDatabase => '打开本地数据库';
+
+  @override
+  String get createNewDatabase => '创建新数据库';
+
+  @override
+  String get openCloudDatabase => '打开云端数据库';
+
+  @override
+  String get recentOpened => '最近打开';
+
+  @override
+  String get cloudPrefix => '云端';
+
+  @override
+  String get syncingCloudDatabase => '正在同步云端数据库...';
+
+  @override
+  String get downloadingFromCloud => '正在从云端下载...';
+
+  @override
+  String get uploadingToCloud => '正在同步到云端...';
+
+  @override
+  String get downloadingFromCloudShort => '正在从云端下载...';
+
+  @override
+  String get pleaseConfigureWebDAV => '请先在设置中配置 WebDAV';
+
+  @override
+  String get cloudNoDatabaseCreateFirst => '云端还没有数据库，请先在本地创建并保存后同步';
+
+  @override
+  String get cloudNoDatabaseSaveFirst => '云端还没有数据库，请先保存本地数据库后同步';
+
+  @override
+  String downloadFailed(Object error) {
+    return '下载失败: $error';
+  }
+
+  @override
+  String syncFailedWithError(Object error) {
+    return '同步失败: $error';
+  }
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get goToSettings => '去设置';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get delete => '删除';
+
+  @override
+  String get confirm => '确定';
+
+  @override
+  String get move => '移动';
+
+  @override
+  String get close => '关闭';
+
+  @override
+  String get unlockDatabase => '解锁数据库';
+
+  @override
+  String get cloudDatabase => '云端数据库';
+
+  @override
+  String get masterPassword => '主密码';
+
+  @override
+  String get pleaseEnterPassword => '请输入密码';
+
+  @override
+  String get decryptingFirstTimeSlow => '正在解密，首次打开可能较慢...';
+
+  @override
+  String get unlock => '解锁';
+
+  @override
+  String get passwordError => '密码错误';
+
+  @override
+  String get fileFormatIncorrect => '文件格式不正确或已损坏';
+
+  @override
+  String openFailed(Object msg) {
+    return '打开失败: $msg';
+  }
+
+  @override
+  String get createDatabase => '创建数据库';
+
+  @override
+  String get databaseName => '数据库名称';
+
+  @override
+  String get pleaseEnterName => '请输入名称';
+
+  @override
+  String get confirmPassword => '确认密码';
+
+  @override
+  String get passwordsNotMatch => '两次密码不一致';
+
+  @override
+  String get selectSaveLocation => '选择保存位置';
+
+  @override
+  String get create => '创建';
+
+  @override
+  String get saveDatabase => '保存数据库';
+
+  @override
+  String get myDatabase => '我的数据库';
+
+  @override
+  String error(Object e) {
+    return '错误: $e';
+  }
+
+  @override
+  String get cloudNewVersion => '云端有新版本';
+
+  @override
+  String get cloudModifiedSyncLatest => '检测到云端数据库已被其他设备修改，是否同步最新版本？';
+
+  @override
+  String get ignore => '忽略';
+
+  @override
+  String get sync => '同步';
+
+  @override
+  String get deleteEntry => '删除条目';
+
+  @override
+  String get moveToRecycleBin => '确定将此条目移至回收站？';
+
+  @override
+  String get permanentDelete => '永久删除';
+
+  @override
+  String get permanentDeleteConfirm => '此操作不可撤销，确定删除？';
+
+  @override
+  String get movedToRecycleBin => '已移至回收站';
+
+  @override
+  String get permanentlyDeleted => '已永久删除';
+
+  @override
+  String get restored => '已恢复';
+
+  @override
+  String get restoreFailed => '恢复失败：找不到原始分组';
+
+  @override
+  String get moved => '已移动';
+
+  @override
+  String get cannotDeleteNonEmptyGroup => '不能删除非空分组';
+
+  @override
+  String get deleteGroup => '删除分组';
+
+  @override
+  String deleteGroupConfirm(Object name) {
+    return '确定删除分组「$name」？';
+  }
+
+  @override
+  String get renameGroup => '重命名分组';
+
+  @override
+  String get groupName => '分组名称';
+
+  @override
+  String get saved => '已保存';
+
+  @override
+  String get syncConflict => '同步冲突';
+
+  @override
+  String get syncConflictMessage =>
+      '云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。';
+
+  @override
+  String get downloadCloudVersion => '下载云端版本';
+
+  @override
+  String get overwriteCloud => '覆盖云端';
+
+  @override
+  String get overwrittenToCloud => '已覆盖同步到云端';
+
+  @override
+  String get syncFailed => '同步失败';
+
+  @override
+  String get search => '搜索';
+
+  @override
+  String get back => '返回';
+
+  @override
+  String get addEntry => '添加条目';
+
+  @override
+  String get addGroup => '添加分组';
+
+  @override
+  String get syncFromCloud => '从云端同步';
+
+  @override
+  String get more => '更多';
+
+  @override
+  String get syncToCloud => '同步到云端';
+
+  @override
+  String get downloadFromCloud => '从云端下载';
+
+  @override
+  String get syncSettings => '同步设置';
+
+  @override
+  String get closeDatabase => '关闭数据库';
+
+  @override
+  String get rootDirectory => '根目录';
+
+  @override
+  String get thisGroupIsEmpty => '此分组为空';
+
+  @override
+  String get newEntry => '新建条目';
+
+  @override
+  String get title => '标题';
+
+  @override
+  String get username => '用户名';
+
+  @override
+  String get password => '密码';
+
+  @override
+  String get url => '网址';
+
+  @override
+  String get notes => '备注';
+
+  @override
+  String get generatePassword => '生成密码';
+
+  @override
+  String get newGroup => '新建分组';
+
+  @override
+  String get rename => '重命名';
+
+  @override
+  String get syncedToCloud => '已同步到云端';
+
+  @override
+  String get syncedFromCloud => '已从云端同步';
+
+  @override
+  String get copyUsername => '复制用户名';
+
+  @override
+  String get copyPassword => '复制密码';
+
+  @override
+  String get entry => '条目';
+
+  @override
+  String get entryNotFound => '未找到该条目';
+
+  @override
+  String get entryDetail => '条目详情';
+
+  @override
+  String get edit => '编辑';
+
+  @override
+  String get restore => '恢复';
+
+  @override
+  String get permanentDeleteTooltip => '永久删除';
+
+  @override
+  String get deleteTooltip => '删除';
+
+  @override
+  String get editEntry => '编辑条目';
+
+  @override
+  String get untitled => '(未命名)';
+
+  @override
+  String get copy => '复制';
+
+  @override
+  String copiedField(Object label) {
+    return '已复制$label';
+  }
+
+  @override
+  String get copiedPassword => '已复制密码';
+
+  @override
+  String get copiedUsername => '已复制用户名';
+
+  @override
+  String get hide => '隐藏';
+
+  @override
+  String get show => '显示';
+
+  @override
+  String get searchEntries => '搜索条目...';
+
+  @override
+  String get enterKeywords => '输入关键词搜索';
+
+  @override
+  String get noResults => '未找到匹配结果';
+
+  @override
+  String get webdavSync => 'WebDAV 同步';
+
+  @override
+  String get autoSyncOnSave => '保存时自动同步到云端';
+
+  @override
+  String get serverAddress => '服务器地址';
+
+  @override
+  String get serverAddressHint => 'https://example.com/dav/';
+
+  @override
+  String get serverAddressHelper => 'WebDAV 服务地址，不含文件名';
+
+  @override
+  String get pleaseEnterServerAddress => '请输入服务器地址';
+
+  @override
+  String get pleaseEnterUsername => '请输入用户名';
+
+  @override
+  String get appPasswordHelper => '部分服务（如坚果云）需要使用应用专用密码而非账号密码';
+
+  @override
+  String get remotePathOptional => '远程路径（可选）';
+
+  @override
+  String get remotePathHint => '例如 /keepass，留空则保存在根目录';
+
+  @override
+  String get filename => '文件名';
+
+  @override
+  String get testConnection => '测试连接';
+
+  @override
+  String get testing => '测试中...';
+
+  @override
+  String get connectionSuccess => '连接成功';
+
+  @override
+  String get connectionFailed => '连接失败';
+
+  @override
+  String get moveToGroup => '移动到分组';
+
+  @override
+  String get generatePasswordTitle => '生成密码';
+
+  @override
+  String get copied => '复制';
+
+  @override
+  String get regenerate => '重新生成';
+
+  @override
+  String get passwordLength => '密码长度';
+
+  @override
+  String get characterTypes => '字符类型';
+
+  @override
+  String get uppercaseAZ => '大写字母 A-Z';
+
+  @override
+  String get lowercaseaz => '小写字母 a-z';
+
+  @override
+  String get digits09 => '数字 0-9';
+
+  @override
+  String get symbols => '符号 !@#\$%^&*';
+
+  @override
+  String get hyphen => '减号 -';
+
+  @override
+  String get underscore => '下划线 _';
+
+  @override
+  String get parentheses => '括号 ()';
+
+  @override
+  String get space => '空格';
+
+  @override
+  String get customSymbols => '自定义符号';
+
+  @override
+  String get customSymbolsHint => '输入额外要包含的符号';
+
+  @override
+  String get useThisPassword => '使用此密码';
+
+  @override
+  String get recycleBin => '回收站';
+
+  @override
+  String get noPasswordCannotReload => '无密码信息，无法重新加载';
+
+  @override
+  String get authFailedCheckCredentials => '认证失败，请检查用户名和密码';
+
+  @override
+  String serverConnectedPathNotAccessible(Object path) {
+    return '服务器已连接，但路径「$path」不可访问';
+  }
+
+  @override
+  String connectionFailedMsg(Object msg) {
+    return '连接失败: $msg';
+  }
+
+  @override
+  String get networkFailedCheckServer => '网络连接失败，请检查服务器地址';
+
+  @override
+  String get remoteDatabaseNotExist => '远程数据库不存在';
+
+  @override
+  String get pleaseConfigureWebDAVFirst => '请先配置 WebDAV';
+
+  @override
+  String get cloudDatabaseNotExist => '云端数据库不存在';
+
+  @override
+  String get language => '语言';
+
+  @override
+  String get followSystem => '跟随系统';
+
+  @override
+  String get chinese => '中文';
+
+  @override
+  String get english => 'English';
+}

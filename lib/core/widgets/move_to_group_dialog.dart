@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kpasslib/kpasslib.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Shows a dialog to pick a target group from the group tree.
 /// Returns the selected [KdbxGroup] on confirm, or null if cancelled.
@@ -25,8 +26,10 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AlertDialog(
-      title: const Text('移动到分组'),
+      title: Text(l10n.moveToGroup),
       content: SizedBox(
         width: 360,
         height: 400,
@@ -38,10 +41,10 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         FilledButton(
           onPressed: _selected != null ? () => Navigator.pop(context, _selected) : null,
-          child: const Text('移动'),
+          child: Text(l10n.move),
         ),
       ],
     );
@@ -62,6 +65,7 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
     final colorScheme = Theme.of(context).colorScheme;
     final isSelected = group == _selected;
     final isRoot = group == widget.db.root;
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: () => setState(() => _selected = group),
@@ -86,7 +90,7 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                isRoot ? '根目录' : group.name,
+                isRoot ? l10n.rootDirectory : group.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(

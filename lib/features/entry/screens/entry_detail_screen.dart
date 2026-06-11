@@ -7,6 +7,7 @@ import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/toast.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
 
@@ -20,10 +21,12 @@ class EntryDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.read(databaseServiceProvider);
     final group = service.findGroupByPath(groupPath);
+    final l10n = AppLocalizations.of(context)!;
+
     if (group == null || entryIndex < 0 || entryIndex >= group.entries.length) {
       return Scaffold(
-        appBar: AppBar(title: const Text('条目')),
-        body: const EmptyState(icon: Icons.error_outline_rounded, message: '未找到该条目'),
+        appBar: AppBar(title: Text(l10n.entry)),
+        body: EmptyState(icon: Icons.error_outline_rounded, message: l10n.entryNotFound),
       );
     }
 
@@ -34,29 +37,29 @@ class EntryDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title.isEmpty ? '条目详情' : title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        title: Text(title.isEmpty ? l10n.entryDetail : title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           if (isInRecycleBin)
             IconButton(
               icon: Icon(Icons.restore_rounded, size: 20, color: colorScheme.primary),
-              tooltip: '恢复',
+              tooltip: l10n.restore,
               onPressed: () => _restoreEntry(context, ref, entry),
             )
           else ...[
             IconButton(
               icon: const Icon(Icons.edit_rounded, size: 20),
-              tooltip: '编辑',
+              tooltip: l10n.edit,
               onPressed: () => context.push('/entry/edit?index=$entryIndex&groupPath=${Uri.encodeComponent(groupPath)}'),
             ),
             IconButton(
               icon: const Icon(Icons.drive_file_move_rounded, size: 20),
-              tooltip: '移动',
+              tooltip: l10n.move,
               onPressed: () => _moveEntry(context, ref, entry, group),
             ),
           ],
           IconButton(
             icon: Icon(Icons.delete_outline_rounded, size: 20, color: colorScheme.error),
-            tooltip: isInRecycleBin ? '永久删除' : '删除',
+            tooltip: isInRecycleBin ? l10n.permanentDelete : l10n.delete,
             onPressed: () => isInRecycleBin
                 ? _permanentDeleteEntry(context, ref, entry)
                 : _deleteEntry(context, ref, entry, group),
@@ -70,13 +73,13 @@ class EntryDetailScreen extends ConsumerWidget {
           if (title.isNotEmpty)
             _SectionCard(
               children: [
-                _FieldRow(label: '标题', value: title),
+                _FieldRow(label: l10n.title, value: title),
               ],
             ),
           // Credentials card
           _SectionCard(
             children: [
-              _FieldRow(label: '用户名', value: entry.fields['UserName']?.text ?? '', showCopy: true),
+              _FieldRow(label: l10n.username, value: entry.fields['UserName']?.text ?? '', showCopy: true),
               _PasswordField(value: entry.fields['Password']?.text ?? ''),
             ],
           ),
@@ -84,8 +87,8 @@ class EntryDetailScreen extends ConsumerWidget {
           if ((entry.fields['URL']?.text ?? '').isNotEmpty || (entry.fields['Notes']?.text ?? '').isNotEmpty)
             _SectionCard(
               children: [
-                _FieldRow(label: '网址', value: entry.fields['URL']?.text ?? '', showCopy: true),
-                _FieldRow(label: '备注', value: entry.fields['Notes']?.text ?? '', multiline: true),
+                _FieldRow(label: l10n.url, value: entry.fields['URL']?.text ?? '', showCopy: true),
+                _FieldRow(label: l10n.notes, value: entry.fields['Notes']?.text ?? '', multiline: true),
               ],
             ),
           // Custom fields
@@ -109,13 +112,14 @@ class EntryDetailScreen extends ConsumerWidget {
   }
 
   void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除条目'),
-        content: const Text('确定将此条目移至回收站？'),
+        title: Text(l10n.deleteEntry),
+        content: Text(l10n.moveToRecycleBin),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -126,11 +130,11 @@ class EntryDetailScreen extends ConsumerWidget {
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
               if (context.mounted) {
-                showToast(context, '已移至回收站');
+                showToast(context, l10n.movedToRecycleBin);
                 context.pop();
               }
             },
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -138,13 +142,14 @@ class EntryDetailScreen extends ConsumerWidget {
   }
 
   void _permanentDeleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('永久删除'),
-        content: const Text('此操作不可撤销，确定删除？'),
+        title: Text(l10n.permanentDelete),
+        content: Text(l10n.permanentDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -159,11 +164,11 @@ class EntryDetailScreen extends ConsumerWidget {
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
               if (context.mounted) {
-                showToast(context, '已永久删除');
+                showToast(context, l10n.permanentlyDeleted);
                 context.pop();
               }
             },
-            child: const Text('删除'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -173,15 +178,16 @@ class EntryDetailScreen extends ConsumerWidget {
   void _restoreEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
     final service = ref.read(databaseServiceProvider);
     final success = service.restoreItem(entry);
+    final l10n = AppLocalizations.of(context)!;
     if (success) {
       refreshExplorerLists(ref);
       if (context.mounted) {
-        showToast(context, '已恢复');
+        showToast(context, l10n.restored);
         context.pop();
       }
     } else {
       if (context.mounted) {
-        showToast(context, '恢复失败：找不到原始分组', isError: true);
+        showToast(context, l10n.restoreFailed, isError: true);
       }
     }
   }
@@ -193,8 +199,9 @@ class EntryDetailScreen extends ConsumerWidget {
     if (target == null) return;
     ref.read(databaseServiceProvider).moveItem(entry, target);
     refreshExplorerLists(ref);
+    final l10n = AppLocalizations.of(context)!;
     if (context.mounted) {
-      showToast(context, '已移动');
+      showToast(context, l10n.moved);
       context.pop();
     }
   }
@@ -251,6 +258,7 @@ class _FieldRow extends StatelessWidget {
   Widget build(BuildContext context) {
     if (value.isEmpty) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -274,11 +282,11 @@ class _FieldRow extends StatelessWidget {
                   height: 30,
                   child: IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 15),
-                    tooltip: '复制',
+                    tooltip: l10n.copy,
                     padding: EdgeInsets.zero,
                     onPressed: () {
                       copyToClipboardWithAutoClear(value);
-                      showToast(context, '已复制$label');
+                      showToast(context, l10n.copiedField(label));
                     },
                   ),
                 ),
@@ -313,6 +321,7 @@ class _PasswordFieldState extends State<_PasswordField> {
   Widget build(BuildContext context) {
     if (widget.value.isEmpty) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -321,7 +330,7 @@ class _PasswordFieldState extends State<_PasswordField> {
           Row(
             children: [
               Text(
-                '密码',
+                l10n.password,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
@@ -335,7 +344,7 @@ class _PasswordFieldState extends State<_PasswordField> {
                 height: 30,
                 child: IconButton(
                   icon: Icon(_visible ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15),
-                  tooltip: _visible ? '隐藏' : '显示',
+                  tooltip: _visible ? l10n.hide : l10n.show,
                   padding: EdgeInsets.zero,
                   onPressed: () => setState(() => _visible = !_visible),
                 ),
@@ -345,11 +354,11 @@ class _PasswordFieldState extends State<_PasswordField> {
                 height: 30,
                 child: IconButton(
                   icon: const Icon(Icons.copy_rounded, size: 15),
-                  tooltip: '复制',
+                  tooltip: l10n.copy,
                   padding: EdgeInsets.zero,
                   onPressed: () {
                     copyToClipboardWithAutoClear(widget.value);
-                    showToast(context, '已复制密码');
+                    showToast(context, l10n.copiedPassword);
                   },
                 ),
               ),

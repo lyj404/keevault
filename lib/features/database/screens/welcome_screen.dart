@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 import '../providers/database_provider.dart';
@@ -34,7 +35,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final exists = await localFile.exists();
 
     if (!lastFile.isCloud) {
-      // Local file: auto-open if it still exists
       if (exists && mounted) {
         _autoOpened = true;
         context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}');
@@ -42,11 +42,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       return;
     }
 
-    // Cloud file: check if remote changed since last sync
-    if (!exists) {
-      // Cache was cleared (e.g. system cleanup) — don't auto-open, user clicks to re-download
-      return;
-    }
+    if (!exists) return;
     _autoOpened = true;
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
@@ -60,23 +56,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (!mounted) return;
     if (remoteInfo != null) {
-      // Compare eTag: skip download if local cache is already up-to-date
       final lastETag = lastFile.lastSyncedETag;
       if (lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
-        // Local cache is current, open directly without downloading
         ref.read(openedFromCloudProvider.notifier).state = true;
         context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
         return;
       }
-      // Remote has changed or no cached eTag — download fresh copy
+      final l10n = AppLocalizations.of(context)!;
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const _SyncLoadingDialog(message: '正在同步云端数据库...'),
+        builder: (_) => _SyncLoadingDialog(message: l10n.syncingCloudDatabase),
       );
       try {
         final localPath = await syncService.downloadToLocal(config);
-        // Persist eTag immediately so next launch can skip download
         if (remoteInfo.eTag != null) {
           final recentService = ref.read(recentFilesServiceProvider);
           await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
@@ -89,14 +82,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         }
       } catch (e) {
         if (mounted) Navigator.of(context).pop();
-        // Download failed, try opening cached version
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
           context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
         }
       }
     } else {
-      // Can't reach remote, open cached version
       ref.read(openedFromCloudProvider.notifier).state = true;
       context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
     }
@@ -107,6 +98,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final recentFiles = ref.watch(recentFilesProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: Stack(
@@ -128,7 +120,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'KeePass 兼容的密码管理器',
+                      l10n.appSubtitle,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontSize: 13,
@@ -151,7 +143,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       child: FilledButton.icon(
                         onPressed: () => _openFile(context),
                         icon: const Icon(Icons.folder_open_rounded, size: 20),
-                        label: const Text('打开本地数据库'),
+                        label: Text(l10n.openLocalDatabase),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -163,7 +155,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     OutlinedButton.icon(
                       onPressed: () => context.push('/create'),
                       icon: const Icon(Icons.add_rounded, size: 20),
-                      label: const Text('创建新数据库'),
+                      label: Text(l10n.createNewDatabase),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -174,7 +166,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     OutlinedButton.icon(
                       onPressed: () => _downloadFromWebDav(context),
                       icon: const Icon(Icons.cloud_download_rounded, size: 20),
-                      label: const Text('打开云端数据库'),
+                      label: Text(l10n.openCloudDatabase),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -193,7 +185,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    '最近打开',
+                                    l10n.recentOpened,
                                     style: textTheme.labelLarge?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: colorScheme.onSurfaceVariant,
@@ -222,7 +214,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     onTap: () {
                                       if (file.isCloud) {
                                         ref.read(openedFromCloudProvider.notifier).state = true;
-                                        _downloadFromWebDav(context);
+                                        _downloadFromWebDav(context, recentFile: file);
                                       } else {
                                         context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
                                       }
@@ -280,36 +272,52 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
   }
 
-  Future<void> _downloadFromWebDav(BuildContext context) async {
+  Future<void> _downloadFromWebDav(BuildContext context, {RecentFile? recentFile}) async {
+    final l10n = AppLocalizations.of(context)!;
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
       if (context.mounted) {
-        _showErrorDialog(context, '请先在设置中配置 WebDAV');
+        _showErrorDialog(context, l10n.pleaseConfigureWebDAV);
       }
       return;
     }
     if (!context.mounted) return;
     final syncService = ref.read(syncServiceProvider);
-    final exists = await syncService.remoteFileExists(config);
-    if (!exists) {
+    final remoteInfo = await syncService.getRemoteFileInfo(config);
+    if (remoteInfo == null) {
       if (context.mounted) {
-        _showErrorDialog(context, '云端还没有数据库，请先在本地创建并保存后同步');
+        _showErrorDialog(context, l10n.cloudNoDatabaseCreateFirst);
       }
       return;
     }
+
+    // eTag check: skip download if local cache is already up-to-date
+    final cachedFile = recentFile;
+    if (cachedFile != null && cachedFile.isCloud) {
+      final localFile = File(cachedFile.path);
+      final exists = await localFile.exists();
+      if (exists && cachedFile.lastSyncedETag != null && remoteInfo.eTag != null &&
+          cachedFile.lastSyncedETag == remoteInfo.eTag) {
+        // Local cache is current, open directly
+        ref.read(openedFromCloudProvider.notifier).state = true;
+        if (context.mounted) {
+          context.push('/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true');
+        }
+        return;
+      }
+    }
+
     if (!context.mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const _SyncLoadingDialog(message: '正在从云端下载...'),
+      builder: (ctx) => _SyncLoadingDialog(message: l10n.downloadingFromCloud),
     );
     try {
       final localPath = await syncService.downloadToLocal(config);
-      // Persist eTag so auto-open can skip redundant downloads
-      final remoteInfo = await syncService.getRemoteFileInfo(config);
-      if (remoteInfo?.eTag != null) {
+      if (remoteInfo.eTag != null) {
         final recentService = ref.read(recentFilesServiceProvider);
-        await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo!.eTag);
+        await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
         await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
       }
       if (context.mounted) {
@@ -320,12 +328,17 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context).pop();
-        _showErrorDialog(context, '下载失败: $e');
+        final msg = e.toString().replaceFirst('Exception: ', '');
+        final translated = msg == 'remote_database_not_exist'
+            ? l10n.remoteDatabaseNotExist
+            : l10n.downloadFailed(msg);
+        _showErrorDialog(context, translated);
       }
     }
   }
 
   void _showErrorDialog(BuildContext context, String message) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -333,9 +346,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text('取消'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(l10n.cancel),
             ),
           ),
           FilledButton(
@@ -347,7 +360,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('去设置'),
+            child: Text(l10n.goToSettings),
           ),
         ],
       ),
@@ -393,6 +406,7 @@ class _RecentFileTile extends StatelessWidget {
     final name = recentFile.path.split(Platform.pathSeparator).last;
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -438,7 +452,7 @@ class _RecentFileTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           recentFile.isCloud
-                              ? '云端 · ${recentFile.remotePath ?? recentFile.path}'
+                              ? '${l10n.cloudPrefix} · ${recentFile.remotePath ?? recentFile.path}'
                               : recentFile.path,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

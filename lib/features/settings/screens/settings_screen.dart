@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
+import '../../../core/providers/locale_provider.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
@@ -59,9 +61,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.watch(localeProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('同步设置')),
+      appBar: AppBar(title: Text(l10n.syncSettings)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -72,6 +76,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Language switcher card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          child: Icon(Icons.language_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.language, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                            ],
+                          ),
+                        ),
+                        DropdownButton<String>(
+                          value: currentLocale?.languageCode ?? 'system',
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            DropdownMenuItem(value: 'system', child: Text(l10n.followSystem)),
+                            const DropdownMenuItem(value: 'zh', child: Text('中文')),
+                            const DropdownMenuItem(value: 'en', child: Text('English')),
+                          ],
+                          onChanged: (v) {
+                            if (v == null) return;
+                            if (v == 'system') {
+                              ref.read(localeProvider.notifier).setLocale(null);
+                            } else {
+                              ref.read(localeProvider.notifier).setLocale(Locale(v));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Enable toggle card
                   _SectionCard(
                     brightness: brightness,
@@ -88,8 +135,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('WebDAV 同步', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                              Text('保存时自动同步到云端',
+                              Text(l10n.webdavSync, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                              Text(l10n.autoSyncOnSave,
                                   style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                             ],
                           ),
@@ -112,43 +159,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         children: [
                           TextFormField(
                             controller: _urlController,
-                            decoration: const InputDecoration(
-                              labelText: '服务器地址',
-                              hintText: 'https://example.com/dav/',
-                              helperText: 'WebDAV 服务地址，不含文件名',
+                            decoration: InputDecoration(
+                              labelText: l10n.serverAddress,
+                              hintText: l10n.serverAddressHint,
+                              helperText: l10n.serverAddressHelper,
                             ),
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入服务器地址' : null,
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterServerAddress : null,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _userController,
-                            decoration: const InputDecoration(labelText: '用户名'),
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入用户名' : null,
+                            decoration: InputDecoration(labelText: l10n.username),
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterUsername : null,
                           ),
                           const SizedBox(height: 12),
                           PasswordTextField(
                             controller: _passwordController,
-                            labelText: '密码',
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+                            labelText: l10n.password,
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '部分服务（如坚果云）需要使用应用专用密码而非账号密码',
+                            l10n.appPasswordHelper,
                             style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _pathController,
-                            decoration: const InputDecoration(
-                              labelText: '远程路径（可选）',
-                              hintText: '例如 /keepass，留空则保存在根目录',
+                            decoration: InputDecoration(
+                              labelText: l10n.remotePathOptional,
+                              hintText: l10n.remotePathHint,
                             ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _filenameController,
-                            decoration: const InputDecoration(labelText: '文件名', hintText: 'database.kdbx'),
-                            validator: (v) => (v == null || v.isEmpty) ? '请输入文件名' : null,
+                            decoration: InputDecoration(labelText: l10n.filename, hintText: 'database.kdbx'),
+                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterName : null,
                           ),
                         ],
                       ),
@@ -164,7 +211,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             icon: _testing
                                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                                 : const Icon(Icons.wifi_find_rounded, size: 18),
-                            label: Text(_testing ? '测试中...' : '测试连接'),
+                            label: Text(_testing ? l10n.testing : l10n.testConnection),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -194,7 +241,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                _connectionOk! ? '连接成功' : (_connectionError ?? '连接失败'),
+                                _connectionOk! ? l10n.connectionSuccess : (_connectionError ?? l10n.connectionFailed),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
@@ -225,7 +272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           minimumSize: const Size.fromHeight(50),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                         ),
-                        child: const Text('保存'),
+                        child: Text(l10n.save),
                       ),
                     ),
                   ],
@@ -252,12 +299,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       remotePath: _pathController.text.trim(),
       remoteFilename: _filenameController.text.trim(),
     );
-    final error = await ref.read(syncServiceProvider).testConnection(config);
+    final errorKey = await ref.read(syncServiceProvider).testConnection(config);
     if (mounted) setState(() {
       _testing = false;
-      _connectionOk = error == null;
-      _connectionError = error;
+      _connectionOk = errorKey == null;
+      _connectionError = _translateError(errorKey);
     });
+  }
+
+  String? _translateError(String? errorKey) {
+    if (errorKey == null) return null;
+    final l10n = AppLocalizations.of(context)!;
+    if (errorKey == 'auth_failed') return l10n.authFailedCheckCredentials;
+    if (errorKey == 'network_failed') return l10n.networkFailedCheckServer;
+    if (errorKey.startsWith('path_not_accessible:')) {
+      final path = errorKey.substring('path_not_accessible:'.length);
+      return l10n.serverConnectedPathNotAccessible(path);
+    }
+    if (errorKey.startsWith('connection_failed:')) {
+      final msg = errorKey.substring('connection_failed:'.length);
+      return l10n.connectionFailedMsg(msg);
+    }
+    return errorKey;
   }
 
   Future<void> _save() async {
@@ -272,8 +335,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     await ref.read(webDavSettingsServiceProvider).saveConfig(config);
     ref.invalidate(webDavConfigProvider);
+    final l10n = AppLocalizations.of(context)!;
     if (mounted) {
-      showToast(context, '已保存');
+      showToast(context, l10n.saved);
       Navigator.of(context).pop();
     }
   }

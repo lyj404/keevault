@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/password_generator.dart';
 import '../utils/clipboard_utils.dart';
+import '../../l10n/app_localizations.dart';
 import 'toast.dart';
 
 /// Shows a password generator dialog and returns the generated password, or null if cancelled.
@@ -70,9 +71,10 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      title: const Text('生成密码'),
+      title: Text(l10n.generatePasswordTitle),
       contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       content: SizedBox(
@@ -110,10 +112,10 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         copyToClipboardWithAutoClear(_password);
-                        showToast(context, '已复制密码');
+                        showToast(context, l10n.copiedPassword);
                       },
                       icon: const Icon(Icons.copy_rounded, size: 16),
-                      label: const Text('复制'),
+                      label: Text(l10n.copied),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -126,7 +128,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                     child: OutlinedButton.icon(
                       onPressed: _regenerate,
                       icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text('重新生成'),
+                      label: Text(l10n.regenerate),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -141,7 +143,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
               // Length
               Row(
                 children: [
-                  Text('密码长度', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
+                  Text(l10n.passwordLength, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
                   const Spacer(),
                   SizedBox(
                     width: 56,
@@ -188,58 +190,58 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
               const SizedBox(height: 8),
 
               // Character types
-              Text('字符类型', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
+              Text(l10n.characterTypes, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
               const SizedBox(height: 4),
               _buildToggle(
                 value: _upper,
-                title: '大写字母 A-Z',
+                title: l10n.uppercaseAZ,
                 onChanged: (v) => setState(() { _upper = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _lower,
-                title: '小写字母 a-z',
+                title: l10n.lowercaseaz,
                 onChanged: (v) => setState(() { _lower = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _digits,
-                title: '数字 0-9',
+                title: l10n.digits09,
                 onChanged: (v) => setState(() { _digits = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _symbols,
-                title: '符号 !@#\$%^&*',
+                title: l10n.symbols,
                 onChanged: (v) => setState(() { _symbols = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _hyphen,
-                title: '减号 -',
+                title: l10n.hyphen,
                 onChanged: (v) => setState(() { _hyphen = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _underscore,
-                title: '下划线 _',
+                title: l10n.underscore,
                 onChanged: (v) => setState(() { _underscore = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _parentheses,
-                title: '括号 ()',
+                title: l10n.parentheses,
                 onChanged: (v) => setState(() { _parentheses = v; _regenerate(); }),
               ),
               _buildToggle(
                 value: _space,
-                title: '空格',
+                title: l10n.space,
                 onChanged: (v) => setState(() { _space = v; _regenerate(); }),
               ),
 
               // Custom symbols
               const SizedBox(height: 20),
-              Text('自定义符号', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
+              Text(l10n.customSymbols, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant)),
               const SizedBox(height: 8),
               TextField(
                 controller: _customSymbolsCtrl,
                 style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: '输入额外要包含的符号',
+                  hintText: l10n.customSymbolsHint,
                   hintStyle: TextStyle(fontSize: 12, color: colorScheme.outline),
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -262,7 +264,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _password),
@@ -271,7 +273,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
             textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-          child: const Text('使用此密码'),
+          child: Text(l10n.useThisPassword),
         ),
       ],
     );

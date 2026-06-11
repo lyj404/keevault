@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../theme/app_theme.dart';
 import '../utils/clipboard_utils.dart';
+import '../../l10n/app_localizations.dart';
 import 'toast.dart';
 
 class EntryListTile extends StatelessWidget {
@@ -29,32 +30,33 @@ class EntryListTile extends StatelessWidget {
       screenSize.width - globalPos.dx,
       screenSize.height - globalPos.dy,
     );
+    final l10n = AppLocalizations.of(context)!;
     final items = <PopupMenuEntry<String>>[
-      const PopupMenuItem(
+      PopupMenuItem(
         value: 'copy_password',
-        child: ListTile(leading: Icon(Icons.copy_rounded), title: Text('复制密码'), dense: true, contentPadding: EdgeInsets.zero),
+        child: ListTile(leading: const Icon(Icons.copy_rounded), title: Text(l10n.copyPassword), dense: true, contentPadding: EdgeInsets.zero),
       ),
-      const PopupMenuItem(
+      PopupMenuItem(
         value: 'copy_username',
-        child: ListTile(leading: Icon(Icons.person_rounded), title: Text('复制用户名'), dense: true, contentPadding: EdgeInsets.zero),
+        child: ListTile(leading: const Icon(Icons.person_rounded), title: Text(l10n.copyUsername), dense: true, contentPadding: EdgeInsets.zero),
       ),
     ];
     if (onMove != null) {
-      items.add(const PopupMenuItem(
+      items.add(PopupMenuItem(
         value: 'move',
-        child: ListTile(leading: Icon(Icons.drive_file_move_rounded), title: Text('移动'), dense: true, contentPadding: EdgeInsets.zero),
+        child: ListTile(leading: const Icon(Icons.drive_file_move_rounded), title: Text(l10n.move), dense: true, contentPadding: EdgeInsets.zero),
       ));
     }
     if (onRestore != null) {
-      items.add(const PopupMenuItem(
+      items.add(PopupMenuItem(
         value: 'restore',
-        child: ListTile(leading: Icon(Icons.restore_rounded), title: Text('恢复'), dense: true, contentPadding: EdgeInsets.zero),
+        child: ListTile(leading: const Icon(Icons.restore_rounded), title: Text(l10n.restore), dense: true, contentPadding: EdgeInsets.zero),
       ));
     }
     if (onDelete != null) {
       items.add(PopupMenuItem(
         value: 'delete',
-        child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(onRestore != null ? '永久删除' : '删除'), dense: true, contentPadding: EdgeInsets.zero),
+        child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(onRestore != null ? l10n.permanentDelete : l10n.delete), dense: true, contentPadding: EdgeInsets.zero),
       ));
     }
     showMenu<String>(context: context, position: position, items: items).then((value) {
@@ -62,11 +64,11 @@ class EntryListTile extends StatelessWidget {
       switch (value) {
         case 'copy_password':
           copyToClipboardWithAutoClear(_password);
-          showToast(context, '已复制密码');
+          showToast(context, l10n.copiedPassword);
         case 'copy_username':
           if (_username.isNotEmpty) {
             copyToClipboardWithAutoClear(_username);
-            showToast(context, '已复制用户名');
+            showToast(context, l10n.copiedUsername);
           }
         case 'move':
           onMove?.call();
@@ -82,7 +84,8 @@ class EntryListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-    final displayTitle = _title.isEmpty ? '(Untitled)' : _title;
+    final l10n = AppLocalizations.of(context)!;
+    final displayTitle = _title.isEmpty ? l10n.untitled : _title;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
@@ -170,7 +173,7 @@ class EntryListTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           onTap: () {
                             copyToClipboardWithAutoClear(_password);
-                            showToast(context, '已复制密码');
+                            showToast(context, l10n.copiedPassword);
                           },
                           child: Icon(Icons.copy_rounded, size: 16, color: colorScheme.onSurfaceVariant),
                         ),

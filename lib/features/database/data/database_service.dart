@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../sync/data/sync_service.dart';
@@ -49,7 +50,7 @@ class DatabaseService {
   }
 
   Future<KdbxDatabase> reloadFromBytes(Uint8List bytes) async {
-    if (_password == null) throw Exception('无密码信息，无法重新加载');
+    if (_password == null) throw Exception('no_password_cannot_reload');
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(_password!),
     );
@@ -59,12 +60,15 @@ class DatabaseService {
     return _db!;
   }
 
-  /// 将回收站重命名为中文
   void _localizeRecycleBin() {
     if (_db == null) return;
     final rb = _db!.recycleBin;
-    if (rb != null && rb.name == 'Recycle Bin') {
-      rb.name = '回收站';
+    if (rb == null) return;
+    final lang = ui.PlatformDispatcher.instance.locale.languageCode;
+    if (lang == 'zh') {
+      if (rb.name == 'Recycle Bin') rb.name = '回收站';
+    } else {
+      if (rb.name == '回收站') rb.name = 'Recycle Bin';
     }
   }
 

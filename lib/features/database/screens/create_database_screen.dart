@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/database_provider.dart';
 
 class CreateDatabaseScreen extends ConsumerStatefulWidget {
@@ -15,11 +16,21 @@ class CreateDatabaseScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
-  final _nameController = TextEditingController(text: '我的数据库');
+  late TextEditingController _nameController;
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _savePath;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _nameController = TextEditingController(text: AppLocalizations.of(context)!.myDatabase);
+      _initialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -33,6 +44,7 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   Widget build(BuildContext context) {
     final dbState = ref.watch(databaseProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     ref.listen(databaseProvider, (prev, next) {
       next.whenOrNull(
@@ -43,7 +55,7 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('创建数据库')),
+      appBar: AppBar(title: Text(l10n.createDatabase)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -81,23 +93,23 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
                   const SizedBox(height: 28),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: '数据库名称',
-                      prefixIcon: Icon(Icons.badge_outlined),
+                    decoration: InputDecoration(
+                      labelText: l10n.databaseName,
+                      prefixIcon: const Icon(Icons.badge_outlined),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? '请输入名称' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterName : null,
                   ),
                   const SizedBox(height: 14),
                   PasswordTextField(
                     controller: _passwordController,
-                    labelText: '主密码',
-                    validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
+                    labelText: l10n.masterPassword,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                   ),
                   const SizedBox(height: 14),
                   PasswordTextField(
                     controller: _confirmController,
-                    labelText: '确认密码',
-                    validator: (v) => v != _passwordController.text ? '两次密码不一致' : null,
+                    labelText: l10n.confirmPassword,
+                    validator: (v) => v != _passwordController.text ? l10n.passwordsNotMatch : null,
                   ),
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
@@ -105,7 +117,7 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
                     icon: Icon(_savePath != null ? Icons.check_circle_outline_rounded : Icons.save_as_rounded, size: 18),
                     label: Text(
                       _savePath == null
-                          ? '选择保存位置'
+                          ? l10n.selectSaveLocation
                           : _savePath!.split('/').last.split('\\').last,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -139,7 +151,7 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
                               minimumSize: const Size.fromHeight(50),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                             ),
-                            child: const Text('创建'),
+                            child: Text(l10n.create),
                           ),
                         ),
                 ],
@@ -152,8 +164,9 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   }
 
   Future<void> _pickSaveLocation() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.saveFile(
-      dialogTitle: '保存数据库',
+      dialogTitle: l10n.saveDatabase,
       fileName: '${_nameController.text}${AppConstants.kdbxExtension}',
       type: FileType.custom,
       allowedExtensions: ['kdbx'],

@@ -12,7 +12,7 @@
 - **回收站** - 软删除，支持恢复
 - **WebDAV 云端同步** - 通过 WebDAV 协议同步数据库，支持冲突检测（ETag/mTime）与自动冲突处理
 - **最近文件** - 快速访问最近打开的数据库文件，区分本地与云端来源
-- **跨平台** - 支持 Android、iOS、Linux、macOS、Windows 和 Web
+- **跨平台** - 支持 Android、iOS、Linux、macOS、Windows
 
 ## 快速开始
 
@@ -24,7 +24,7 @@
 ### 安装
 
 ```bash
-git clone https://github.com/your-username/keevault.git
+git clone https://github.com/lyj404/keevault
 cd keevault
 flutter pub get
 ```
@@ -33,7 +33,6 @@ flutter pub get
 
 ```bash
 flutter run -d windows    # Windows 桌面
-flutter run -d chrome     # Web
 flutter run -d android    # Android
 ```
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../providers/search_provider.dart';
 
@@ -31,6 +32,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final results = ref.watch(searchResultsProvider);
     final service = ref.read(databaseServiceProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +41,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           autofocus: true,
           style: const TextStyle(fontSize: 15),
           decoration: InputDecoration(
-            hintText: '搜索条目...',
+            hintText: l10n.searchEntries,
             hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
             border: InputBorder.none,
             prefixIcon: Icon(Icons.search_rounded, size: 20, color: colorScheme.onSurfaceVariant),
@@ -55,9 +57,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
       body: _searchCtrl.text.isEmpty
-          ? const EmptyState(icon: Icons.search_rounded, message: '输入关键词搜索')
+          ? EmptyState(icon: Icons.search_rounded, message: l10n.enterKeywords)
           : results.isEmpty
-              ? const EmptyState(icon: Icons.search_off_rounded, message: '未找到匹配结果')
+              ? EmptyState(icon: Icons.search_off_rounded, message: l10n.noResults)
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   itemCount: results.length,

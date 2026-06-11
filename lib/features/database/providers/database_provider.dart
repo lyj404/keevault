@@ -128,10 +128,10 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<void> reloadFromCloud() async {
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
-    if (config == null || !config.enabled) throw Exception('请先配置 WebDAV');
+    if (config == null || !config.enabled) throw Exception('please_configure_webdav');
     final syncService = _ref.read(syncServiceProvider);
     final result = await syncService.downloadWithInfo(config);
-    if (result == null) throw Exception('云端数据库不存在');
+    if (result == null) throw Exception('cloud_database_not_exist');
     final db = await _service.reloadFromBytes(result.bytes);
     _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
