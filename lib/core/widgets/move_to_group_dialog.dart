@@ -96,7 +96,7 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? colorScheme.primary : null,
+                  color: isSelected ? colorScheme.primary : colorScheme.onSurface,
                 ),
               ),
             ),

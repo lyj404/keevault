@@ -184,6 +184,9 @@
 
   "language": "语言",
   "followSystem": "跟随系统",
+  "theme": "主题",
+  "lightTheme": "浅色模式",
+  "darkTheme": "深色模式",
   "chinese": "中文",
   "english": "English"
 }

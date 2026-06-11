@@ -7,10 +7,12 @@ class ClayColors {
   static const primary = Color(0xFF0D9488);
   static const primaryLight = Color(0xFF2DD4BF);
   static const primaryDark = Color(0xFF0F766E);
+  static const primaryMuted = Color(0xFF5AB8AD);
 
   // Secondary – emerald accent
   static const secondary = Color(0xFF10B981);
   static const secondaryLight = Color(0xFF34D399);
+  static const secondaryMuted = Color(0xFF6DC7A8);
 
   // Tertiary – amber warm accent
   static const tertiary = Color(0xFFF59E0B);
@@ -135,7 +137,7 @@ class ClayDecoration {
     final isDark = brightness == Brightness.dark;
     return BoxDecoration(
       color: color ?? (isDark
-          ? ClayColors.primary.withValues(alpha: 0.2)
+          ? ClayColors.primaryMuted.withValues(alpha: 0.2)
           : ClayColors.primary.withValues(alpha: 0.12)),
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
@@ -272,19 +274,19 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: ClayColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: ClayColors.onSurfaceLight,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: ClayColors.primary,
+          foregroundColor: ClayColors.onSurfaceLight,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
           side: BorderSide.none,
           backgroundColor: ClayColors.surfaceContainerLight,
         ),
@@ -324,8 +326,8 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ClayColors.primary,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          foregroundColor: ClayColors.onSurfaceLight,
+          textStyle: TextStyle(fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -351,14 +353,14 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
-        primary: ClayColors.primaryLight,
+        primary: ClayColors.primaryMuted,
         onPrimary: const Color(0xFF1A1030),
         primaryContainer: ClayColors.primary.withValues(alpha: 0.25),
-        onPrimaryContainer: ClayColors.primaryLight,
-        secondary: ClayColors.secondaryLight,
+        onPrimaryContainer: ClayColors.primaryMuted,
+        secondary: ClayColors.secondaryMuted,
         onSecondary: const Color(0xFF2D1515),
         secondaryContainer: ClayColors.secondary.withValues(alpha: 0.25),
-        onSecondaryContainer: ClayColors.secondaryLight,
+        onSecondaryContainer: ClayColors.secondaryMuted,
         tertiary: ClayColors.tertiaryLight,
         onTertiary: const Color(0xFF0D2D2A),
         tertiaryContainer: ClayColors.tertiary.withValues(alpha: 0.25),
@@ -403,7 +405,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: ClayColors.primaryLight, width: 2),
+          borderSide: const BorderSide(color: ClayColors.primaryMuted, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -434,20 +436,20 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ClayColors.primaryLight,
-          foregroundColor: const Color(0xFF1A1030),
+          backgroundColor: ClayColors.primaryMuted,
+          foregroundColor: ClayColors.onSurfaceDark,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: ClayColors.primaryLight,
+          foregroundColor: ClayColors.onSurfaceDark,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
           side: BorderSide.none,
           backgroundColor: ClayColors.surfaceContainerDark,
         ),
@@ -459,7 +461,7 @@ class AppTheme {
         backgroundColor: ClayColors.surfaceContainerDark,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: ClayColors.primaryLight,
+        backgroundColor: ClayColors.primaryMuted,
         foregroundColor: const Color(0xFF1A1030),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 0,
@@ -487,8 +489,8 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ClayColors.primaryLight,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          foregroundColor: ClayColors.onSurfaceDark,
+          textStyle: TextStyle(fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -496,10 +498,10 @@ class AppTheme {
         side: BorderSide(color: ClayColors.outlineDark.withValues(alpha: 0.4)),
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: ClayColors.primaryLight,
-        inactiveTrackColor: ClayColors.primaryLight.withValues(alpha: 0.15),
-        thumbColor: ClayColors.primaryLight,
-        overlayColor: ClayColors.primaryLight.withValues(alpha: 0.1),
+        activeTrackColor: ClayColors.primaryMuted,
+        inactiveTrackColor: ClayColors.primaryMuted.withValues(alpha: 0.15),
+        thumbColor: ClayColors.primaryMuted,
+        overlayColor: ClayColors.primaryMuted.withValues(alpha: 0.1),
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),

@@ -35,15 +35,9 @@ dependencies:
   crypto: ^3.0.6
 
   # UI helpers
-  flutter_slidable: ^3.1.1
-
-  # Icons
-  material_design_icons_flutter: ^7.0.7296
-
   # Logging
   logger: ^2.5.0
 
-  cupertino_icons: ^1.0.8
   webdav_client: ^1.2.2
 
 dev_dependencies:

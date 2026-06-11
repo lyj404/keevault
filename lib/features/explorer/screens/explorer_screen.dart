@@ -885,7 +885,7 @@ class _GroupTreeView extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? colorScheme.onPrimaryContainer : null,
+                        color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -1110,7 +1110,7 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                         child: Icon(Icons.add_rounded, size: 16, color: colorScheme.primary),
                       ),
                       const SizedBox(width: 10),
-                      Text(l10n.newEntry, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(l10n.newEntry, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
                       const Spacer(),
                       TextButton(onPressed: _save, child: Text(l10n.save)),
                       IconButton(
@@ -1259,7 +1259,7 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
                       child: Icon(Icons.create_new_folder_rounded, size: 16, color: colorScheme.primary),
                     ),
                     const SizedBox(width: 10),
-                    Text(l10n.newGroup, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(l10n.newGroup, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
                     const Spacer(),
                     TextButton(onPressed: _save, child: Text(l10n.save)),
                     IconButton(
@@ -1417,7 +1417,7 @@ Future<void> _syncToCloud(BuildContext context) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => Dialog(
+    builder: (ctx) => Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -1425,7 +1425,7 @@ Future<void> _syncToCloud(BuildContext context) async {
           children: [
             const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
             const SizedBox(height: 16),
-            Text(l10n.uploadingToCloud, style: const TextStyle(fontSize: 14)),
+            Text(l10n.uploadingToCloud, style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface)),
           ],
         ),
       ),
@@ -1473,7 +1473,7 @@ Future<void> _syncFromCloud(BuildContext context) async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => Dialog(
+    builder: (ctx) => Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -1481,7 +1481,7 @@ Future<void> _syncFromCloud(BuildContext context) async {
           children: [
             const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
             const SizedBox(height: 16),
-            Text(l10n.downloadingFromCloudShort, style: const TextStyle(fontSize: 14)),
+            Text(l10n.downloadingFromCloudShort, style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface)),
           ],
         ),
       ),

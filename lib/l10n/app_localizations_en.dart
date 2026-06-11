@@ -493,6 +493,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get followSystem => 'Follow System';
 
   @override
+  String get theme => 'Theme';
+
+  @override
+  String get lightTheme => 'Light';
+
+  @override
+  String get darkTheme => 'Dark';
+
+  @override
   String get chinese => '中文';
 
   @override

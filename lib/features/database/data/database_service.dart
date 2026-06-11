@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
+import '../../../core/utils/logger.dart';
 import '../../sync/data/sync_service.dart';
 
 class DatabaseService {
@@ -24,6 +25,7 @@ class DatabaseService {
   void markClean() => _dirty = false;
 
   Future<KdbxDatabase> openFile(String filePath, String password) async {
+    log.i('Opening database: $filePath');
     final bytes = await File(filePath).readAsBytes();
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(password),
@@ -33,10 +35,12 @@ class DatabaseService {
     _password = password;
     _dirty = false;
     _localizeRecycleBin();
+    log.i('Database opened, entries: ${_db!.root.allEntries.length}');
     return _db!;
   }
 
   Future<KdbxDatabase> createDatabase(String name, String password, String filePath) async {
+    log.i('Creating database: $name -> $filePath');
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(password),
     );
@@ -46,6 +50,7 @@ class DatabaseService {
     _dirty = true;
     _localizeRecycleBin();
     await save();
+    log.i('Database created successfully');
     return _db!;
   }
 
@@ -74,9 +79,11 @@ class DatabaseService {
 
   Future<void> save() async {
     if (_db == null || _filePath == null) return;
+    log.i('Saving database: $_filePath');
     final bytes = await _db!.save();
     await File(_filePath!).writeAsBytes(bytes);
     _dirty = false;
+    log.i('Database saved (${bytes.length} bytes)');
   }
 
   Future<Uint8List> saveToBytes() async {
@@ -164,6 +171,7 @@ class DatabaseService {
   }
 
   void close() {
+    log.i('Database closed: $_filePath');
     _db = null;
     _filePath = null;
     _password = null;

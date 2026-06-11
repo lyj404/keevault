@@ -39,7 +39,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         title: TextField(
           controller: _searchCtrl,
           autofocus: true,
-          style: const TextStyle(fontSize: 15),
+          style: TextStyle(fontSize: 15, color: colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: l10n.searchEntries,
             hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),

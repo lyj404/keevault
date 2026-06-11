@@ -143,7 +143,7 @@ class EntryListTile extends StatelessWidget {
                           displayTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
                         ),
                         if (_username.isNotEmpty) ...[
                           const SizedBox(height: 2),

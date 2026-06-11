@@ -374,6 +374,7 @@ class _SyncLoadingDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -386,7 +387,7 @@ class _SyncLoadingDialog extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             ),
             const SizedBox(height: 16),
-            Text(message, style: const TextStyle(fontSize: 14)),
+            Text(message, style: TextStyle(fontSize: 14, color: colorScheme.onSurface)),
           ],
         ),
       ),
@@ -447,7 +448,7 @@ class _RecentFileTile extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: colorScheme.onSurface),
                         ),
                         const SizedBox(height: 2),
                         Text(

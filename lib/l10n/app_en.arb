@@ -176,6 +176,9 @@
 
   "language": "Language",
   "followSystem": "Follow System",
+  "theme": "Theme",
+  "lightTheme": "Light",
+  "darkTheme": "Dark",
   "chinese": "中文",
   "english": "English"
 }

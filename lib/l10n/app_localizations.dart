@@ -1016,6 +1016,24 @@ abstract class AppLocalizations {
   /// **'跟随系统'**
   String get followSystem;
 
+  /// No description provided for @theme.
+  ///
+  /// In zh, this message translates to:
+  /// **'主题'**
+  String get theme;
+
+  /// No description provided for @lightTheme.
+  ///
+  /// In zh, this message translates to:
+  /// **'浅色模式'**
+  String get lightTheme;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In zh, this message translates to:
+  /// **'深色模式'**
+  String get darkTheme;
+
   /// No description provided for @chinese.
   ///
   /// In zh, this message translates to:

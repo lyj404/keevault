@@ -6,6 +6,7 @@ class PasswordTextField extends StatefulWidget {
   final String? hintText;
   final String? Function(String?)? validator;
   final bool autofocus;
+  final bool showPrefixIcon;
   final ValueChanged<String>? onFieldSubmitted;
 
   const PasswordTextField({
@@ -15,6 +16,7 @@ class PasswordTextField extends StatefulWidget {
     this.hintText,
     this.validator,
     this.autofocus = false,
+    this.showPrefixIcon = true,
     this.onFieldSubmitted,
   });
 
@@ -36,7 +38,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
       decoration: InputDecoration(
         labelText: widget.labelText,
         hintText: widget.hintText,
-        prefixIcon: const Icon(Icons.lock_outline_rounded),
+        prefixIcon: widget.showPrefixIcon ? const Icon(Icons.lock_outline_rounded) : null,
         suffixIcon: IconButton(
           icon: Icon(_obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 18),
           onPressed: () => setState(() => _obscure = !_obscure),

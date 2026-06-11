@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
@@ -61,8 +62,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(localeProvider);
+    final currentThemeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.syncSettings)),
@@ -92,7 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.language, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                              Text(l10n.language, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
                             ],
                           ),
                         ),
@@ -119,6 +122,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
+                  // Theme switcher card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          child: Icon(
+                            currentThemeMode == ThemeMode.dark
+                                ? Icons.dark_mode_rounded
+                                : currentThemeMode == ThemeMode.light
+                                    ? Icons.light_mode_rounded
+                                    : Icons.brightness_auto_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.theme, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                            ],
+                          ),
+                        ),
+                        DropdownButton<ThemeMode>(
+                          value: currentThemeMode,
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.followSystem)),
+                            DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.lightTheme)),
+                            DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.darkTheme)),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              ref.read(themeModeProvider.notifier).setThemeMode(v);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Enable toggle card
                   _SectionCard(
                     brightness: brightness,
@@ -135,9 +186,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.webdavSync, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                              Text(l10n.webdavSync, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
                               Text(l10n.autoSyncOnSave,
-                                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
                             ],
                           ),
                         ),
@@ -176,6 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           PasswordTextField(
                             controller: _passwordController,
                             labelText: l10n.password,
+                            showPrefixIcon: false,
                             validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                           ),
                           const SizedBox(height: 4),

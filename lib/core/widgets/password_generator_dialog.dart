@@ -101,7 +101,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                 ),
                 child: SelectableText(
                   _password,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 14, letterSpacing: 0.5),
+                  style: TextStyle(fontFamily: 'monospace', fontSize: 14, letterSpacing: 0.5, color: colorScheme.onSurface),
                 ),
               ),
               const SizedBox(height: 10),
@@ -151,7 +151,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                     child: TextField(
                       controller: _lengthCtrl,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         isDense: true,
@@ -239,7 +239,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _customSymbolsCtrl,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                style: TextStyle(fontFamily: 'monospace', fontSize: 13, color: colorScheme.onSurface),
                 decoration: InputDecoration(
                   hintText: l10n.customSymbolsHint,
                   hintStyle: TextStyle(fontSize: 12, color: colorScheme.outline),
@@ -284,12 +284,13 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
     required String title,
     required ValueChanged<bool> onChanged,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: 36,
       child: CheckboxListTile(
         value: value,
         onChanged: (v) => onChanged(v ?? false),
-        title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        title: Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: colorScheme.onSurface)),
         dense: true,
         contentPadding: EdgeInsets.zero,
         controlAffinity: ListTileControlAffinity.leading,
