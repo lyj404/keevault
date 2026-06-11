@@ -1,0 +1,103 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}" -replace '/', '-'
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "KeeVault-$tag-windows-x64.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: KeeVault-*.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev clang cmake pkg-config libsecret-1-dev
+      - run: flutter pub get
+      - run: flutter build linux --release
+
+      - name: Package
+        run: |
+          tag="${{ github.ref_name }}"
+          tag="${tag//\//-}"
+          tar -czf "KeeVault-${tag}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: KeeVault-*.tar.gz
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - name: Package
+        run: |
+          tag="${{ github.ref_name }}"
+          tag="${tag//\//-}"
+          cp build/app/outputs/flutter-apk/app-release.apk "KeeVault-${tag}-android.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: KeeVault-*.apk
+
+  release:
+    needs: [build-windows, build-linux, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            KeeVault-*
