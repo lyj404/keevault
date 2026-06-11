@@ -9,11 +9,87 @@ import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 import '../providers/database_provider.dart';
 
-class WelcomeScreen extends ConsumerWidget {
+class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  bool _autoOpened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryAutoOpen());
+  }
+
+  Future<void> _tryAutoOpen() async {
+    if (_autoOpened) return;
+    final lastFile = await ref.read(recentFilesServiceProvider).getLastOpenedFile();
+    if (lastFile == null || !mounted) return;
+
+    final localFile = File(lastFile.path);
+    final exists = await localFile.exists();
+
+    if (!lastFile.isCloud) {
+      // Local file: auto-open if it still exists
+      if (exists && mounted) {
+        _autoOpened = true;
+        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}');
+      }
+      return;
+    }
+
+    // Cloud file: check if remote changed since last sync
+    if (!exists) {
+      // Cache was cleared (e.g. system cleanup) — don't auto-open, user clicks to re-download
+      return;
+    }
+    _autoOpened = true;
+    final config = await ref.read(webDavSettingsServiceProvider).getConfig();
+    if (config == null || !config.enabled) {
+      if (mounted) {
+        ref.read(openedFromCloudProvider.notifier).state = true;
+        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+      }
+      return;
+    }
+    final syncService = ref.read(syncServiceProvider);
+    final remoteInfo = await syncService.getRemoteFileInfo(config);
+    if (!mounted) return;
+    if (remoteInfo != null) {
+      // Download fresh copy — explorer screen will handle conflict detection on open
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const _SyncLoadingDialog(message: '正在同步云端数据库...'),
+      );
+      try {
+        final localPath = await syncService.downloadToLocal(config);
+        if (mounted) Navigator.of(context).pop();
+        if (mounted) {
+          ref.read(openedFromCloudProvider.notifier).state = true;
+          context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true');
+        }
+      } catch (e) {
+        if (mounted) Navigator.of(context).pop();
+        // Download failed, try opening cached version
+        if (mounted) {
+          ref.read(openedFromCloudProvider.notifier).state = true;
+          context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+        }
+      }
+    } else {
+      // Can't reach remote, open cached version
+      ref.read(openedFromCloudProvider.notifier).state = true;
+      context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recentFiles = ref.watch(recentFilesProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -59,7 +135,7 @@ class WelcomeScreen extends ConsumerWidget {
                         ],
                       ),
                       child: FilledButton.icon(
-                        onPressed: () => _openFile(context, ref),
+                        onPressed: () => _openFile(context),
                         icon: const Icon(Icons.folder_open_rounded, size: 20),
                         label: const Text('打开本地数据库'),
                         style: FilledButton.styleFrom(
@@ -82,7 +158,7 @@ class WelcomeScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     // Download from WebDAV
                     OutlinedButton.icon(
-                      onPressed: () => _downloadFromWebDav(context, ref),
+                      onPressed: () => _downloadFromWebDav(context),
                       icon: const Icon(Icons.cloud_download_rounded, size: 20),
                       label: const Text('打开云端数据库'),
                       style: OutlinedButton.styleFrom(
@@ -132,7 +208,7 @@ class WelcomeScreen extends ConsumerWidget {
                                     onTap: () {
                                       if (file.isCloud) {
                                         ref.read(openedFromCloudProvider.notifier).state = true;
-                                        _downloadFromWebDav(context, ref);
+                                        _downloadFromWebDav(context);
                                       } else {
                                         context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
                                       }
@@ -178,7 +254,7 @@ class WelcomeScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openFile(BuildContext context, WidgetRef ref) async {
+  Future<void> _openFile(BuildContext context) async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['kdbx'],
@@ -190,7 +266,7 @@ class WelcomeScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _downloadFromWebDav(BuildContext context, WidgetRef ref) async {
+  Future<void> _downloadFromWebDav(BuildContext context) async {
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
       if (context.mounted) {
@@ -340,7 +416,9 @@ class _RecentFileTile extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          recentFile.isCloud ? '云端 · ${recentFile.path}' : recentFile.path,
+                          recentFile.isCloud
+                              ? '云端 · ${recentFile.remotePath ?? recentFile.path}'
+                              : recentFile.path,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),

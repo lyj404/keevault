@@ -24,6 +24,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _enabled = false;
   bool _testing = false;
   bool? _connectionOk;
+  String? _connectionError;
 
   @override
   void initState() {
@@ -130,6 +131,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             labelText: '密码',
                             validator: (v) => (v == null || v.isEmpty) ? '请输入密码' : null,
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '部分服务（如坚果云）需要使用应用专用密码而非账号密码',
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+                          ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _pathController,
@@ -186,11 +192,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
                             ),
                             const SizedBox(width: 10),
-                            Text(
-                              _connectionOk! ? '连接成功' : '连接失败，请检查配置',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+                            Expanded(
+                              child: Text(
+                                _connectionOk! ? '连接成功' : (_connectionError ?? '连接失败'),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+                                ),
                               ),
                             ),
                           ],
@@ -235,6 +243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       _testing = true;
       _connectionOk = null;
+      _connectionError = null;
     });
     final config = WebDavConfig(
       serverUrl: _urlController.text.trim(),
@@ -243,10 +252,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       remotePath: _pathController.text.trim(),
       remoteFilename: _filenameController.text.trim(),
     );
-    final ok = await ref.read(syncServiceProvider).testConnection(config);
+    final error = await ref.read(syncServiceProvider).testConnection(config);
     if (mounted) setState(() {
       _testing = false;
-      _connectionOk = ok;
+      _connectionOk = error == null;
+      _connectionError = error;
     });
   }
 

@@ -41,7 +41,58 @@ class _ExplorerBody extends ConsumerStatefulWidget {
   ConsumerState<_ExplorerBody> createState() => _ExplorerBodyState();
 }
 
-class _ExplorerBodyState extends ConsumerState<_ExplorerBody> {
+class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkRemoteChangesOnResume();
+    }
+  }
+
+  Future<void> _checkRemoteChangesOnResume() async {
+    final isOpenedFromCloud = ref.read(openedFromCloudProvider);
+    if (!isOpenedFromCloud) return;
+    final hasChanges = await ref.read(databaseProvider.notifier).checkRemoteChanges();
+    if (hasChanges && mounted) {
+      _showAutoSyncDialog();
+    }
+  }
+
+  void _showAutoSyncDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('云端有新版本'),
+        content: const Text('检测到云端数据库已被其他设备修改，是否同步最新版本？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('忽略'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _syncFromCloud(context);
+            },
+            child: const Text('同步'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentGroup = ref.watch(currentGroupProvider);
@@ -258,9 +309,55 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> {
   }
 
   void _save(BuildContext context, WidgetRef ref) {
-    ref.read(databaseProvider.notifier).save().then((_) {
-      if (context.mounted) {
+    ref.read(databaseProvider.notifier).save().then((success) {
+      if (!context.mounted) return;
+      if (success) {
         showToast(context, '已保存');
+      } else {
+        _showConflictDialog(context, ref);
+      }
+    });
+  }
+
+  void _showConflictDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('同步冲突'),
+        content: const Text('云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _syncFromCloud(context);
+            },
+            child: const Text('下载云端版本'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _forceUpload(context, ref);
+            },
+            child: const Text('覆盖云端'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _forceUpload(BuildContext context, WidgetRef ref) {
+    ref.read(databaseProvider.notifier).forceUpload().then((_) {
+      if (context.mounted) {
+        final syncState = ref.read(syncStateProvider);
+        if (syncState == SyncState.success) {
+          showToast(context, '已覆盖同步到云端');
+        } else if (syncState == SyncState.error) {
+          showToast(context, '同步失败', isError: true);
+        }
       }
     });
   }
@@ -1126,14 +1223,15 @@ Future<void> _syncToCloud(BuildContext context) async {
     ),
   );
   try {
-    final syncService = container.read(syncServiceProvider);
-    final dbService = container.read(databaseServiceProvider);
-    await syncService.ensureRemoteDirectory(config);
-    final bytes = await dbService.saveToBytes();
-    await syncService.uploadDatabase(config, bytes);
+    await container.read(databaseProvider.notifier).forceUpload();
     if (context.mounted) {
       Navigator.of(context).pop();
-      showToast(context, '已同步到云端');
+      final syncState = container.read(syncStateProvider);
+      if (syncState == SyncState.success) {
+        showToast(context, '已同步到云端');
+      } else {
+        showToast(context, '同步失败', isError: true);
+      }
     }
   } catch (e) {
     if (context.mounted) {
