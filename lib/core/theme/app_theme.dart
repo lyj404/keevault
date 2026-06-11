@@ -150,6 +150,38 @@ class ClayDecoration {
 }
 
 class AppTheme {
+  // Cross-platform CJK font fallback
+  static const _fontFallback = <String>[
+    'Microsoft YaHei',    // Windows
+    'PingFang SC',        // macOS
+    'Noto Sans CJK SC',   // Linux
+    'sans-serif',
+  ];
+
+  static TextStyle _withFallback(TextStyle? base) {
+    return (base ?? const TextStyle()).copyWith(fontFamilyFallback: _fontFallback);
+  }
+
+  static TextTheme _applyFallback(TextTheme theme) {
+    return theme.copyWith(
+      displayLarge: _withFallback(theme.displayLarge),
+      displayMedium: _withFallback(theme.displayMedium),
+      displaySmall: _withFallback(theme.displaySmall),
+      headlineLarge: _withFallback(theme.headlineLarge),
+      headlineMedium: _withFallback(theme.headlineMedium),
+      headlineSmall: _withFallback(theme.headlineSmall),
+      titleLarge: _withFallback(theme.titleLarge),
+      titleMedium: _withFallback(theme.titleMedium),
+      titleSmall: _withFallback(theme.titleSmall),
+      bodyLarge: _withFallback(theme.bodyLarge),
+      bodyMedium: _withFallback(theme.bodyMedium),
+      bodySmall: _withFallback(theme.bodySmall),
+      labelLarge: _withFallback(theme.labelLarge),
+      labelMedium: _withFallback(theme.labelMedium),
+      labelSmall: _withFallback(theme.labelSmall),
+    );
+  }
+
   static ThemeData light() {
     return ThemeData(
       useMaterial3: true,
@@ -308,6 +340,8 @@ class AppTheme {
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),
+      textTheme: _applyFallback(ThemeData.light().textTheme),
+      primaryTextTheme: _applyFallback(ThemeData.light().primaryTextTheme),
     );
   }
 
@@ -469,6 +503,8 @@ class AppTheme {
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),
+      textTheme: _applyFallback(ThemeData.dark().textTheme),
+      primaryTextTheme: _applyFallback(ThemeData.dark().primaryTextTheme),
     );
   }
 }
