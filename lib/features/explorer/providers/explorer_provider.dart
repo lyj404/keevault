@@ -17,10 +17,14 @@ final entriesProvider = StateProvider<List<KdbxEntry>>((ref) {
   return [...?group?.entries];
 });
 
+/// Currently selected entry in the explorer (for keyboard shortcuts).
+final selectedEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
+
 /// Call after any mutation (add/delete/edit) to refresh the entry list.
 void refreshExplorerLists(WidgetRef ref) {
   final group = ref.read(currentGroupProvider);
   ref.read(entriesProvider.notifier).state = [...?group?.entries];
+  ref.read(selectedEntryProvider.notifier).state = null;
 }
 
 final breadcrumbProvider = Provider<List<String>>((ref) {

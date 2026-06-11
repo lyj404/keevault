@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -42,6 +44,8 @@ class _ExplorerBody extends ConsumerStatefulWidget {
 }
 
 class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindingObserver {
+  final _focusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -50,8 +54,32 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
   @override
   void dispose() {
+    _focusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return;
+    final selected = ref.read(selectedEntryProvider);
+    if (selected == null) return;
+
+    final isCtrl = HardwareKeyboard.instance.isControlPressed;
+    if (!isCtrl) return;
+
+    if (event.logicalKey == LogicalKeyboardKey.keyB) {
+      final username = selected.fields['UserName']?.text ?? '';
+      if (username.isNotEmpty) {
+        copyToClipboardWithAutoClear(username);
+        if (mounted) showToast(context, '已复制用户名');
+      }
+    } else if (event.logicalKey == LogicalKeyboardKey.keyC) {
+      final password = selected.fields['Password']?.text ?? '';
+      if (password.isNotEmpty) {
+        copyToClipboardWithAutoClear(password);
+        if (mounted) showToast(context, '已复制密码');
+      }
+    }
   }
 
   @override
@@ -102,61 +130,86 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final service = ref.read(databaseServiceProvider);
     final isRecycleBin = currentGroup?.icon == KdbxIcon.trashBin;
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
+    final selectedEntry = ref.watch(selectedEntryProvider);
+
+    void onEntrySelect(KdbxEntry entry) {
+      ref.read(selectedEntryProvider.notifier).state = entry;
+    }
+
+    void onEntryOpen(KdbxEntry entry) {
+      ref.read(selectedEntryProvider.notifier).state = entry;
+      final idx = currentGroup?.entries.indexOf(entry) ?? 0;
+      final path = service.getGroupPath(currentGroup!);
+      context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
+    }
 
     if (isWide) {
-      return _WideLayout(
+      return Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          _handleKeyEvent(event);
+          return KeyEventResult.ignored;
+        },
+        child: _WideLayout(
+          breadcrumbs: breadcrumbs,
+          currentGroup: currentGroup,
+          entries: entries,
+          selectedEntry: selectedEntry,
+          isRecycleBin: isRecycleBin,
+          isOpenedFromCloud: isOpenedFromCloud,
+          onGroupTap: (group) {
+            ref.read(selectedEntryProvider.notifier).state = null;
+            final path = service.getGroupPath(group);
+            ref.read(currentGroupPathProvider.notifier).state = path;
+          },
+          onEntrySelect: onEntrySelect,
+          onEntryOpen: onEntryOpen,
+          onDeleteEntry: isRecycleBin
+              ? (entry) => _permanentDeleteEntry(context, ref, entry)
+              : (entry) => _deleteEntry(context, ref, entry),
+          onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
+          onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
+          onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
+          onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
+          onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
+          onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
+          onSave: () => _save(context, ref),
+          onClose: () => _close(context, ref),
+          onSearch: () => context.push('/search'),
+          onPop: _popPath(ref),
+        ),
+      );
+    }
+
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        _handleKeyEvent(event);
+        return KeyEventResult.ignored;
+      },
+      child: _NarrowLayout(
         breadcrumbs: breadcrumbs,
         currentGroup: currentGroup,
         entries: entries,
+        selectedEntry: selectedEntry,
         isRecycleBin: isRecycleBin,
         isOpenedFromCloud: isOpenedFromCloud,
-        onGroupTap: (group) {
-          final path = service.getGroupPath(group);
-          ref.read(currentGroupPathProvider.notifier).state = path;
-        },
-        onEntryTap: (entry) {
-          final idx = currentGroup?.entries.indexOf(entry) ?? 0;
-          final path = service.getGroupPath(currentGroup!);
-          context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
-        },
+        onEntrySelect: onEntrySelect,
+        onEntryOpen: onEntryOpen,
         onDeleteEntry: isRecycleBin
             ? (entry) => _permanentDeleteEntry(context, ref, entry)
             : (entry) => _deleteEntry(context, ref, entry),
         onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
         onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
-        onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
-        onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
         onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
         onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
         onSave: () => _save(context, ref),
         onClose: () => _close(context, ref),
         onSearch: () => context.push('/search'),
         onPop: _popPath(ref),
-      );
-    }
-
-    return _NarrowLayout(
-      breadcrumbs: breadcrumbs,
-      currentGroup: currentGroup,
-      entries: entries,
-      isRecycleBin: isRecycleBin,
-      isOpenedFromCloud: isOpenedFromCloud,
-      onEntryTap: (entry) {
-        final idx = currentGroup?.entries.indexOf(entry) ?? 0;
-        final path = service.getGroupPath(currentGroup!);
-        context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
-      },
-      onDeleteEntry: isRecycleBin
-          ? (entry) => _permanentDeleteEntry(context, ref, entry)
-          : (entry) => _deleteEntry(context, ref, entry),
-      onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
-      onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
-      onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
-      onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
-      onSave: () => _save(context, ref),
-      onClose: () => _close(context, ref),
-      onSearch: () => context.push('/search'),
-      onPop: _popPath(ref),
+      ),
     );
   }
 
@@ -391,10 +444,12 @@ class _WideLayout extends StatelessWidget {
   final List<String> breadcrumbs;
   final KdbxGroup? currentGroup;
   final List<KdbxEntry> entries;
+  final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
   final ValueChanged<KdbxGroup> onGroupTap;
-  final ValueChanged<KdbxEntry> onEntryTap;
+  final ValueChanged<KdbxEntry> onEntrySelect;
+  final ValueChanged<KdbxEntry> onEntryOpen;
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
@@ -411,10 +466,12 @@ class _WideLayout extends StatelessWidget {
     required this.breadcrumbs,
     required this.currentGroup,
     required this.entries,
+    this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
     required this.onGroupTap,
-    required this.onEntryTap,
+    required this.onEntrySelect,
+    required this.onEntryOpen,
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
@@ -563,12 +620,17 @@ class _WideLayout extends StatelessWidget {
                 Expanded(
                   child: _EntryListBody(
                     entries: entries,
-                    onEntryTap: onEntryTap,
+                    selectedEntry: selectedEntry,
+                    onEntrySelect: onEntrySelect,
+                    onEntryOpen: onEntryOpen,
                     onDeleteEntry: onDeleteEntry,
                     onRestoreEntry: onRestoreEntry,
                     onMoveEntry: onMoveEntry,
                   ),
                 ),
+                // Shortcut hint bar
+                if (selectedEntry != null)
+                  _ShortcutHintBar(entry: selectedEntry!),
               ],
             ),
           ),
@@ -615,9 +677,11 @@ class _NarrowLayout extends StatelessWidget {
   final List<String> breadcrumbs;
   final KdbxGroup? currentGroup;
   final List<KdbxEntry> entries;
+  final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
-  final ValueChanged<KdbxEntry> onEntryTap;
+  final ValueChanged<KdbxEntry> onEntrySelect;
+  final ValueChanged<KdbxEntry> onEntryOpen;
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
@@ -632,9 +696,11 @@ class _NarrowLayout extends StatelessWidget {
     required this.breadcrumbs,
     required this.currentGroup,
     required this.entries,
+    this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
-    required this.onEntryTap,
+    required this.onEntrySelect,
+    required this.onEntryOpen,
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
@@ -687,12 +753,22 @@ class _NarrowLayout extends StatelessWidget {
           ),
         ],
       ),
-      body: _EntryListBody(
-        entries: entries,
-        onEntryTap: onEntryTap,
-        onDeleteEntry: onDeleteEntry,
-        onRestoreEntry: onRestoreEntry,
-        onMoveEntry: onMoveEntry,
+      body: Column(
+        children: [
+          Expanded(
+            child: _EntryListBody(
+              entries: entries,
+              selectedEntry: selectedEntry,
+              onEntrySelect: onEntrySelect,
+              onEntryOpen: onEntryOpen,
+              onDeleteEntry: onDeleteEntry,
+              onRestoreEntry: onRestoreEntry,
+              onMoveEntry: onMoveEntry,
+            ),
+          ),
+          if (selectedEntry != null)
+            _ShortcutHintBar(entry: selectedEntry!),
+        ],
       ),
       floatingActionButton: currentGroup != null && onAddEntry != null
           ? FloatingActionButton(
@@ -900,14 +976,18 @@ class _BreadcrumbBar extends StatelessWidget {
 
 class _EntryListBody extends StatelessWidget {
   final List<KdbxEntry> entries;
-  final ValueChanged<KdbxEntry> onEntryTap;
+  final KdbxEntry? selectedEntry;
+  final ValueChanged<KdbxEntry> onEntrySelect;
+  final ValueChanged<KdbxEntry> onEntryOpen;
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
 
   const _EntryListBody({
     required this.entries,
-    required this.onEntryTap,
+    this.selectedEntry,
+    required this.onEntrySelect,
+    required this.onEntryOpen,
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
@@ -927,7 +1007,9 @@ class _EntryListBody extends StatelessWidget {
         final e = entries[index];
         return EntryListTile(
           entry: e,
-          onTap: () => onEntryTap(e),
+          isSelected: e == selectedEntry,
+          onTap: () => onEntrySelect(e),
+          onOpen: () => onEntryOpen(e),
           onDelete: () => onDeleteEntry(e),
           onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
           onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
@@ -1189,6 +1271,70 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
     service.createGroup(widget.group, _nameCtrl.text);
     refreshExplorerLists(widget.ref);
     if (mounted) Navigator.pop(context);
+  }
+}
+
+// ─── Shortcut hint bar ─────────────────────────────────────────────────
+
+class _ShortcutHintBar extends StatelessWidget {
+  final KdbxEntry entry;
+  const _ShortcutHintBar({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final username = entry.fields['UserName']?.text ?? '';
+    final password = entry.fields['Password']?.text ?? '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          if (username.isNotEmpty) ...[
+            _KeyChip(label: 'Ctrl+B'),
+            const SizedBox(width: 4),
+            Text('复制用户名', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            const SizedBox(width: 16),
+          ],
+          if (password.isNotEmpty) ...[
+            _KeyChip(label: 'Ctrl+C'),
+            const SizedBox(width: 4),
+            Text('复制密码', style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _KeyChip extends StatelessWidget {
+  final String label;
+  const _KeyChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant),
+      ),
+    );
   }
 }
 

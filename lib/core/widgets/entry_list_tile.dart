@@ -6,12 +6,14 @@ import 'toast.dart';
 
 class EntryListTile extends StatelessWidget {
   final KdbxEntry entry;
+  final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onOpen;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onMove;
 
-  const EntryListTile({super.key, required this.entry, this.onTap, this.onDelete, this.onRestore, this.onMove});
+  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove});
 
   String get _title => entry.fields['Title']?.text ?? '';
   String get _username => entry.fields['UserName']?.text ?? '';
@@ -85,10 +87,22 @@ class EntryListTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Container(
-        decoration: ClayDecoration.card(
-          brightness: brightness,
-          radius: 16,
-        ),
+        decoration: isSelected
+            ? BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: brightness == Brightness.dark ? 0.15 : 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              )
+            : ClayDecoration.card(
+                brightness: brightness,
+                radius: 16,
+              ),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
@@ -162,6 +176,25 @@ class EntryListTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                  const SizedBox(width: 6),
+                  // Open detail button
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: onOpen,
+                        child: Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
