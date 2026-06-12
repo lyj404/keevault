@@ -292,7 +292,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
 
     // eTag check: skip download if local cache is already up-to-date
-    final cachedFile = recentFile;
+    var cachedFile = recentFile;
+    if (cachedFile == null) {
+      // Look up matching cloud entry from recent files
+      final recentFiles = await ref.read(recentFilesServiceProvider).getRecentFiles();
+      cachedFile = recentFiles.where((f) => f.isCloud && f.remotePath == config.remoteFilePath).firstOrNull;
+    }
     if (cachedFile != null && cachedFile.isCloud) {
       final localFile = File(cachedFile.path);
       final exists = await localFile.exists();

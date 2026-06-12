@@ -47,7 +47,15 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.unlockDatabase)),
+      appBar: AppBar(
+        title: Text(l10n.unlockDatabase),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),

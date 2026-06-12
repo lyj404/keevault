@@ -89,7 +89,7 @@
   "more": "更多",
   "syncToCloud": "同步到云端",
   "downloadFromCloud": "从云端下载",
-  "syncSettings": "同步设置",
+  "settings": "设置",
   "closeDatabase": "关闭数据库",
 
   "rootDirectory": "根目录",

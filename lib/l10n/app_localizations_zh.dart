@@ -245,7 +245,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadFromCloud => '从云端下载';
 
   @override
-  String get syncSettings => '同步设置';
+  String get settings => '设置';
 
   @override
   String get closeDatabase => '关闭数据库';

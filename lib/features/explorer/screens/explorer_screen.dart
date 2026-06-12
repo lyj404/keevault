@@ -10,7 +10,6 @@ import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/toast.dart';
-import '../../../core/providers/locale_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
@@ -612,7 +611,6 @@ class _WideLayout extends StatelessWidget {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
                             case 'settings': context.push('/settings');
-                            case 'language': _showLanguageDialog(context);
                             case 'close': onClose();
                           }
                         },
@@ -620,9 +618,8 @@ class _WideLayout extends StatelessWidget {
                           if (isOpenedFromCloud) ...[
                             PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                             PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                            PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.syncSettings), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
-                          PopupMenuItem(value: 'language', child: ListTile(leading: const Icon(Icons.language_rounded), title: Text(l10n.language), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
@@ -750,7 +747,6 @@ class _NarrowLayout extends StatelessWidget {
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
                 case 'settings': context.push('/settings');
-                case 'language': _showLanguageDialog(context);
                 case 'close': onClose();
               }
             },
@@ -763,9 +759,8 @@ class _NarrowLayout extends StatelessWidget {
               if (isOpenedFromCloud) ...[
                 PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.syncSettings), dense: true, contentPadding: EdgeInsets.zero)),
               ],
-              PopupMenuItem(value: 'language', child: ListTile(leading: const Icon(Icons.language_rounded), title: Text(l10n.language), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
             ],
           ),
@@ -1361,43 +1356,6 @@ class _KeyChip extends StatelessWidget {
       ),
     );
   }
-}
-
-// ─── Language dialog ────────────────────────────────────────────────────
-
-void _showLanguageDialog(BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final container = ProviderScope.containerOf(context);
-  final currentLocale = container.read(localeProvider);
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.language),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _languageOption(ctx, container, null, l10n.followSystem, currentLocale),
-          _languageOption(ctx, container, const Locale('zh'), '中文', currentLocale),
-          _languageOption(ctx, container, const Locale('en'), 'English', currentLocale),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _languageOption(BuildContext ctx, ProviderContainer container, Locale? locale, String label, Locale? currentLocale) {
-  return RadioListTile<Locale?>(
-    value: locale,
-    groupValue: currentLocale,
-    onChanged: (v) {
-      container.read(localeProvider.notifier).setLocale(locale);
-      Navigator.pop(ctx);
-    },
-    title: Text(label),
-    dense: true,
-    contentPadding: EdgeInsets.zero,
-    activeColor: Theme.of(ctx).colorScheme.primary,
-  );
 }
 
 // ─── Sync helpers ───────────────────────────────────────────────────────

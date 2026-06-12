@@ -548,11 +548,11 @@ abstract class AppLocalizations {
   /// **'从云端下载'**
   String get downloadFromCloud;
 
-  /// No description provided for @syncSettings.
+  /// No description provided for @settings.
   ///
   /// In zh, this message translates to:
-  /// **'同步设置'**
-  String get syncSettings;
+  /// **'设置'**
+  String get settings;
 
   /// No description provided for @closeDatabase.
   ///

@@ -250,7 +250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadFromCloud => 'Download from Cloud';
 
   @override
-  String get syncSettings => 'Sync Settings';
+  String get settings => 'Settings';
 
   @override
   String get closeDatabase => 'Close Database';
