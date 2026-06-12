@@ -156,3 +156,84 @@ jobs:
           files: |
             KeeVault-*
             keevault_*
+
+  publish-aur:
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Update PKGBUILD version
+        run: |
+          sed -i "s/pkgver=.*/pkgver=${{ steps.version.outputs.version }}/" PKGBUILD
+          sed -i "s/pkgrel=.*/pkgrel=1/" PKGBUILD
+
+      - name: Update .SRCINFO version
+        run: |
+          sed -i "s/pkgver = .*/pkgver = ${{ steps.version.outputs.version }}/" .SRCINFO
+          sed -i "s/pkgrel = .*/pkgrel = 1/" .SRCINFO
+          sed -i "s|releases/download/v.*|releases/download/v${{ steps.version.outputs.version }}/KeeVault-v${{ steps.version.outputs.version }}-linux-x64.tar.gz|" .SRCINFO
+
+      - name: Publish to AUR
+        env:
+          AUR_PKGNAME: keevault-bin
+          AUR_USERNAME: ${{ secrets.AUR_USERNAME }}
+          AUR_EMAIL: ${{ secrets.AUR_EMAIL }}
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          WORKSPACE_DIR="$PWD"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+
+          rm -rf /tmp/local-repo
+          echo "=> Cloning existing AUR repository via HTTPS..."
+
+          if git clone "https://aur.archlinux.org/${AUR_PKGNAME}.git" /tmp/local-repo; then
+            cd /tmp/local-repo
+            git remote set-url origin "ssh://aur@aur.archlinux.org/${AUR_PKGNAME}.git"
+          else
+            echo "=> HTTPS clone failed, initializing fresh repository..."
+            mkdir -p /tmp/local-repo
+            cd /tmp/local-repo
+            git init -b master
+            git remote add origin "ssh://aur@aur.archlinux.org/${AUR_PKGNAME}.git"
+          fi
+
+          cp "$WORKSPACE_DIR/PKGBUILD" "$WORKSPACE_DIR/.SRCINFO" .
+
+          git config user.name "$AUR_USERNAME"
+          git config user.email "$AUR_EMAIL"
+
+          git add PKGBUILD .SRCINFO
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "=> No changes, skipping publish."
+            exit 0
+          fi
+
+          git commit -m "Update ${AUR_PKGNAME} to ${{ steps.version.outputs.version }}"
+
+          echo "=> Pushing to AUR..."
+          for i in $(seq 1 5); do
+            if git push -u origin master; then
+              echo "=> Successfully pushed to AUR!"
+              exit 0
+            fi
+            echo "=> Push failed, retrying in 10s ($i/5)..."
+            sleep 10
+          done
+
+          echo "=> Failed to push to AUR after 5 retries." >&2
+          exit 1

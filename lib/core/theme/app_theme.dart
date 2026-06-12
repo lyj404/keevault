@@ -197,11 +197,11 @@ class AppTheme {
         secondary: ClayColors.secondary,
         onSecondary: Colors.white,
         secondaryContainer: ClayColors.secondaryLight.withValues(alpha: 0.2),
-        onSecondaryContainer: const Color(0xFF1A5C3A),
+        onSecondaryContainer: const Color(0xFF065F46),
         tertiary: ClayColors.tertiary,
         onTertiary: Colors.white,
         tertiaryContainer: ClayColors.tertiaryLight.withValues(alpha: 0.2),
-        onTertiaryContainer: const Color(0xFF1A5C57),
+        onTertiaryContainer: const Color(0xFF92400E),
         error: ClayColors.error,
         onError: Colors.white,
         errorContainer: ClayColors.errorLight,
@@ -274,10 +274,10 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: ClayColors.primary,
-          foregroundColor: ClayColors.onSurfaceLight,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
           elevation: 0,
         ),
       ),
@@ -297,10 +297,10 @@ class AppTheme {
         contentTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         backgroundColor: ClayColors.onSurfaceLight,
       ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
@@ -312,15 +312,15 @@ class AppTheme {
           color: ClayColors.onSurfaceLight,
         ),
       ),
-      bottomSheetTheme: BottomSheetThemeData(
-        shape: const RoundedRectangleBorder(
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
       ),
-      popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      popupMenuTheme: const PopupMenuThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
         elevation: 4,
         color: Colors.white,
       ),
@@ -354,15 +354,15 @@ class AppTheme {
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
         primary: ClayColors.primaryMuted,
-        onPrimary: const Color(0xFF1A1030),
+        onPrimary: Colors.white,
         primaryContainer: ClayColors.primary.withValues(alpha: 0.25),
         onPrimaryContainer: ClayColors.primaryMuted,
         secondary: ClayColors.secondaryMuted,
-        onSecondary: const Color(0xFF2D1515),
+        onSecondary: Colors.white,
         secondaryContainer: ClayColors.secondary.withValues(alpha: 0.25),
         onSecondaryContainer: ClayColors.secondaryMuted,
         tertiary: ClayColors.tertiaryLight,
-        onTertiary: const Color(0xFF0D2D2A),
+        onTertiary: const Color(0xFF1A1030),
         tertiaryContainer: ClayColors.tertiary.withValues(alpha: 0.25),
         onTertiaryContainer: ClayColors.tertiaryLight,
         error: const Color(0xFFEF9A9A),
@@ -437,10 +437,10 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: ClayColors.primaryMuted,
-          foregroundColor: ClayColors.onSurfaceDark,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
           elevation: 0,
         ),
       ),
@@ -460,10 +460,10 @@ class AppTheme {
         contentTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         backgroundColor: ClayColors.surfaceContainerDark,
       ),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primaryMuted,
-        foregroundColor: const Color(0xFF1A1030),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
