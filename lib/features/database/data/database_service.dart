@@ -3,9 +3,11 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/utils/logger.dart';
+import '../../backup/data/backup_service.dart';
 import '../../sync/data/sync_service.dart';
 
 class DatabaseService {
+  final _backupService = BackupService();
   KdbxDatabase? _db;
   String? _filePath;
   String? _password;
@@ -100,6 +102,9 @@ class DatabaseService {
     if (_db == null || _filePath == null) return;
     log.i('Saving database: $_filePath');
     final bytes = await _db!.save();
+    if (await _backupService.isAutoBackupEnabled()) {
+      await _backupService.createBackup(_filePath!);
+    }
     await File(_filePath!).writeAsBytes(bytes);
     _dirty = false;
     log.i('Database saved (${bytes.length} bytes)');

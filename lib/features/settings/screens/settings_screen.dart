@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
@@ -251,6 +252,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ref.read(autoLockProvider.notifier).setMinutes(v);
                             }
                           },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Backup management card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          child: Icon(Icons.backup_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.databaseBackup, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () => context.push('/backup'),
+                              child: Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                            ),
+                          ),
                         ),
                       ],
                     ),

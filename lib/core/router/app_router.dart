@@ -9,6 +9,7 @@ import '../../features/entry/screens/entry_edit_screen.dart';
 import '../../features/group/screens/group_edit_screen.dart';
 import '../../features/search/screens/search_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/backup/screens/backup_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -69,6 +70,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/backup',
+      builder: (context, state) => const BackupScreen(),
     ),
   ],
 );

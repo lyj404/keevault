@@ -4,6 +4,7 @@ import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
 export '../data/recent_files_service.dart' show RecentFile;
 import '../../../core/providers/auto_lock_provider.dart';
+import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 
@@ -106,6 +107,10 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Future<void> forceUpload() async {
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) return;
+    final backupSvc = _ref.read(backupServiceProvider);
+    if (_service.filePath != null && await backupSvc.isAutoBackupEnabled()) {
+      await backupSvc.createBackup(_service.filePath!);
+    }
     _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
     try {
       final syncService = _ref.read(syncServiceProvider);

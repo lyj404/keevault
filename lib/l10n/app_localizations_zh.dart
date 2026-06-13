@@ -546,4 +546,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get minutes => '分钟';
+
+  @override
+  String get databaseBackup => '数据库备份';
+
+  @override
+  String get autoBackup => '自动备份';
+
+  @override
+  String get autoBackupDescription => '保存和同步前自动备份数据库';
+
+  @override
+  String get createBackupNow => '立即备份';
+
+  @override
+  String get noBackups => '暂无备份';
+
+  @override
+  String get backupCreated => '备份已创建';
+
+  @override
+  String get backupFailed => '备份失败';
+
+  @override
+  String get restoreBackup => '恢复备份';
+
+  @override
+  String get restoreBackupConfirm => '确定恢复此备份？恢复前将自动备份当前数据库。';
+
+  @override
+  String get backupRestored => '备份已恢复';
+
+  @override
+  String get backupRestoreFailed => '恢复失败';
+
+  @override
+  String get backupNotFound => '备份文件不存在';
+
+  @override
+  String get deleteBackup => '删除备份';
+
+  @override
+  String get deleteBackupConfirm => '确定删除此备份？此操作不可撤销。';
+
+  @override
+  String get backupDeleted => '备份已删除';
+
+  @override
+  String get backupRetention => '备份数量';
+
+  @override
+  String backupRetentionInfo(Object count) {
+    return '保留最近 $count 个备份';
+  }
+
+  @override
+  String backupRetentionCount(Object count) {
+    return '保留 $count 个备份';
+  }
 }

@@ -1141,6 +1141,114 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'分钟'**
   String get minutes;
+
+  /// No description provided for @databaseBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据库备份'**
+  String get databaseBackup;
+
+  /// No description provided for @autoBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动备份'**
+  String get autoBackup;
+
+  /// No description provided for @autoBackupDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存和同步前自动备份数据库'**
+  String get autoBackupDescription;
+
+  /// No description provided for @createBackupNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即备份'**
+  String get createBackupNow;
+
+  /// No description provided for @noBackups.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无备份'**
+  String get noBackups;
+
+  /// No description provided for @backupCreated.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份已创建'**
+  String get backupCreated;
+
+  /// No description provided for @backupFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份失败'**
+  String get backupFailed;
+
+  /// No description provided for @restoreBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复备份'**
+  String get restoreBackup;
+
+  /// No description provided for @restoreBackupConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定恢复此备份？恢复前将自动备份当前数据库。'**
+  String get restoreBackupConfirm;
+
+  /// No description provided for @backupRestored.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份已恢复'**
+  String get backupRestored;
+
+  /// No description provided for @backupRestoreFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复失败'**
+  String get backupRestoreFailed;
+
+  /// No description provided for @backupNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份文件不存在'**
+  String get backupNotFound;
+
+  /// No description provided for @deleteBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除备份'**
+  String get deleteBackup;
+
+  /// No description provided for @deleteBackupConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除此备份？此操作不可撤销。'**
+  String get deleteBackupConfirm;
+
+  /// No description provided for @backupDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份已删除'**
+  String get backupDeleted;
+
+  /// No description provided for @backupRetention.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份数量'**
+  String get backupRetention;
+
+  /// No description provided for @backupRetentionInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留最近 {count} 个备份'**
+  String backupRetentionInfo(Object count);
+
+  /// No description provided for @backupRetentionCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'保留 {count} 个备份'**
+  String backupRetentionCount(Object count);
 }
 
 class _AppLocalizationsDelegate

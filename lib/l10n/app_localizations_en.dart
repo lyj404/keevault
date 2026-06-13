@@ -554,4 +554,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minutes => 'min';
+
+  @override
+  String get databaseBackup => 'Database Backup';
+
+  @override
+  String get autoBackup => 'Auto Backup';
+
+  @override
+  String get autoBackupDescription => 'Backup before every save and cloud sync';
+
+  @override
+  String get createBackupNow => 'Create Backup Now';
+
+  @override
+  String get noBackups => 'No backups yet';
+
+  @override
+  String get backupCreated => 'Backup created';
+
+  @override
+  String get backupFailed => 'Backup failed';
+
+  @override
+  String get restoreBackup => 'Restore Backup';
+
+  @override
+  String get restoreBackupConfirm =>
+      'Restore this backup? Current database will be backed up before restoring.';
+
+  @override
+  String get backupRestored => 'Backup restored';
+
+  @override
+  String get backupRestoreFailed => 'Restore failed';
+
+  @override
+  String get backupNotFound => 'Backup file not found';
+
+  @override
+  String get deleteBackup => 'Delete Backup';
+
+  @override
+  String get deleteBackupConfirm =>
+      'Delete this backup? This cannot be undone.';
+
+  @override
+  String get backupDeleted => 'Backup deleted';
+
+  @override
+  String get backupRetention => 'Backup Retention';
+
+  @override
+  String backupRetentionInfo(Object count) {
+    return 'Keeping latest $count backups';
+  }
+
+  @override
+  String backupRetentionCount(Object count) {
+    return 'Keep $count backups';
+  }
 }

@@ -199,5 +199,26 @@
   "autoLockDescription": "Lock database after inactivity",
   "disabled": "Disabled",
   "minute": "min",
-  "minutes": "min"
+  "minutes": "min",
+
+  "databaseBackup": "Database Backup",
+  "autoBackup": "Auto Backup",
+  "autoBackupDescription": "Backup before every save and cloud sync",
+  "createBackupNow": "Create Backup Now",
+  "noBackups": "No backups yet",
+  "backupCreated": "Backup created",
+  "backupFailed": "Backup failed",
+  "restoreBackup": "Restore Backup",
+  "restoreBackupConfirm": "Restore this backup? Current database will be backed up before restoring.",
+  "backupRestored": "Backup restored",
+  "backupRestoreFailed": "Restore failed",
+  "backupNotFound": "Backup file not found",
+  "deleteBackup": "Delete Backup",
+  "deleteBackupConfirm": "Delete this backup? This cannot be undone.",
+  "backupDeleted": "Backup deleted",
+  "backupRetention": "Backup Retention",
+  "backupRetentionInfo": "Keeping latest {count} backups",
+  "@backupRetentionInfo": { "placeholders": { "count": {} } },
+  "backupRetentionCount": "Keep {count} backups",
+  "@backupRetentionCount": { "placeholders": { "count": {} } }
 }
