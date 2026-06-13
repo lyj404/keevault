@@ -22,6 +22,12 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
+  }
+
+  @override
   void dispose() {
     _passwordController.dispose();
     super.dispose();

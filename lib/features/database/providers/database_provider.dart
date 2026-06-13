@@ -26,6 +26,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   DatabaseService get _service => _ref.read(databaseServiceProvider);
 
+  Future<void> preloadFile(String filePath) => _service.preloadFile(filePath);
+
   Future<void> openFile(String filePath, String password, {bool isCloud = false, String? syncedETag}) async {
     state = const AsyncValue.loading();
     try {

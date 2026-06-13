@@ -270,7 +270,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
           onPressed: () => Navigator.pop(context, _password),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.0),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: Text(l10n.useThisPassword),

@@ -10,6 +10,7 @@ class DatabaseService {
   String? _filePath;
   String? _password;
   bool _dirty = false;
+  Uint8List? _preloadedBytes;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -24,9 +25,16 @@ class DatabaseService {
   void markDirty() => _dirty = true;
   void markClean() => _dirty = false;
 
+  /// Preloads file bytes into memory so openFile doesn't block on I/O.
+  Future<void> preloadFile(String filePath) async {
+    log.i('Preloading file: $filePath');
+    _preloadedBytes = await File(filePath).readAsBytes();
+  }
+
   Future<KdbxDatabase> openFile(String filePath, String password) async {
     log.i('Opening database: $filePath');
-    final bytes = await File(filePath).readAsBytes();
+    final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
+    _preloadedBytes = null;
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(password),
     );
@@ -177,5 +185,6 @@ class DatabaseService {
     _password = null;
     _dirty = false;
     _lastSyncedRemoteInfo = null;
+    _preloadedBytes = null;
   }
 }
