@@ -125,16 +125,32 @@ jobs:
           channel: stable
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keevault.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > keevault.jks
+
+      - name: Verify keystore password
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+        run: |
+          echo "Verifying keystore can be read..."
+          keytool -list -keystore keevault.jks -storepass "$STORE_PASSWORD" || {
+            echo "::error::Keystore password verification failed. Check KEYSTORE_STORE_PASSWORD secret."
+            exit 1
+          }
 
       - name: Create key.properties
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
         run: |
-          cat > android/key.properties << EOF
-          storePassword=${{ secrets.KEYSTORE_STORE_PASSWORD }}
-          keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}
-          storeFile=../keevault.jks
-          EOF
+          {
+            printf 'storePassword=%s\n' "$STORE_PASSWORD"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'storeFile=../../keevault.jks\n'
+          } > android/key.properties
 
       - run: flutter pub get
       - run: flutter build apk --release --split-per-abi
