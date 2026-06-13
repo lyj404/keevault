@@ -112,6 +112,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 PasswordTextField(
                   controller: _passwordCtrl,
                   labelText: l10n.password,
+                  showStrengthIndicator: true,
                 ),
                 const SizedBox(height: 4),
                 Align(

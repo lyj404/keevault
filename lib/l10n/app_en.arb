@@ -193,5 +193,11 @@
   "closeWindowMessage": "What would you like to do?",
   "rememberChoice": "Remember my choice",
   "showMainWindow": "Show Main Window",
-  "exit": "Exit"
+  "exit": "Exit",
+
+  "autoLock": "Auto Lock",
+  "autoLockDescription": "Lock database after inactivity",
+  "disabled": "Disabled",
+  "minute": "min",
+  "minutes": "min"
 }

@@ -1111,6 +1111,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'退出'**
   String get exit;
+
+  /// No description provided for @autoLock.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动锁定'**
+  String get autoLock;
+
+  /// No description provided for @autoLockDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'无操作后自动锁定数据库'**
+  String get autoLockDescription;
+
+  /// No description provided for @disabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get disabled;
+
+  /// No description provided for @minute.
+  ///
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get minute;
+
+  /// No description provided for @minutes.
+  ///
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get minutes;
 }
 
 class _AppLocalizationsDelegate

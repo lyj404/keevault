@@ -6,6 +6,7 @@ import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
@@ -210,6 +211,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 16),
+
+                  // Auto-lock card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          child: Icon(Icons.lock_clock_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.autoLock, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(l10n.autoLockDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                        DropdownButton<int>(
+                          value: ref.watch(autoLockProvider),
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+                            DropdownMenuItem(value: 1, child: Text('1 ${l10n.minute}')),
+                            DropdownMenuItem(value: 5, child: Text('5 ${l10n.minutes}')),
+                            DropdownMenuItem(value: 15, child: Text('15 ${l10n.minutes}')),
+                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.minutes}')),
+                            DropdownMenuItem(value: 60, child: Text('60 ${l10n.minutes}')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              ref.read(autoLockProvider.notifier).setMinutes(v);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: 16),
 

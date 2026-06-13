@@ -531,4 +531,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get exit => '退出';
+
+  @override
+  String get autoLock => '自动锁定';
+
+  @override
+  String get autoLockDescription => '无操作后自动锁定数据库';
+
+  @override
+  String get disabled => '关闭';
+
+  @override
+  String get minute => '分钟';
+
+  @override
+  String get minutes => '分钟';
 }

@@ -3,6 +3,7 @@ import 'package:kpasslib/kpasslib.dart';
 import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
 export '../data/recent_files_service.dart' show RecentFile;
+import '../../../core/providers/auto_lock_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 
@@ -43,6 +44,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag);
       await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag);
       state = AsyncValue.data(db);
+      _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -55,6 +57,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       await _ref.read(recentFilesServiceProvider).addRecentFile(filePath);
       await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath);
       state = AsyncValue.data(db);
+      _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -124,6 +127,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     state = const AsyncValue.data(null);
     _ref.read(openedFromCloudProvider.notifier).state = false;
     _ref.read(recentFilesServiceProvider).clearLastOpenedFile();
+    _ref.read(autoLockProvider.notifier).cancelTimer();
   }
 
   Future<void> reloadFromCloud() async {

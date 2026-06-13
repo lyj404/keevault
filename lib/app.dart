@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/providers/auto_lock_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/locale_provider.dart';
@@ -15,24 +16,30 @@ class KeeVaultApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      title: 'KeeVault',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: themeMode,
-      routerConfig: appRouter,
-      debugShowCheckedModeBanner: false,
-      locale: locale,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('zh'),
-        Locale('en'),
-      ],
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
+      onPointerHover: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
+      onPointerSignal: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
+      child: MaterialApp.router(
+        title: 'KeeVault',
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode,
+        routerConfig: appRouter,
+        debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('zh'),
+          Locale('en'),
+        ],
+      ),
     );
   }
 }

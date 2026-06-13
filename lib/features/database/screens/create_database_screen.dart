@@ -103,6 +103,7 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
                   PasswordTextField(
                     controller: _passwordController,
                     labelText: l10n.masterPassword,
+                    showStrengthIndicator: true,
                     validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                   ),
                   const SizedBox(height: 14),
