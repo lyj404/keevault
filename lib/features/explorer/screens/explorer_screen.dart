@@ -198,6 +198,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         selectedEntry: selectedEntry,
         isRecycleBin: isRecycleBin,
         isOpenedFromCloud: isOpenedFromCloud,
+        onGroupTap: (group) {
+          ref.read(selectedEntryProvider.notifier).state = null;
+          final path = service.getGroupPath(group);
+          ref.read(currentGroupPathProvider.notifier).state = path;
+        },
         onEntrySelect: onEntrySelect,
         onEntryOpen: onEntryOpen,
         onDeleteEntry: isRecycleBin
@@ -691,6 +696,7 @@ class _NarrowLayout extends StatelessWidget {
   final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
+  final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
   final ValueChanged<KdbxEntry> onEntryOpen;
   final ValueChanged<KdbxEntry> onDeleteEntry;
@@ -710,6 +716,7 @@ class _NarrowLayout extends StatelessWidget {
     this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
+    required this.onGroupTap,
     required this.onEntrySelect,
     required this.onEntryOpen,
     required this.onDeleteEntry,
@@ -769,9 +776,11 @@ class _NarrowLayout extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: _EntryListBody(
+            child: _MobileEntryListBody(
+              currentGroup: currentGroup,
               entries: entries,
               selectedEntry: selectedEntry,
+              onGroupTap: onGroupTap,
               onEntrySelect: onEntrySelect,
               onEntryOpen: onEntryOpen,
               onDeleteEntry: onDeleteEntry,
@@ -1031,6 +1040,157 @@ class _EntryListBody extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+// ─── Mobile entry list with group navigation ──────────────────────────────
+
+class _MobileEntryListBody extends StatelessWidget {
+  final KdbxGroup? currentGroup;
+  final List<KdbxEntry> entries;
+  final KdbxEntry? selectedEntry;
+  final ValueChanged<KdbxGroup> onGroupTap;
+  final ValueChanged<KdbxEntry> onEntrySelect;
+  final ValueChanged<KdbxEntry> onEntryOpen;
+  final ValueChanged<KdbxEntry> onDeleteEntry;
+  final ValueChanged<KdbxEntry>? onRestoreEntry;
+  final ValueChanged<KdbxEntry>? onMoveEntry;
+
+  const _MobileEntryListBody({
+    required this.currentGroup,
+    required this.entries,
+    this.selectedEntry,
+    required this.onGroupTap,
+    required this.onEntrySelect,
+    required this.onEntryOpen,
+    required this.onDeleteEntry,
+    this.onRestoreEntry,
+    this.onMoveEntry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subGroups = currentGroup?.groups ?? [];
+    final l10n = AppLocalizations.of(context)!;
+
+    if (subGroups.isEmpty && entries.isEmpty) {
+      return EmptyState(icon: Icons.folder_open_rounded, message: l10n.thisGroupIsEmpty);
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      itemCount: subGroups.length + entries.length + 1,
+      itemBuilder: (context, index) {
+        if (index < subGroups.length) {
+          return _MobileGroupTile(
+            group: subGroups[index],
+            onTap: () => onGroupTap(subGroups[index]),
+          );
+        }
+        final entryIndex = index - subGroups.length;
+        if (entryIndex == entries.length) return const SizedBox(height: 80);
+        final e = entries[entryIndex];
+        return EntryListTile(
+          entry: e,
+          isSelected: e == selectedEntry,
+          onTap: () => onEntrySelect(e),
+          onOpen: () => onEntryOpen(e),
+          onDelete: () => onDeleteEntry(e),
+          onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
+          onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+        );
+      },
+    );
+  }
+}
+
+class _MobileGroupTile extends StatelessWidget {
+  final KdbxGroup group;
+  final VoidCallback onTap;
+
+  const _MobileGroupTile({required this.group, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: Material(
+        color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: group.icon == KdbxIcon.trashBin
+                        ? colorScheme.errorContainer
+                        : colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    group.icon == KdbxIcon.trashBin
+                        ? Icons.delete_outline_rounded
+                        : Icons.folder_outlined,
+                    size: 18,
+                    color: group.icon == KdbxIcon.trashBin
+                        ? colorScheme.onErrorContainer
+                        : colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        group.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      if (group.groups.isNotEmpty || group.entries.isNotEmpty)
+                        Text(
+                          _groupSubtitle(context, group),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _groupSubtitle(BuildContext context, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
+    final parts = <String>[];
+    if (group.groups.isNotEmpty) parts.add('${group.groups.length} ${l10n.groups}');
+    if (group.entries.isNotEmpty) parts.add('${group.entries.length} ${l10n.entries}');
+    return parts.join(' · ');
   }
 }
 

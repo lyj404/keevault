@@ -2,6 +2,8 @@
 
 基于 Flutter 构建的跨平台 KeePass 兼容密码管理器。
 
+![欢迎页](assets/images/screenshot.png)
+
 ## 功能特性
 
 - **KDBX 格式支持** - 完全兼容 KeePass 数据库文件 (.kdbx)
@@ -14,25 +16,51 @@
 - **最近文件** - 快速访问最近打开的数据库文件，区分本地与云端来源
 - **跨平台** - 支持 Android、iOS、Linux、macOS、Windows
 
-## 快速开始
+## 安装
+
+从 [Releases](https://github.com/lyj404/keevault/releases) 页面下载对应平台的安装包。
+
+### Windows
+
+下载 `KeeVault-*-windows-x64.zip`，解压后运行 `keevault.exe`。
+
+### Debian / Ubuntu
+
+下载 `.deb` 安装包，使用 `apt` 安装：
+
+```bash
+sudo apt install ./keevault_*_amd64.deb
+```
+
+### Arch Linux
+
+通过 AUR 安装：
+
+```bash
+# 使用 yay
+yay -S keevault-bin
+
+# 或使用 paru
+paru -S keevault-bin
+```
+
+### Android
+
+下载对应架构的 APK 文件（`arm64-v8a`、`armeabi-v7a` 或 `x86_64`），安装到设备上。
+
+## 从源码构建
 
 ### 环境要求
 
 - Flutter SDK >= 3.12.0
 - Dart SDK >= 3.12.0
 
-### 安装
-
 ```bash
 git clone https://github.com/lyj404/keevault
 cd keevault
 flutter pub get
-```
-
-### 运行
-
-```bash
-flutter run -d windows    # Windows 桌面
+flutter run -d windows    # Windows
+flutter run -d linux      # Linux
 flutter run -d android    # Android
 ```
 
