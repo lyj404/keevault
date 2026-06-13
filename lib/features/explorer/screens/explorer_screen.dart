@@ -1030,6 +1030,7 @@ class _EntryListBody extends StatelessWidget {
         if (index == entries.length) return const SizedBox(height: 80);
         final e = entries[index];
         return EntryListTile(
+          key: ValueKey(e.uuid),
           entry: e,
           isSelected: e == selectedEntry,
           onTap: () => onEntrySelect(e),
@@ -1091,6 +1092,7 @@ class _MobileEntryListBody extends StatelessWidget {
         if (entryIndex == entries.length) return const SizedBox(height: 80);
         final e = entries[entryIndex];
         return EntryListTile(
+          key: ValueKey(e.uuid),
           entry: e,
           isSelected: e == selectedEntry,
           onTap: () => onEntrySelect(e),

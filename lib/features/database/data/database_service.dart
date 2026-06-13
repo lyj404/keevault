@@ -11,6 +11,7 @@ class DatabaseService {
   String? _password;
   bool _dirty = false;
   Uint8List? _preloadedBytes;
+  List<KdbxEntry>? _allEntriesCache;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -24,6 +25,13 @@ class DatabaseService {
 
   void markDirty() => _dirty = true;
   void markClean() => _dirty = false;
+
+  /// All entries in a flat cached list. Rebuilt on open/create/mutation.
+  List<KdbxEntry> get allEntries => _allEntriesCache ?? [];
+
+  void _rebuildEntryCache() {
+    _allEntriesCache = _db?.root.allEntries.toList();
+  }
 
   /// Preloads file bytes into memory so openFile doesn't block on I/O.
   Future<void> preloadFile(String filePath) async {
@@ -43,7 +51,8 @@ class DatabaseService {
     _password = password;
     _dirty = false;
     _localizeRecycleBin();
-    log.i('Database opened, entries: ${_db!.root.allEntries.length}');
+    _rebuildEntryCache();
+    log.i('Database opened, entries: ${_allEntriesCache!.length}');
     return _db!;
   }
 
@@ -57,6 +66,7 @@ class DatabaseService {
     _password = password;
     _dirty = true;
     _localizeRecycleBin();
+    _rebuildEntryCache();
     await save();
     log.i('Database created successfully');
     return _db!;
@@ -70,6 +80,7 @@ class DatabaseService {
     _db = await KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
     _dirty = false;
     _localizeRecycleBin();
+    _rebuildEntryCache();
     return _db!;
   }
 
@@ -115,12 +126,14 @@ class DatabaseService {
   KdbxEntry createEntry(KdbxGroup parent) {
     final entry = _db!.createEntry(parent: parent);
     _dirty = true;
+    _rebuildEntryCache();
     return entry;
   }
 
   void deleteItem(KdbxItem item) {
     _db!.remove(item);
     _dirty = true;
+    _rebuildEntryCache();
   }
 
   /// Restores an item from the recycle bin to its previous parent group.
@@ -133,18 +146,20 @@ class DatabaseService {
     if (target == null) return false;
     _db!.move(item: item, target: target);
     _dirty = true;
+    _rebuildEntryCache();
     return true;
   }
 
   void moveItem(KdbxItem item, KdbxGroup target) {
     _db!.move(item: item, target: target);
     _dirty = true;
+    _rebuildEntryCache();
   }
 
   List<KdbxEntry> search(String query) {
     if (_db == null || query.isEmpty) return [];
     final lowerQuery = query.toLowerCase();
-    return _db!.root.allEntries.where((entry) {
+    return allEntries.where((entry) {
       final title = entry.fields['Title']?.text ?? '';
       final username = entry.fields['UserName']?.text ?? '';
       final url = entry.fields['URL']?.text ?? '';
@@ -186,5 +201,6 @@ class DatabaseService {
     _dirty = false;
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
+    _allEntriesCache = null;
   }
 }
