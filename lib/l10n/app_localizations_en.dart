@@ -512,4 +512,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get entries => 'entries';
+
+  @override
+  String get closeBehavior => 'On Window Close';
+
+  @override
+  String get askEveryTime => 'Ask Every Time';
+
+  @override
+  String get minimizeToTray => 'Minimize to System Tray';
+
+  @override
+  String get minimize => 'Minimize';
+
+  @override
+  String get exitApp => 'Exit App';
+
+  @override
+  String get closeWindowMessage => 'What would you like to do?';
+
+  @override
+  String get rememberChoice => 'Remember my choice';
+
+  @override
+  String get showMainWindow => 'Show Main Window';
+
+  @override
+  String get exit => 'Exit';
 }

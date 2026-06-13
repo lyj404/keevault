@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -5,6 +6,7 @@ import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/close_behavior_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
@@ -167,6 +169,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ],
                     ),
                   ),
+
+                  // Close behavior card (desktop only)
+                  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ...[
+                    const SizedBox(height: 16),
+                    _SectionCard(
+                      brightness: brightness,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: ClayDecoration.iconContainer(brightness: brightness),
+                            child: Icon(Icons.close_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l10n.closeBehavior, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              ],
+                            ),
+                          ),
+                          DropdownButton<CloseBehavior>(
+                            value: ref.watch(closeBehaviorProvider),
+                            underline: const SizedBox.shrink(),
+                            items: [
+                              DropdownMenuItem(value: CloseBehavior.ask, child: Text(l10n.askEveryTime)),
+                              DropdownMenuItem(value: CloseBehavior.minimizeToTray, child: Text(l10n.minimizeToTray)),
+                              DropdownMenuItem(value: CloseBehavior.exit, child: Text(l10n.exitApp)),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) {
+                                ref.read(closeBehaviorProvider.notifier).setCloseBehavior(v);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 16),
 

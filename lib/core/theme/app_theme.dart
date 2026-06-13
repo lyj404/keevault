@@ -311,6 +311,11 @@ class AppTheme {
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceLight,
         ),
+        contentTextStyle: TextStyle(
+          fontSize: 14,
+          color: ClayColors.onSurfaceLight,
+          fontFamilyFallback: _fontFallback,
+        ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(
@@ -473,6 +478,11 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceDark,
+        ),
+        contentTextStyle: TextStyle(
+          fontSize: 14,
+          color: ClayColors.onSurfaceDark,
+          fontFamilyFallback: _fontFallback,
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(

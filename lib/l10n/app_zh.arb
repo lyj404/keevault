@@ -191,5 +191,15 @@
   "english": "English",
 
   "groups": "个分组",
-  "entries": "个条目"
+  "entries": "个条目",
+
+  "closeBehavior": "关闭窗口时",
+  "askEveryTime": "每次询问",
+  "minimizeToTray": "最小化到系统托盘",
+  "minimize": "最小化",
+  "exitApp": "直接退出",
+  "closeWindowMessage": "请选择关闭窗口的方式：",
+  "rememberChoice": "记住我的选择",
+  "showMainWindow": "显示主窗口",
+  "exit": "退出"
 }

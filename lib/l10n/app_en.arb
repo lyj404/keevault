@@ -183,5 +183,15 @@
   "english": "English",
 
   "groups": "groups",
-  "entries": "entries"
+  "entries": "entries",
+
+  "closeBehavior": "On Window Close",
+  "askEveryTime": "Ask Every Time",
+  "minimizeToTray": "Minimize to System Tray",
+  "minimize": "Minimize",
+  "exitApp": "Exit App",
+  "closeWindowMessage": "What would you like to do?",
+  "rememberChoice": "Remember my choice",
+  "showMainWindow": "Show Main Window",
+  "exit": "Exit"
 }

@@ -504,4 +504,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get entries => '个条目';
+
+  @override
+  String get closeBehavior => '关闭窗口时';
+
+  @override
+  String get askEveryTime => '每次询问';
+
+  @override
+  String get minimizeToTray => '最小化到系统托盘';
+
+  @override
+  String get minimize => '最小化';
+
+  @override
+  String get exitApp => '直接退出';
+
+  @override
+  String get closeWindowMessage => '请选择关闭窗口的方式：';
+
+  @override
+  String get rememberChoice => '记住我的选择';
+
+  @override
+  String get showMainWindow => '显示主窗口';
+
+  @override
+  String get exit => '退出';
 }

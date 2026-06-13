@@ -50,10 +50,19 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       appBar: AppBar(
         title: Text(l10n.unlockDatabase),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_rounded),
-            onPressed: () => context.push('/settings'),
+          GestureDetector(
+            onTap: () => context.push('/settings'),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: ClayDecoration.iconContainer(
+                brightness: Theme.of(context).brightness,
+                radius: 12,
+              ),
+              child: Icon(Icons.settings_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+            ),
           ),
+          const SizedBox(width: 16),
         ],
       ),
       body: Center(

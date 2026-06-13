@@ -1057,6 +1057,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'个条目'**
   String get entries;
+
+  /// No description provided for @closeBehavior.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭窗口时'**
+  String get closeBehavior;
+
+  /// No description provided for @askEveryTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'每次询问'**
+  String get askEveryTime;
+
+  /// No description provided for @minimizeToTray.
+  ///
+  /// In zh, this message translates to:
+  /// **'最小化到系统托盘'**
+  String get minimizeToTray;
+
+  /// No description provided for @minimize.
+  ///
+  /// In zh, this message translates to:
+  /// **'最小化'**
+  String get minimize;
+
+  /// No description provided for @exitApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'直接退出'**
+  String get exitApp;
+
+  /// No description provided for @closeWindowMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择关闭窗口的方式：'**
+  String get closeWindowMessage;
+
+  /// No description provided for @rememberChoice.
+  ///
+  /// In zh, this message translates to:
+  /// **'记住我的选择'**
+  String get rememberChoice;
+
+  /// No description provided for @showMainWindow.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示主窗口'**
+  String get showMainWindow;
+
+  /// No description provided for @exit.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出'**
+  String get exit;
 }
 
 class _AppLocalizationsDelegate
