@@ -498,4 +498,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get english => 'English';
+
+  @override
+  String get groups => '个分组';
+
+  @override
+  String get entries => '个条目';
 }

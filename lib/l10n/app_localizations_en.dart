@@ -506,4 +506,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get english => 'English';
+
+  @override
+  String get groups => 'groups';
+
+  @override
+  String get entries => 'entries';
 }

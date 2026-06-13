@@ -180,5 +180,8 @@
   "lightTheme": "Light",
   "darkTheme": "Dark",
   "chinese": "中文",
-  "english": "English"
+  "english": "English",
+
+  "groups": "groups",
+  "entries": "entries"
 }

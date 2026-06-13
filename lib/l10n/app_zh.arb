@@ -188,5 +188,8 @@
   "lightTheme": "浅色模式",
   "darkTheme": "深色模式",
   "chinese": "中文",
-  "english": "English"
+  "english": "English",
+
+  "groups": "个分组",
+  "entries": "个条目"
 }

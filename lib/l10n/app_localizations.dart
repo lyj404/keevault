@@ -1045,6 +1045,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'English'**
   String get english;
+
+  /// No description provided for @groups.
+  ///
+  /// In zh, this message translates to:
+  /// **'个分组'**
+  String get groups;
+
+  /// No description provided for @entries.
+  ///
+  /// In zh, this message translates to:
+  /// **'个条目'**
+  String get entries;
 }
 
 class _AppLocalizationsDelegate
