@@ -87,6 +87,14 @@ if(PLUGIN_BUNDLED_LIBRARIES)
     COMPONENT Runtime)
 endif()
 
+# Bundle native crypto library (kreepto)
+set(KREEPTO_DLL "${CMAKE_SOURCE_DIR}/../assets/native/windows/x86_64/kreepto.dll")
+if(EXISTS "${KREEPTO_DLL}")
+  install(FILES "${KREEPTO_DLL}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

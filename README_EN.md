@@ -4,7 +4,7 @@
 
 A cross-platform KeePass-compatible password manager built with Flutter.
 
-![Welcome](assets/images/screenshot.png)
+![Welcome](assets/images/screenshot_en.png)
 
 ## Features
 

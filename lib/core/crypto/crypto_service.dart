@@ -35,11 +35,12 @@ class CryptoService {
     } else if (Platform.isMacOS) {
       return _tryLoad('libkreepto.dylib');
     } else if (Platform.isWindows) {
+      // Windows: DLL is bundled next to the executable
       return _tryLoad('kreepto.dll');
     } else if (Platform.isAndroid) {
+      // Android: .so is bundled in jniLibs by Gradle
       return _tryLoad('libkreepto.so');
     } else if (Platform.isIOS) {
-      // iOS uses statically linked library
       try {
         return DynamicLibrary.process();
       } catch (_) {

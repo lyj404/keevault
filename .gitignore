@@ -99,6 +99,7 @@ app.*.map.json
 # Native crypto library build artifacts
 /native/kreepto-rust/target/
 /assets/native/
+/android/app/src/main/jniLibs/
 
 # Coverage
 coverage/
