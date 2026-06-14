@@ -59,7 +59,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       final lastETag = lastFile.lastSyncedETag;
       if (lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
         return;
       }
       final l10n = AppLocalizations.of(context)!;
@@ -78,7 +78,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true');
+          final etagParam = remoteInfo.eTag != null ? '&etag=${Uri.encodeComponent(remoteInfo.eTag!)}' : '';
+          context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
         }
       } catch (e) {
         if (mounted) Navigator.of(context).pop();
@@ -306,7 +307,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         // Local cache is current, open directly
         ref.read(openedFromCloudProvider.notifier).state = true;
         if (context.mounted) {
-          context.push('/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true');
+          context.push('/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
         }
         return;
       }
@@ -328,7 +329,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       if (context.mounted) {
         Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true');
+        final etagParam = remoteInfo.eTag != null ? '&etag=${Uri.encodeComponent(remoteInfo.eTag!)}' : '';
+        context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
       }
     } catch (e) {
       if (context.mounted) {

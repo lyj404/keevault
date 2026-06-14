@@ -111,6 +111,14 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# Bundle native crypto library (kreepto)
+set(KREEPTO_LIB "${CMAKE_SOURCE_DIR}/../native/kreepto-rust/target/release/libkreepto.so")
+if(EXISTS "${KREEPTO_LIB}")
+  install(FILES "${KREEPTO_LIB}"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

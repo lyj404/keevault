@@ -10,7 +10,8 @@ import '../providers/database_provider.dart';
 class UnlockScreen extends ConsumerStatefulWidget {
   final String filePath;
   final bool isCloud;
-  const UnlockScreen({super.key, required this.filePath, this.isCloud = false});
+  final String? syncedETag;
+  const UnlockScreen({super.key, required this.filePath, this.isCloud = false, this.syncedETag});
 
   @override
   ConsumerState<UnlockScreen> createState() => _UnlockScreenState();
@@ -204,7 +205,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void _unlock() {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
-    ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud);
+    ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag);
   }
 
   String _friendlyError(Object e, AppLocalizations l10n) {

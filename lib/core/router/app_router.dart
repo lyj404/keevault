@@ -26,7 +26,8 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final filePath = state.uri.queryParameters['path'] ?? '';
         final isCloud = state.uri.queryParameters['cloud'] == 'true';
-        return UnlockScreen(filePath: filePath, isCloud: isCloud);
+        final syncedETag = state.uri.queryParameters['etag'];
+        return UnlockScreen(filePath: filePath, isCloud: isCloud, syncedETag: syncedETag);
       },
     ),
     GoRoute(

@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
+import '../../../core/crypto/crypto_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
 import '../../sync/data/sync_service.dart';
@@ -41,14 +43,23 @@ class DatabaseService {
     _preloadedBytes = await File(filePath).readAsBytes();
   }
 
+  /// Loads a KDBX database in a background isolate to avoid blocking the UI.
+  /// The isolate initializes its own crypto engine (FFI if available, pure Dart fallback).
+  static Future<KdbxDatabase> _loadDatabase(Uint8List bytes, String password) async {
+    return await Isolate.run(() {
+      CryptoService.initialize();
+      final credentials = KdbxCredentials(
+        password: ProtectedData.fromString(password),
+      );
+      return KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
+    });
+  }
+
   Future<KdbxDatabase> openFile(String filePath, String password) async {
     log.i('Opening database: $filePath');
     final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
     _preloadedBytes = null;
-    final credentials = KdbxCredentials(
-      password: ProtectedData.fromString(password),
-    );
-    _db = await KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
+    _db = await _loadDatabase(bytes, password);
     _filePath = filePath;
     _password = password;
     _dirty = false;
@@ -76,10 +87,7 @@ class DatabaseService {
 
   Future<KdbxDatabase> reloadFromBytes(Uint8List bytes) async {
     if (_password == null) throw Exception('no_password_cannot_reload');
-    final credentials = KdbxCredentials(
-      password: ProtectedData.fromString(_password!),
-    );
-    _db = await KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
+    _db = await _loadDatabase(bytes, _password!);
     _dirty = false;
     _localizeRecycleBin();
     _rebuildEntryCache();

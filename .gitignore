@@ -93,8 +93,12 @@ app.*.map.json
 /windows/flutter/ephemeral/
 /windows/flutter/generated_plugins.cmake
 
-# Web
-/web/favicon.png
+# Web (not supported)
+/web/
+
+# Native crypto library build artifacts
+/native/kreepto-rust/target/
+/assets/native/
 
 # Coverage
 coverage/

@@ -6,6 +6,7 @@ export '../data/recent_files_service.dart' show RecentFile;
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
+import '../../sync/data/sync_service.dart' show RemoteFileInfo;
 import '../../sync/providers/sync_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
@@ -38,10 +39,15 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       if (isCloud) {
         final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
         if (config != null && config.enabled) {
-          final info = await _ref.read(syncServiceProvider).getRemoteFileInfo(config);
-          _service.setLastSyncedRemoteInfo(info);
           remotePath = config.remoteFilePath;
-          eTag = info?.eTag ?? syncedETag;
+          if (syncedETag != null) {
+            // Welcome screen already verified eTag, reuse it directly
+            _service.setLastSyncedRemoteInfo(RemoteFileInfo(eTag: syncedETag));
+          } else {
+            final info = await _ref.read(syncServiceProvider).getRemoteFileInfo(config);
+            _service.setLastSyncedRemoteInfo(info);
+            eTag = info?.eTag;
+          }
         }
       }
       await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag);
