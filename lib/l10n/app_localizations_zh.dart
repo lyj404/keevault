@@ -630,6 +630,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linkCopied => '链接已复制';
 
   @override
+  String get newVersionAvailable => '有新版本可用';
+
+  @override
+  String get update => '去更新';
+
+  @override
+  String get alreadyLatest => '已是最新版本';
+
+  @override
   String get licenses => '许可证';
 
   @override

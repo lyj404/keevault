@@ -238,6 +238,9 @@
   "reportIssue": "报告问题",
   "reportIssueDescription": "反馈 Bug 或建议",
   "linkCopied": "链接已复制",
+  "newVersionAvailable": "有新版本可用",
+  "update": "去更新",
+  "alreadyLatest": "已是最新版本",
   "licenses": "许可证",
   "openSourceLicenses": "开源许可协议"
 }

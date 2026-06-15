@@ -1,17 +1,87 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../l10n/app_localizations.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
 
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
-  static const String _version = '0.1.0';
+  static const String _version = '0.3.1';
   static const String _buildNumber = '1';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
   static const String _licenseUrl = 'https://github.com/lyj404/keevault/blob/main/LICENSE';
+  static const String _releasesApiUrl = 'https://api.github.com/repos/lyj404/keevault/releases/latest';
+
+  String? _latestVersion;
+  bool _isChecking = false;
+  bool _hasChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdates();
+  }
+
+  Future<void> _checkForUpdates() async {
+    setState(() {
+      _isChecking = true;
+    });
+
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 5);
+      final request = await client.getUrl(Uri.parse(_releasesApiUrl));
+      final response = await request.close();
+
+      if (response.statusCode == 200) {
+        final json = await response.transform(utf8.decoder).join();
+        final data = Map<String, dynamic>.from(
+          (jsonDecode(json) as Map<String, dynamic>),
+        );
+        final tagName = data['tag_name'] as String?;
+        if (tagName != null) {
+          // 移除 v 前缀 (如 v0.3.1 -> 0.3.1)
+          final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
+          setState(() {
+            _latestVersion = version;
+            _hasChecked = true;
+          });
+        }
+      }
+      client.close();
+    } catch (e) {
+      // 忽略网络错误
+    } finally {
+      setState(() {
+        _isChecking = false;
+      });
+    }
+  }
+
+  bool _isNewVersionAvailable() {
+    if (_latestVersion == null) return false;
+    return _compareVersions(_latestVersion!, _version) > 0;
+  }
+
+  int _compareVersions(String v1, String v2) {
+    final parts1 = v1.split('.').map(int.parse).toList();
+    final parts2 = v2.split('.').map(int.parse).toList();
+
+    for (var i = 0; i < 3; i++) {
+      final p1 = i < parts1.length ? parts1[i] : 0;
+      final p2 = i < parts2.length ? parts2[i] : 0;
+      if (p1 != p2) return p1.compareTo(p2);
+    }
+    return 0;
+  }
 
   Future<void> _openUrl(BuildContext context, String url) async {
     final l10n = AppLocalizations.of(context)!;
@@ -22,7 +92,6 @@ class AboutScreen extends StatelessWidget {
     } else if (Platform.isWindows) {
       await Process.run('cmd', ['/c', 'start', url]);
     } else {
-      // Android/iOS: 复制链接并提示
       await Clipboard.setData(ClipboardData(text: url));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -40,6 +109,7 @@ class AboutScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final hasUpdate = _isNewVersionAvailable();
 
     return Scaffold(
       appBar: AppBar(
@@ -91,6 +161,44 @@ class AboutScreen extends StatelessWidget {
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Update Status
+                if (_isChecking)
+                  const CircularProgressIndicator()
+                else if (hasUpdate) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${l10n.newVersionAvailable}: $_latestVersion',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => _openUrl(context, '$_githubUrl/releases/latest'),
+                    icon: const Icon(Icons.system_update_rounded),
+                    label: Text(l10n.update),
+                  ),
+                ] else if (_hasChecked)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.alreadyLatest,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 32),
                 // Description
                 Card(

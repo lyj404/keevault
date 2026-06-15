@@ -1298,6 +1298,24 @@ abstract class AppLocalizations {
   /// **'链接已复制'**
   String get linkCopied;
 
+  /// No description provided for @newVersionAvailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'有新版本可用'**
+  String get newVersionAvailable;
+
+  /// No description provided for @update.
+  ///
+  /// In zh, this message translates to:
+  /// **'去更新'**
+  String get update;
+
+  /// No description provided for @alreadyLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'已是最新版本'**
+  String get alreadyLatest;
+
   /// No description provided for @licenses.
   ///
   /// In zh, this message translates to:

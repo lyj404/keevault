@@ -641,6 +641,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkCopied => 'Link copied';
 
   @override
+  String get newVersionAvailable => 'New version available';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get alreadyLatest => 'Already latest version';
+
+  @override
   String get licenses => 'Licenses';
 
   @override
