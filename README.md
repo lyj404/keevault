@@ -78,6 +78,10 @@ flutter run -d android    # Android
 - **KDBX 解析**: kpasslib
 - **本地存储**: flutter_secure_storage
 
+## 友链
+
+- [LINUX DO 社区](https://linux.do/)
+
 ## 开源协议
 
 本项目基于 Apache License 2.0 开源 - 详见 [LICENSE](LICENSE) 文件。
