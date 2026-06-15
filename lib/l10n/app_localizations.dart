@@ -1249,6 +1249,66 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'保留 {count} 个备份'**
   String backupRetentionCount(Object count);
+
+  /// No description provided for @about.
+  ///
+  /// In zh, this message translates to:
+  /// **'关于'**
+  String get about;
+
+  /// No description provided for @version.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本'**
+  String get version;
+
+  /// No description provided for @build.
+  ///
+  /// In zh, this message translates to:
+  /// **'构建'**
+  String get build;
+
+  /// No description provided for @aboutDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'一个安全、开源的密码管理器，兼容 KeePass 格式。'**
+  String get aboutDescription;
+
+  /// No description provided for @sourceCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'源代码'**
+  String get sourceCode;
+
+  /// No description provided for @reportIssue.
+  ///
+  /// In zh, this message translates to:
+  /// **'报告问题'**
+  String get reportIssue;
+
+  /// No description provided for @reportIssueDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'反馈 Bug 或建议'**
+  String get reportIssueDescription;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'链接已复制'**
+  String get linkCopied;
+
+  /// No description provided for @licenses.
+  ///
+  /// In zh, this message translates to:
+  /// **'许可证'**
+  String get licenses;
+
+  /// No description provided for @openSourceLicenses.
+  ///
+  /// In zh, this message translates to:
+  /// **'开源许可协议'**
+  String get openSourceLicenses;
 }
 
 class _AppLocalizationsDelegate

@@ -616,6 +616,7 @@ class _WideLayout extends StatelessWidget {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
                             case 'settings': context.push('/settings');
+                            case 'about': context.push('/about');
                             case 'close': onClose();
                           }
                         },
@@ -625,6 +626,7 @@ class _WideLayout extends StatelessWidget {
                             PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
                           PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
@@ -754,6 +756,7 @@ class _NarrowLayout extends StatelessWidget {
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
                 case 'settings': context.push('/settings');
+                case 'about': context.push('/about');
                 case 'close': onClose();
               }
             },
@@ -768,6 +771,7 @@ class _NarrowLayout extends StatelessWidget {
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
               ],
               PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
             ],
           ),

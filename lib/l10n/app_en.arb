@@ -220,5 +220,16 @@
   "backupRetentionInfo": "Keeping latest {count} backups",
   "@backupRetentionInfo": { "placeholders": { "count": {} } },
   "backupRetentionCount": "Keep {count} backups",
-  "@backupRetentionCount": { "placeholders": { "count": {} } }
+  "@backupRetentionCount": { "placeholders": { "count": {} } },
+
+  "about": "About",
+  "version": "Version",
+  "build": "Build",
+  "aboutDescription": "A secure, open-source password manager compatible with KeePass format.",
+  "sourceCode": "Source Code",
+  "linkCopied": "Link copied",
+  "reportIssue": "Report Issue",
+  "reportIssueDescription": "Report bugs or suggestions",
+  "licenses": "Licenses",
+  "openSourceLicenses": "Open source licenses"
 }

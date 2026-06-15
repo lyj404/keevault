@@ -614,4 +614,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String backupRetentionCount(Object count) {
     return 'Keep $count backups';
   }
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get build => 'Build';
+
+  @override
+  String get aboutDescription =>
+      'A secure, open-source password manager compatible with KeePass format.';
+
+  @override
+  String get sourceCode => 'Source Code';
+
+  @override
+  String get reportIssue => 'Report Issue';
+
+  @override
+  String get reportIssueDescription => 'Report bugs or suggestions';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
+  String get licenses => 'Licenses';
+
+  @override
+  String get openSourceLicenses => 'Open source licenses';
 }

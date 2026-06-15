@@ -604,4 +604,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String backupRetentionCount(Object count) {
     return '保留 $count 个备份';
   }
+
+  @override
+  String get about => '关于';
+
+  @override
+  String get version => '版本';
+
+  @override
+  String get build => '构建';
+
+  @override
+  String get aboutDescription => '一个安全、开源的密码管理器，兼容 KeePass 格式。';
+
+  @override
+  String get sourceCode => '源代码';
+
+  @override
+  String get reportIssue => '报告问题';
+
+  @override
+  String get reportIssueDescription => '反馈 Bug 或建议';
+
+  @override
+  String get linkCopied => '链接已复制';
+
+  @override
+  String get licenses => '许可证';
+
+  @override
+  String get openSourceLicenses => '开源许可协议';
 }
