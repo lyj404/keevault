@@ -823,19 +823,17 @@ class _GroupTreeView extends ConsumerStatefulWidget {
 
 class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
   final Set<KdbxGroup> _expanded = {};
+  bool _didInitExpand = false;
 
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(databaseProvider).valueOrNull;
     if (db == null) return const SizedBox.shrink();
 
-    // Auto-expand path to current group
-    if (widget.currentGroup != null) {
-      KdbxGroup? g = widget.currentGroup;
-      while (g != null && g != db.root) {
-        _expanded.add(g);
-        g = g.parent;
-      }
+    // Expand all groups by default on first build after database opens.
+    if (!_didInitExpand) {
+      _didInitExpand = true;
+      _expandAll(db.root);
     }
 
     final visible = _flattenVisible(db.root);
@@ -862,6 +860,13 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
     for (final child in group.groups) {
       result.add(_GroupItem(child, depth));
       _flattenChildren(child, depth + 1, result);
+    }
+  }
+
+  void _expandAll(KdbxGroup group) {
+    _expanded.add(group);
+    for (final child in group.groups) {
+      _expandAll(child);
     }
   }
 

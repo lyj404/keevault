@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/crypto/crypto_service.dart';
+import 'core/utils/logger.dart';
 import 'core/providers/auto_lock_provider.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
@@ -12,6 +13,7 @@ import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await fileLogOutput.init();
   CryptoService.initialize();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
