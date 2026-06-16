@@ -31,13 +31,14 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   Future<void> _checkForUpdates() async {
+    if (!mounted) return;
     setState(() {
       _isChecking = true;
     });
 
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 5);
     try {
-      final client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 5);
       final request = await client.getUrl(Uri.parse(_releasesApiUrl));
       final response = await request.close();
 
@@ -47,8 +48,7 @@ class _AboutScreenState extends State<AboutScreen> {
           (jsonDecode(json) as Map<String, dynamic>),
         );
         final tagName = data['tag_name'] as String?;
-        if (tagName != null) {
-          // 移除 v 前缀 (如 v0.3.1 -> 0.3.1)
+        if (tagName != null && mounted) {
           final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
           setState(() {
             _latestVersion = version;
@@ -56,13 +56,15 @@ class _AboutScreenState extends State<AboutScreen> {
           });
         }
       }
-      client.close();
     } catch (e) {
       // 忽略网络错误
     } finally {
-      setState(() {
-        _isChecking = false;
-      });
+      client.close();
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+        });
+      }
     }
   }
 

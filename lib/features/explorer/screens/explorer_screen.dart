@@ -843,7 +843,7 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
       itemCount: visible.length,
       itemBuilder: (context, index) {
         final item = visible[index];
-        return _buildGroupTile(context, item.group, item.depth);
+        return RepaintBoundary(child: _buildGroupTile(context, item.group, item.depth));
       },
     );
   }
@@ -1089,15 +1089,17 @@ class _EntryListBody extends StatelessWidget {
       itemBuilder: (context, index) {
         if (index == entries.length) return const SizedBox(height: 80);
         final e = entries[index];
-        return EntryListTile(
-          key: ValueKey(e.uuid),
-          entry: e,
-          isSelected: e == selectedEntry,
-          onTap: () => onEntrySelect(e),
-          onOpen: () => onEntryOpen(e),
-          onDelete: () => onDeleteEntry(e),
-          onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
-          onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+        return RepaintBoundary(
+          child: EntryListTile(
+            key: ValueKey(e.uuid),
+            entry: e,
+            isSelected: e == selectedEntry,
+            onTap: () => onEntrySelect(e),
+            onOpen: () => onEntryOpen(e),
+            onDelete: () => onDeleteEntry(e),
+            onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
+            onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+          ),
         );
       },
     );
@@ -1143,23 +1145,27 @@ class _MobileEntryListBody extends StatelessWidget {
       itemCount: subGroups.length + entries.length + 1,
       itemBuilder: (context, index) {
         if (index < subGroups.length) {
-          return _MobileGroupTile(
-            group: subGroups[index],
-            onTap: () => onGroupTap(subGroups[index]),
+          return RepaintBoundary(
+            child: _MobileGroupTile(
+              group: subGroups[index],
+              onTap: () => onGroupTap(subGroups[index]),
+            ),
           );
         }
         final entryIndex = index - subGroups.length;
         if (entryIndex == entries.length) return const SizedBox(height: 80);
         final e = entries[entryIndex];
-        return EntryListTile(
-          key: ValueKey(e.uuid),
-          entry: e,
-          isSelected: e == selectedEntry,
-          onTap: () => onEntrySelect(e),
-          onOpen: () => onEntryOpen(e),
-          onDelete: () => onDeleteEntry(e),
-          onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
-          onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+        return RepaintBoundary(
+          child: EntryListTile(
+            key: ValueKey(e.uuid),
+            entry: e,
+            isSelected: e == selectedEntry,
+            onTap: () => onEntrySelect(e),
+            onOpen: () => onEntryOpen(e),
+            onDelete: () => onDeleteEntry(e),
+            onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
+            onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+          ),
         );
       },
     );

@@ -66,13 +66,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   itemBuilder: (ctx, i) {
                     final entry = results[i];
                     final groupPath = service.getGroupPath(entry.parent!);
-                    return EntryListTile(
-                      key: ValueKey(entry.uuid),
-                      entry: entry,
-                      onTap: () {
-                        final idx = entry.parent?.entries.indexOf(entry) ?? 0;
-                        context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(groupPath)}');
-                      },
+                    return RepaintBoundary(
+                      child: EntryListTile(
+                        key: ValueKey(entry.uuid),
+                        entry: entry,
+                        onTap: () {
+                          final idx = entry.parent?.entries.indexOf(entry) ?? 0;
+                          context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(groupPath)}');
+                        },
+                      ),
                     );
                   },
                 ),

@@ -55,8 +55,12 @@ void showToast(BuildContext context, String message, {bool isError = false, Dura
 
   Future.delayed(duration, () async {
     if (controller.isDismissed) return;
-    await controller.reverse();
-    entry.remove();
-    controller.dispose();
+    try {
+      await controller.reverse();
+      entry.remove();
+      controller.dispose();
+    } catch (_) {
+      // Controller or entry already disposed — safe to ignore.
+    }
   });
 }
