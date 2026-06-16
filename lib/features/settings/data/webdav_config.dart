@@ -65,4 +65,18 @@ class WebDavConfig {
         remoteFilename: remoteFilename ?? this.remoteFilename,
         enabled: enabled ?? this.enabled,
       );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WebDavConfig &&
+          serverUrl == other.serverUrl &&
+          username == other.username &&
+          password == other.password &&
+          remotePath == other.remotePath &&
+          remoteFilename == other.remoteFilename &&
+          enabled == other.enabled;
+
+  @override
+  int get hashCode => Object.hash(serverUrl, username, password, remotePath, remoteFilename, enabled);
 }

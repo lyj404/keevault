@@ -809,7 +809,7 @@ class _NarrowLayout extends StatelessWidget {
 
 // ─── Group tree (sidebar) ────────────────────────────────────────────────
 
-class _GroupTreeView extends ConsumerWidget {
+class _GroupTreeView extends ConsumerStatefulWidget {
   final KdbxGroup? currentGroup;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxGroup> onDeleteGroup;
@@ -818,24 +818,60 @@ class _GroupTreeView extends ConsumerWidget {
   const _GroupTreeView({required this.currentGroup, required this.onGroupTap, required this.onDeleteGroup, required this.onRenameGroup});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_GroupTreeView> createState() => _GroupTreeViewState();
+}
+
+class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
+  final Set<KdbxGroup> _expanded = {};
+
+  @override
+  Widget build(BuildContext context) {
     final db = ref.watch(databaseProvider).valueOrNull;
     if (db == null) return const SizedBox.shrink();
 
-    return ListView(
+    // Auto-expand path to current group
+    if (widget.currentGroup != null) {
+      KdbxGroup? g = widget.currentGroup;
+      while (g != null && g != db.root) {
+        _expanded.add(g);
+        g = g.parent;
+      }
+    }
+
+    final visible = _flattenVisible(db.root);
+
+    return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      children: [
-        _buildGroupTile(context, db.root, 0),
-        ..._buildChildren(context, db.root, 1),
-      ],
+      itemCount: visible.length,
+      itemBuilder: (context, index) {
+        final item = visible[index];
+        return _buildGroupTile(context, item.group, item.depth);
+      },
     );
   }
 
+  List<_GroupItem> _flattenVisible(KdbxGroup root) {
+    final result = <_GroupItem>[];
+    result.add(_GroupItem(root, 0));
+    _flattenChildren(root, 1, result);
+    return result;
+  }
+
+  void _flattenChildren(KdbxGroup group, int depth, List<_GroupItem> result) {
+    if (!_expanded.contains(group)) return;
+    for (final child in group.groups) {
+      result.add(_GroupItem(child, depth));
+      _flattenChildren(child, depth + 1, result);
+    }
+  }
+
   Widget _buildGroupTile(BuildContext context, KdbxGroup group, int depth) {
-    final isSelected = group == currentGroup;
+    final isSelected = group == widget.currentGroup;
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
     final canDelete = depth > 0 && group.icon != KdbxIcon.trashBin;
+    final hasChildren = group.groups.isNotEmpty;
+    final isExpanded = _expanded.contains(group);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -861,7 +897,7 @@ class _GroupTreeView extends ConsumerWidget {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
-            onTap: () => onGroupTap(group),
+            onTap: () => widget.onGroupTap(group),
             onSecondaryTapUp: canDelete ? (details) => _showContextMenu(context, details.globalPosition, group) : null,
             onLongPress: canDelete ? () {
               final box = context.findRenderObject() as RenderBox?;
@@ -875,6 +911,24 @@ class _GroupTreeView extends ConsumerWidget {
               padding: EdgeInsets.only(left: 12.0 + depth * 18, right: 12),
               child: Row(
                 children: [
+                  if (hasChildren)
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        if (isExpanded) {
+                          _expanded.remove(group);
+                        } else {
+                          _expanded.add(group);
+                        }
+                      }),
+                      child: Icon(
+                        isExpanded ? Icons.expand_more_rounded : Icons.chevron_right_rounded,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 16),
+                  const SizedBox(width: 4),
                   Icon(
                     group.icon == KdbxIcon.trashBin
                         ? (isSelected ? Icons.delete_rounded : Icons.delete_outline_rounded)
@@ -952,19 +1006,16 @@ class _GroupTreeView extends ConsumerWidget {
       ],
     ).then((value) {
       if (!context.mounted) return;
-      if (value == 'rename') onRenameGroup(group);
-      if (value == 'delete') onDeleteGroup(group);
+      if (value == 'rename') widget.onRenameGroup(group);
+      if (value == 'delete') widget.onDeleteGroup(group);
     });
   }
+}
 
-  List<Widget> _buildChildren(BuildContext context, KdbxGroup group, int depth) {
-    final widgets = <Widget>[];
-    for (final child in group.groups) {
-      widgets.add(_buildGroupTile(context, child, depth));
-      widgets.addAll(_buildChildren(context, child, depth + 1));
-    }
-    return widgets;
-  }
+class _GroupItem {
+  final KdbxGroup group;
+  final int depth;
+  const _GroupItem(this.group, this.depth);
 }
 
 // ─── Breadcrumb bar ──────────────────────────────────────────────────────

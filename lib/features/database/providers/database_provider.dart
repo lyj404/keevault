@@ -50,8 +50,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           }
         }
       }
-      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag);
-      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag);
+      final recentSvc = _ref.read(recentFilesServiceProvider);
+      await Future.wait([
+        recentSvc.addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
+        recentSvc.setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
+      ]);
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
@@ -63,8 +66,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     state = const AsyncValue.loading();
     try {
       final db = await _service.createDatabase(name, password, filePath);
-      await _ref.read(recentFilesServiceProvider).addRecentFile(filePath);
-      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(filePath);
+      final recentSvc = _ref.read(recentFilesServiceProvider);
+      await Future.wait([
+        recentSvc.addRecentFile(filePath),
+        recentSvc.setLastOpenedFile(filePath),
+      ]);
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
@@ -75,7 +81,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   /// Saves locally and syncs to WebDAV if enabled.
   /// Returns true on success, false if a conflict was detected (caller should show dialog).
   Future<bool> save() async {
-    await _service.save();
+    final bytes = await _service.save();
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     if (config != null && config.enabled) {
       _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
@@ -91,15 +97,17 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           return false;
         }
         await syncService.ensureRemoteDirectory(config);
-        final bytes = await _service.saveToBytes();
         await syncService.uploadDatabase(config, bytes);
         // Store the remote metadata after successful upload
         final newInfo = await syncService.getRemoteFileInfo(config);
         _service.setLastSyncedRemoteInfo(newInfo);
         // Persist the eTag so next startup can skip redundant download
         if (newInfo?.eTag != null && _service.filePath != null) {
-          await _ref.read(recentFilesServiceProvider).addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo!.eTag);
-          await _ref.read(recentFilesServiceProvider).setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo.eTag);
+          final recentSvc = _ref.read(recentFilesServiceProvider);
+          await Future.wait([
+            recentSvc.addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo!.eTag),
+            recentSvc.setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo.eTag),
+          ]);
         }
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
       } catch (e) {
@@ -153,8 +161,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
     if (_service.filePath != null) {
-      await _ref.read(recentFilesServiceProvider).addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag);
-      await _ref.read(recentFilesServiceProvider).setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag);
+      final recentSvc = _ref.read(recentFilesServiceProvider);
+      await Future.wait([
+        recentSvc.addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
+        recentSvc.setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
+      ]);
     }
   }
 

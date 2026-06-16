@@ -152,6 +152,10 @@ class ClayDecoration {
 }
 
 class AppTheme {
+  // Cached theme instances — built once, reused on every rebuild.
+  static ThemeData? _light;
+  static ThemeData? _dark;
+
   // Cross-platform CJK font fallback
   static const _fontFallback = <String>[
     'Microsoft YaHei',    // Windows
@@ -184,7 +188,10 @@ class AppTheme {
     );
   }
 
-  static ThemeData light() {
+  static ThemeData light() => _light ??= _buildLight();
+  static ThemeData dark() => _dark ??= _buildDark();
+
+  static ThemeData _buildLight() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -352,7 +359,7 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData _buildDark() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,

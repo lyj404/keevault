@@ -12,7 +12,14 @@ class RemoteFileInfo {
 }
 
 class SyncService {
+  webdav.Client? _cachedClient;
+  WebDavConfig? _cachedConfig;
+
+  /// Returns a cached WebDAV client, rebuilding it only when config changes.
   webdav.Client _buildClient(WebDavConfig config, {bool debug = false}) {
+    if (!debug && _cachedClient != null && _cachedConfig == config) {
+      return _cachedClient!;
+    }
     final client = webdav.newClient(
       config.serverUrl,
       user: config.username,
@@ -22,6 +29,10 @@ class SyncService {
     client.setConnectTimeout(15000);
     client.setSendTimeout(15000);
     client.setReceiveTimeout(30000);
+    if (!debug) {
+      _cachedClient = client;
+      _cachedConfig = config;
+    }
     return client;
   }
 

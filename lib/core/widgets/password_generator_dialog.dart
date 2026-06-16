@@ -183,9 +183,9 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                   setState(() {
                     _length = n;
                     _lengthCtrl.text = '$n';
+                    _password = _generate();
                   });
                 },
-                onChangeEnd: (_) => _regenerate(),
               ),
               const SizedBox(height: 8),
 
@@ -195,42 +195,42 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
               _buildToggle(
                 value: _upper,
                 title: l10n.uppercaseAZ,
-                onChanged: (v) => setState(() { _upper = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _upper = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _lower,
                 title: l10n.lowercaseaz,
-                onChanged: (v) => setState(() { _lower = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _lower = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _digits,
                 title: l10n.digits09,
-                onChanged: (v) => setState(() { _digits = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _digits = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _symbols,
                 title: l10n.symbols,
-                onChanged: (v) => setState(() { _symbols = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _symbols = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _hyphen,
                 title: l10n.hyphen,
-                onChanged: (v) => setState(() { _hyphen = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _hyphen = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _underscore,
                 title: l10n.underscore,
-                onChanged: (v) => setState(() { _underscore = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _underscore = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _parentheses,
                 title: l10n.parentheses,
-                onChanged: (v) => setState(() { _parentheses = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _parentheses = v; _password = _generate(); }),
               ),
               _buildToggle(
                 value: _space,
                 title: l10n.space,
-                onChanged: (v) => setState(() { _space = v; _regenerate(); }),
+                onChanged: (v) => setState(() { _space = v; _password = _generate(); }),
               ),
 
               // Custom symbols
@@ -253,8 +253,7 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                   fillColor: colorScheme.surfaceContainerLow,
                 ),
                 onChanged: (v) {
-                  _customSymbols = v;
-                  _regenerate();
+                  setState(() { _customSymbols = v; _password = _generate(); });
                 },
               ),
             ],

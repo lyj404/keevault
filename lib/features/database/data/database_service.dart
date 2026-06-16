@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui' as ui;
@@ -106,22 +107,32 @@ class DatabaseService {
     }
   }
 
-  Future<void> save() async {
-    if (_db == null || _filePath == null) return;
+  /// Saves the database to disk and returns the serialized bytes.
+  /// The serialization+encryption runs in a background isolate to avoid blocking the UI.
+  /// Returns the serialized bytes so callers can reuse them (e.g. for cloud upload).
+  Future<Uint8List> save() async {
+    if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
-    final bytes = await _db!.save();
+    final db = _db!;
+    final bytes = await Isolate.run(() => db.save());
     if (await _backupService.isAutoBackupEnabled()) {
-      await _backupService.createBackup(_filePath!);
+      unawaited(_backupService.createBackup(_filePath!).catchError((e) {
+        log.e('Auto-backup failed', error: e);
+        return null;
+      }));
     }
     await File(_filePath!).writeAsBytes(bytes);
     _dirty = false;
     log.i('Database saved (${bytes.length} bytes)');
+    return Uint8List.fromList(bytes);
   }
 
+  /// Serializes the database to bytes without writing to disk.
+  /// Runs in a background isolate to avoid blocking the UI.
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
-    final bytes = await _db!.save();
-    _dirty = false;
+    final db = _db!;
+    final bytes = await Isolate.run(() => db.save());
     return Uint8List.fromList(bytes);
   }
 
