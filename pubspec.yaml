@@ -31,9 +31,6 @@ dependencies:
   # Secure storage (recent files only, never passwords)
   flutter_secure_storage: ^9.2.4
 
-  # Password generation
-  crypto: ^3.0.6
-
   # System tray & window management
   system_tray: ^2.0.3
   window_manager: ^0.4.3
