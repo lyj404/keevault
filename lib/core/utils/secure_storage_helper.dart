@@ -4,10 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Windows DPAPI corruption errors (CryptUnprotectData failure).
 ///
 /// On Windows, the secure storage file can become unreadable after
-/// Windows updates, user profile changes, or file corruption. When
-/// this happens, the package deletes the corrupt file and throws.
-/// This wrapper catches the error and returns null/default values
-/// so the app can continue working.
+/// Windows updates, user profile changes, or file corruption. The
+/// native plugin prints the error and deletes the file — this is
+/// a one-time cost that cannot be suppressed. This wrapper catches
+/// the thrown exception so the app continues working.
 class SecureStorageHelper {
   final FlutterSecureStorage _storage;
 
@@ -18,8 +18,6 @@ class SecureStorageHelper {
     try {
       return await _storage.read(key: key);
     } catch (_) {
-      // DPAPI decryption failed; the package already deleted the corrupt file.
-      // Subsequent reads will return null from a clean state.
       return null;
     }
   }
@@ -28,7 +26,6 @@ class SecureStorageHelper {
     try {
       await _storage.write(key: key, value: value);
     } catch (_) {
-      // If write fails (e.g. corrupt file still present), delete and retry.
       try {
         await _storage.delete(key: key);
         await _storage.write(key: key, value: value);

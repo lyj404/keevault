@@ -104,9 +104,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         // Persist the eTag so next startup can skip redundant download
         if (newInfo?.eTag != null && _service.filePath != null) {
           final recentSvc = _ref.read(recentFilesServiceProvider);
+          final existing = await recentSvc.getRecentFiles();
+          final wasCloud = existing.any((f) => f.path == _service.filePath && f.isCloud);
           await Future.wait([
-            recentSvc.addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo!.eTag),
-            recentSvc.setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: newInfo.eTag),
+            recentSvc.addRecentFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: newInfo!.eTag),
+            recentSvc.setLastOpenedFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: newInfo.eTag),
           ]);
         }
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
@@ -163,9 +165,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     state = AsyncValue.data(db);
     if (_service.filePath != null) {
       final recentSvc = _ref.read(recentFilesServiceProvider);
+      final existing = await recentSvc.getRecentFiles();
+      final wasCloud = existing.any((f) => f.path == _service.filePath && f.isCloud);
       await Future.wait([
-        recentSvc.addRecentFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
-        recentSvc.setLastOpenedFile(_service.filePath!, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
+        recentSvc.addRecentFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
+        recentSvc.setLastOpenedFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
       ]);
     }
   }

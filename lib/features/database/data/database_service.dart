@@ -151,6 +151,7 @@ class DatabaseService {
 
   KdbxEntry createEntry(KdbxGroup parent) {
     final entry = _db!.createEntry(parent: parent);
+    entry.times = KdbxTimes.fromTime();
     _dirty = true;
     _rebuildEntryCache();
     return entry;

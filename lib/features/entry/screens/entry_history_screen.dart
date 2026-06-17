@@ -60,7 +60,6 @@ class EntryHistoryScreen extends ConsumerWidget {
   void _showHistoryDetail(BuildContext context, WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final brightness = Theme.of(context).brightness;
     final title = historyEntry.fields['Title']?.text ?? '';
     final username = historyEntry.fields['UserName']?.text ?? '';
     final password = historyEntry.fields['Password']?.text ?? '';
@@ -187,6 +186,7 @@ class EntryHistoryScreen extends ConsumerWidget {
 
   void _restoreVersion(WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
     // Save current state to history before restoring
+    currentEntry.times.touch();
     currentEntry.pushHistory();
     // Copy fields from history entry
     for (final field in historyEntry.fields.entries) {

@@ -200,6 +200,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     final service = ref.read(databaseServiceProvider);
 
     if (_isEdit) {
+      _entry!.times.touch();
       _entry!.pushHistory();
     }
     _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
