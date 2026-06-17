@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
@@ -182,6 +185,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onClose: () => _close(context, ref),
           onSearch: () => context.push('/search'),
           onPop: _popPath(ref),
+          onImportCsv: () => _importCsv(context, ref),
+          onExportCsv: () => _exportCsv(context, ref),
+          onExportKdbx: () => _exportKdbx(context, ref),
         ),
       );
     }
@@ -218,6 +224,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onClose: () => _close(context, ref),
         onSearch: () => context.push('/search'),
         onPop: _popPath(ref),
+        onImportCsv: () => _importCsv(context, ref),
+        onExportCsv: () => _exportCsv(context, ref),
+        onExportKdbx: () => _exportKdbx(context, ref),
       ),
     );
   }
@@ -437,6 +446,95 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     if (context.mounted) context.go('/welcome');
   }
 
+  Future<void> _importCsv(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+    if (result == null || result.files.single.path == null) return;
+
+    try {
+      final content = await File(result.files.single.path!).readAsString();
+      final csvService = ref.read(csvServiceProvider);
+      final entries = csvService.importFromCsv(content);
+      if (entries.isEmpty) {
+        if (context.mounted) showToast(context, l10n.noEntriesToExport, isError: true);
+        return;
+      }
+
+      final dbService = ref.read(databaseServiceProvider);
+      final db = dbService.db;
+      final groupPath = ref.read(currentGroupPathProvider);
+      final targetGroup = dbService.findGroupByPath(groupPath) ?? db!.root;
+
+      final count = csvService.createEntries(entries, db!, targetGroup);
+      dbService.markDirty();
+      dbService.rebuildEntryCache();
+      refreshExplorerLists(ref);
+
+      if (context.mounted) {
+        showToast(context, l10n.importSuccess(count));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showToast(context, l10n.importFailed(e.toString()), isError: true);
+      }
+    }
+  }
+
+  Future<void> _exportCsv(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final dbService = ref.read(databaseServiceProvider);
+    final entries = dbService.allEntries;
+    if (entries.isEmpty) {
+      if (context.mounted) showToast(context, l10n.noEntriesToExport, isError: true);
+      return;
+    }
+
+    final csvService = ref.read(csvServiceProvider);
+    final csvContent = csvService.exportToCsv(entries);
+
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: l10n.exportCsv,
+      fileName: 'passwords.csv',
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+    if (savePath == null) return;
+
+    try {
+      final file = File(savePath);
+      await file.writeAsString(csvContent, encoding: utf8);
+      if (context.mounted) showToast(context, l10n.exportSuccess);
+    } catch (e) {
+      if (context.mounted) showToast(context, l10n.exportFailed, isError: true);
+    }
+  }
+
+  Future<void> _exportKdbx(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final dbService = ref.read(databaseServiceProvider);
+    if (dbService.db == null) return;
+
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: l10n.exportKdbx,
+      fileName: 'database.kdbx',
+      type: FileType.custom,
+      allowedExtensions: ['kdbx'],
+    );
+    if (savePath == null) return;
+
+    try {
+      final bytes = await dbService.saveToBytes();
+      final file = File(savePath);
+      await file.writeAsBytes(bytes);
+      if (context.mounted) showToast(context, l10n.exportSuccess);
+    } catch (e) {
+      if (context.mounted) showToast(context, l10n.exportFailed, isError: true);
+    }
+  }
+
   void _showAddEntrySheet(BuildContext context, WidgetRef ref, KdbxGroup group) {
     showModalBottomSheet(
       context: context,
@@ -478,6 +576,9 @@ class _WideLayout extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onSearch;
   final VoidCallback? onPop;
+  final VoidCallback? onImportCsv;
+  final VoidCallback? onExportCsv;
+  final VoidCallback? onExportKdbx;
 
   const _WideLayout({
     required this.breadcrumbs,
@@ -500,6 +601,9 @@ class _WideLayout extends StatelessWidget {
     required this.onClose,
     required this.onSearch,
     this.onPop,
+    this.onImportCsv,
+    this.onExportCsv,
+    this.onExportKdbx,
   });
 
   @override
@@ -618,6 +722,9 @@ class _WideLayout extends StatelessWidget {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
                             case 'change_password': showChangePasswordDialog(context);
+                            case 'import_csv': onImportCsv?.call();
+                            case 'export_csv': onExportCsv?.call();
+                            case 'export_kdbx': onExportKdbx?.call();
                             case 'settings': context.push('/settings');
                             case 'about': context.push('/about');
                             case 'close': onClose();
@@ -629,6 +736,11 @@ class _WideLayout extends StatelessWidget {
                             PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
                           PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
+                          const PopupMenuDivider(),
                           PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
@@ -714,6 +826,9 @@ class _NarrowLayout extends StatelessWidget {
   final VoidCallback onClose;
   final VoidCallback onSearch;
   final VoidCallback? onPop;
+  final VoidCallback? onImportCsv;
+  final VoidCallback? onExportCsv;
+  final VoidCallback? onExportKdbx;
 
   const _NarrowLayout({
     required this.breadcrumbs,
@@ -734,6 +849,9 @@ class _NarrowLayout extends StatelessWidget {
     required this.onClose,
     required this.onSearch,
     this.onPop,
+    this.onImportCsv,
+    this.onExportCsv,
+    this.onExportKdbx,
   });
 
   @override
@@ -760,6 +878,9 @@ class _NarrowLayout extends StatelessWidget {
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
                 case 'change_password': showChangePasswordDialog(context);
+                case 'import_csv': onImportCsv?.call();
+                case 'export_csv': onExportCsv?.call();
+                case 'export_kdbx': onExportKdbx?.call();
                 case 'settings': context.push('/settings');
                 case 'about': context.push('/about');
                 case 'close': onClose();
@@ -776,6 +897,11 @@ class _NarrowLayout extends StatelessWidget {
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
               ],
               PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuDivider(),
+              PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
+              const PopupMenuDivider(),
               PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),

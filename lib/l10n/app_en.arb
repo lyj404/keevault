@@ -276,5 +276,17 @@
   "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
 
   "backupPasswordDifferent": "Backup uses a different password (master password may have been changed). Please enter the backup password.",
-  "backupPasswordHint": "Enter the master password from when the backup was created"
+  "backupPasswordHint": "Enter the master password from when the backup was created",
+
+  "importCsv": "Import CSV",
+  "exportCsv": "Export CSV",
+  "exportKdbx": "Export KDBX",
+  "importCsvTitle": "Import CSV File",
+  "importSuccess": "Successfully imported {count} entries",
+  "@importSuccess": { "placeholders": { "count": {} } },
+  "importFailed": "Import failed: {error}",
+  "@importFailed": { "placeholders": { "error": {} } },
+  "exportSuccess": "Export successful",
+  "exportFailed": "Export failed",
+  "noEntriesToExport": "No entries to export"
 }

@@ -5,7 +5,6 @@ import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/crypto/crypto_service.dart';
 import 'core/utils/logger.dart';
-import 'core/providers/auto_lock_provider.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/tray_service.dart';
@@ -28,6 +27,7 @@ void main() async {
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
+      await windowManager.setPreventClose(true);
     });
   }
 

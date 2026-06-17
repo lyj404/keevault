@@ -751,4 +751,35 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupPasswordHint => '请输入备份时的主密码';
+
+  @override
+  String get importCsv => '导入 CSV';
+
+  @override
+  String get exportCsv => '导出 CSV';
+
+  @override
+  String get exportKdbx => '导出 KDBX';
+
+  @override
+  String get importCsvTitle => '导入 CSV 文件';
+
+  @override
+  String importSuccess(Object count) {
+    return '成功导入 $count 个条目';
+  }
+
+  @override
+  String importFailed(Object error) {
+    return '导入失败: $error';
+  }
+
+  @override
+  String get exportSuccess => '导出成功';
+
+  @override
+  String get exportFailed => '导出失败';
+
+  @override
+  String get noEntriesToExport => '没有可导出的条目';
 }

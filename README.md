@@ -26,12 +26,70 @@
 
 - [ ] **TOTP 支持** - 一次性动态验证码生成与显示，支持两步验证场景（如 GitHub、Google 等），无需额外安装 Authenticator 应用
 - [x] **文件附件** - 支持在条目中附加文件（SSH 密钥、证书、恢复密钥等），查看、添加、删除附件
-- [ ] **自定义字段编辑** - 在编辑界面添加和修改自定义字段，存储安全问题答案、PIN 码等额外信息
+- [x] **自定义字段编辑** - 在编辑界面添加和修改自定义字段，存储安全问题答案、PIN 码等额外信息
 - [ ] **Key File 认证** - 支持使用密钥文件作为第二层验证，密码 + 文件双因素解锁数据库
-- [ ] **CSV 导入/导出** - 支持从 Chrome、1Password、LastPass 等导入密码，或将数据库导出为 CSV 格式
+- [x] **CSV 导入/导出** - 支持从 Chrome、1Password、LastPass 等导入密码，或将数据库导出为 CSV/KDBX 格式
 - [x] **修改主密码** - 支持更改数据库的主密码
 - [ ] **条目过期时间** - 设置密码过期日期，过期后提醒用户更换
 - [x] **条目历史查看** - 查看条目的历史版本记录，支持回溯和恢复旧版本
+
+## CSV 导入格式说明
+
+支持自动识别多种常见密码管理器的 CSV 格式，无需固定模板：
+
+### 支持的列名（不区分大小写）
+
+| 字段 | 支持的列名 |
+|------|-----------|
+| 标题 | `Title`, `Name`, `Entry Name` |
+| 用户名 | `Username`, `User`, `Login`, `Login_Username` |
+| 密码 | `Password`, `Pass`, `Passwd`, `Login_Password` |
+| 网址 | `URL`, `URI`, `Website`, `Web Site`, `Login_URI` |
+| 备注 | `Notes`, `Note`, `Extra`, `Comments`, `Comment` |
+| 分组 | `Group`, `Grouping`, `Folder`, `Folders`, `Path` |
+| TOTP | `TOTP`, `OTPAuth`, `Login_TOTP`, `OTP` |
+
+### 支持的密码管理器格式
+
+**Chrome / Google 密码管理器**
+```csv
+name,url,username,password
+```
+
+**1Password**
+```csv
+Title,Username,Password,URL,Notes
+```
+
+**LastPass**
+```csv
+url,username,password,totp,extra,name,grouping,fav
+```
+
+**Bitwarden**
+```csv
+folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp
+```
+
+**KeePass**
+```csv
+Group,Title,Username,Password,URL,Notes
+```
+
+### 说明
+
+- 分隔符自动检测：支持逗号 (`,`)、分号 (`;`)、制表符
+- 自动跳过 UTF-8 BOM
+- 自动识别标题行
+- 未识别的列会作为自定义字段导入
+- 支持子分组路径（如 `Email/Work`）
+
+### 导出格式
+
+- **CSV 导出**：使用 KeePass 兼容格式（`Group,Title,Username,Password,URL,Notes`）
+- **KDBX 导出**：导出完整的 KeePass 数据库文件
+
+---
 
 从 [Releases](https://github.com/lyj404/keevault/releases) 页面下载对应平台的安装包。
 
@@ -86,6 +144,12 @@ flutter run -d android    # Android
 - **路由**: go_router
 - **KDBX 解析**: kpasslib
 - **本地存储**: flutter_secure_storage
+- **文件选择**: file_picker
+- **CSV 解析**: csv
+- **系统托盘**: system_tray
+- **窗口管理**: window_manager
+- **WebDAV 同步**: webdav_client
+- **日志**: logger
 
 ## 友链
 

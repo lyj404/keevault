@@ -25,6 +25,9 @@ dependencies:
   # File picking
   file_picker: ^8.1.7
 
+  # CSV parsing
+  csv: ^6.0.0
+
   # Platform paths
   path_provider: ^2.1.5
 

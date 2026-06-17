@@ -1531,6 +1531,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'请输入备份时的主密码'**
   String get backupPasswordHint;
+
+  /// No description provided for @importCsv.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入 CSV'**
+  String get importCsv;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 CSV'**
+  String get exportCsv;
+
+  /// No description provided for @exportKdbx.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 KDBX'**
+  String get exportKdbx;
+
+  /// No description provided for @importCsvTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入 CSV 文件'**
+  String get importCsvTitle;
+
+  /// No description provided for @importSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功导入 {count} 个条目'**
+  String importSuccess(Object count);
+
+  /// No description provided for @importFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入失败: {error}'**
+  String importFailed(Object error);
+
+  /// No description provided for @exportSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出成功'**
+  String get exportSuccess;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出失败'**
+  String get exportFailed;
+
+  /// No description provided for @noEntriesToExport.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有可导出的条目'**
+  String get noEntriesToExport;
 }
 
 class _AppLocalizationsDelegate

@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
+import '../data/csv_service.dart';
 import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
 export '../data/recent_files_service.dart' show RecentFile;
+export '../data/csv_service.dart' show CsvEntry;
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
@@ -11,6 +13,10 @@ import '../../sync/providers/sync_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
+});
+
+final csvServiceProvider = Provider<CsvService>((ref) {
+  return CsvService();
 });
 
 final recentFilesServiceProvider = Provider<RecentFilesService>((ref) {

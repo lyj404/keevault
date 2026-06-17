@@ -1,0 +1,262 @@
+import 'package:csv/csv.dart';
+import 'package:kpasslib/kpasslib.dart';
+import '../../../core/utils/logger.dart';
+
+const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
+
+/// A parsed entry from CSV, ready to be imported into KDBX.
+class CsvEntry {
+  String title;
+  String username;
+  String password;
+  String url;
+  String notes;
+  String? group;
+  Map<String, String> customFields;
+
+  CsvEntry({
+    this.title = '',
+    this.username = '',
+    this.password = '',
+    this.url = '',
+    this.notes = '',
+    this.group,
+    Map<String, String>? customFields,
+  }) : customFields = customFields ?? {};
+}
+
+/// Column mapping for a recognized CSV format.
+class _ColumnMapping {
+  int title = -1;
+  int username = -1;
+  int password = -1;
+  int url = -1;
+  int notes = -1;
+  int group = -1;
+  int totp = -1;
+  List<int> customIndices = [];
+  List<String> customHeaders = [];
+}
+
+class CsvService {
+  /// Import entries from a CSV file content.
+  /// Returns a list of [CsvEntry] objects.
+  List<CsvEntry> importFromCsv(String csvContent) {
+    // Strip UTF-8 BOM if present
+    if (csvContent.startsWith('﻿')) {
+      csvContent = csvContent.substring(1);
+    }
+
+    // Normalize line endings
+    csvContent = csvContent.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // Detect delimiter
+    final delimiter = _detectDelimiter(csvContent);
+
+    final rows = const CsvToListConverter(
+      shouldParseNumbers: false,
+      allowInvalid: false,
+    ).convert(csvContent, fieldDelimiter: delimiter);
+
+    if (rows.length < 2) return [];
+
+    final headers = rows.first.map((h) => h.toString().trim()).toList();
+    final mapping = _mapColumns(headers);
+    final entries = <CsvEntry>[];
+
+    for (int i = 1; i < rows.length; i++) {
+      final row = rows[i];
+      if (row.isEmpty || _isEmptyRow(row)) continue;
+
+      String _cell(int idx) =>
+          idx >= 0 && idx < row.length ? row[idx].toString().trim() : '';
+
+      final entry = CsvEntry(
+        title: _cell(mapping.title),
+        username: _cell(mapping.username),
+        password: _cell(mapping.password),
+        url: _cell(mapping.url),
+        notes: _cell(mapping.notes),
+        group: mapping.group >= 0 ? _cell(mapping.group) : null,
+      );
+
+      // TOTP -> custom field
+      final totp = _cell(mapping.totp);
+      if (totp.isNotEmpty) {
+        entry.customFields['TOTP'] = totp;
+      }
+
+      // Other custom fields
+      for (int j = 0; j < mapping.customIndices.length; j++) {
+        final value = _cell(mapping.customIndices[j]);
+        if (value.isNotEmpty && j < mapping.customHeaders.length) {
+          entry.customFields[mapping.customHeaders[j]] = value;
+        }
+      }
+
+      entries.add(entry);
+    }
+
+    log.i('CSV import: ${entries.length} entries parsed');
+    return entries;
+  }
+
+  /// Create KDBX entries from parsed CSV entries.
+  /// Returns the number of entries created.
+  int createEntries(List<CsvEntry> csvEntries, KdbxDatabase db, KdbxGroup targetGroup) {
+    int count = 0;
+    for (final csv in csvEntries) {
+      // Resolve target group
+      KdbxGroup group = targetGroup;
+      if (csv.group != null && csv.group!.isNotEmpty) {
+        group = _findOrCreateGroup(db, targetGroup, csv.group!);
+      }
+
+      final entry = db.createEntry(parent: group);
+      entry.times = KdbxTimes.fromTime();
+      entry.fields['Title'] = KdbxTextField.fromText(text: csv.title);
+      entry.fields['UserName'] = KdbxTextField.fromText(text: csv.username);
+      entry.fields['Password'] = KdbxTextField.fromText(text: csv.password, protected: true);
+      entry.fields['URL'] = KdbxTextField.fromText(text: csv.url);
+      entry.fields['Notes'] = KdbxTextField.fromText(text: csv.notes);
+
+      // Custom fields
+      for (final e in csv.customFields.entries) {
+        if (!_standardKeys.contains(e.key) && e.value.isNotEmpty) {
+          entry.fields[e.key] = KdbxTextField.fromText(text: e.value);
+        }
+      }
+
+      count++;
+    }
+    log.i('CSV import: $count entries created');
+    return count;
+  }
+
+  /// Export all entries to CSV string (KeePass-compatible format).
+  String exportToCsv(List<KdbxEntry> entries) {
+    final rows = <List<String>>[
+      ['Group', 'Title', 'Username', 'Password', 'URL', 'Notes'],
+    ];
+
+    for (final entry in entries) {
+      final title = entry.fields['Title']?.text ?? '';
+      final username = entry.fields['UserName']?.text ?? '';
+      final password = entry.fields['Password']?.text ?? '';
+      final url = entry.fields['URL']?.text ?? '';
+      final notes = entry.fields['Notes']?.text ?? '';
+
+      // Get group path
+      String groupPath = '';
+      KdbxGroup? current = entry.parent;
+      final pathParts = <String>[];
+      while (current != null && current.parent != null) {
+        pathParts.add(current.name);
+        current = current.parent;
+      }
+      if (pathParts.isNotEmpty) {
+        groupPath = pathParts.reversed.join('/');
+      }
+
+      rows.add([groupPath, title, username, password, url, notes]);
+    }
+
+    return const ListToCsvConverter().convert(rows);
+  }
+
+  /// Detect CSV delimiter by sampling the first few lines.
+  String _detectDelimiter(String content) {
+    final lines = content.split('\n').take(5).toList();
+    int commas = 0;
+    int semicolons = 0;
+    int tabs = 0;
+    for (final line in lines) {
+      // Skip quoted sections for accurate counting
+      bool inQuote = false;
+      for (int i = 0; i < line.length; i++) {
+        if (line[i] == '"') {
+          inQuote = !inQuote;
+        } else if (!inQuote) {
+          if (line[i] == ',') commas++;
+          if (line[i] == ';') semicolons++;
+          if (line[i] == '\t') tabs++;
+        }
+      }
+    }
+    if (tabs > commas && tabs > semicolons) return '\t';
+    if (semicolons > commas) return ';';
+    return ',';
+  }
+
+  /// Map CSV headers to column indices.
+  _ColumnMapping _mapColumns(List<String> headers) {
+    final m = _ColumnMapping();
+    final lowerHeaders = headers.map((h) => h.toLowerCase().trim()).toList();
+
+    for (int i = 0; i < lowerHeaders.length; i++) {
+      final h = lowerHeaders[i];
+      // Title/Name
+      if (h == 'name' || h == 'title' || h == 'entry name') {
+        m.title = i;
+      }
+      // Username
+      else if (h == 'username' || h == 'login_username' || h == 'user' || h == 'login') {
+        m.username = i;
+      }
+      // Password
+      else if (h == 'password' || h == 'login_password' || h == 'pass' || h == 'passwd') {
+        m.password = i;
+      }
+      // URL
+      else if (h == 'url' || h == 'login_uri' || h == 'website' || h == 'web site' || h == 'uri') {
+        m.url = i;
+      }
+      // Notes
+      else if (h == 'notes' || h == 'extra' || h == 'note' || h == 'comments' || h == 'comment') {
+        m.notes = i;
+      }
+      // Group/Folder
+      else if (h == 'group' || h == 'grouping' || h == 'folder' || h == 'folders' || h == 'path') {
+        m.group = i;
+      }
+      // TOTP
+      else if (h == 'totp' || h == 'otpauth' || h == 'login_totp' || h == 'otp') {
+        m.totp = i;
+      }
+      // Unknown -> custom field
+      else {
+        m.customIndices.add(i);
+        m.customHeaders.add(headers[i]);
+      }
+    }
+
+    // If title not found, try first column
+    if (m.title < 0 && headers.isNotEmpty) {
+      m.title = 0;
+    }
+
+    return m;
+  }
+
+  bool _isEmptyRow(List<dynamic> row) {
+    return row.every((cell) => cell.toString().trim().isEmpty);
+  }
+
+  /// Find or create a group by path (e.g., "Email/Work").
+  KdbxGroup _findOrCreateGroup(KdbxDatabase db, KdbxGroup root, String path) {
+    // Normalize separators
+    final normalized = path.replaceAll('\\', '/');
+    final segments = normalized.split('/').where((s) => s.isNotEmpty).toList();
+
+    KdbxGroup current = root;
+    for (final segment in segments) {
+      final existing = current.groups.where((g) => g.name == segment).firstOrNull;
+      if (existing != null) {
+        current = existing;
+      } else {
+        current = db.createGroup(parent: current, name: segment);
+      }
+    }
+    return current;
+  }
+}

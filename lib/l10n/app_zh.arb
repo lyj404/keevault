@@ -284,5 +284,17 @@
   "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
 
   "backupPasswordDifferent": "备份使用了不同的密码（可能修改过主密码），请输入备份时的密码",
-  "backupPasswordHint": "请输入备份时的主密码"
+  "backupPasswordHint": "请输入备份时的主密码",
+
+  "importCsv": "导入 CSV",
+  "exportCsv": "导出 CSV",
+  "exportKdbx": "导出 KDBX",
+  "importCsvTitle": "导入 CSV 文件",
+  "importSuccess": "成功导入 {count} 个条目",
+  "@importSuccess": { "placeholders": { "count": {} } },
+  "importFailed": "导入失败: {error}",
+  "@importFailed": { "placeholders": { "error": {} } },
+  "exportSuccess": "导出成功",
+  "exportFailed": "导出失败",
+  "noEntriesToExport": "没有可导出的条目"
 }

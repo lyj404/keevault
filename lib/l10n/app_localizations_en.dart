@@ -765,4 +765,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupPasswordHint =>
       'Enter the master password from when the backup was created';
+
+  @override
+  String get importCsv => 'Import CSV';
+
+  @override
+  String get exportCsv => 'Export CSV';
+
+  @override
+  String get exportKdbx => 'Export KDBX';
+
+  @override
+  String get importCsvTitle => 'Import CSV File';
+
+  @override
+  String importSuccess(Object count) {
+    return 'Successfully imported $count entries';
+  }
+
+  @override
+  String importFailed(Object error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String get exportSuccess => 'Export successful';
+
+  @override
+  String get exportFailed => 'Export failed';
+
+  @override
+  String get noEntriesToExport => 'No entries to export';
 }
