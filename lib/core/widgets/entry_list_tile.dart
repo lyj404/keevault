@@ -19,6 +19,7 @@ class EntryListTile extends StatelessWidget {
   String get _title => entry.fields['Title']?.text ?? '';
   String get _username => entry.fields['UserName']?.text ?? '';
   String get _password => entry.fields['Password']?.text ?? '';
+  bool get _isExpired => entry.times.expires && entry.times.expiry.time != null && entry.times.expiry.time!.isBefore(DateTime.now());
 
   void _showContextMenu(BuildContext context, Offset globalPos) {
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
@@ -145,13 +146,29 @@ class EntryListTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
                         ),
-                        if (_username.isNotEmpty) ...[
+                        if (_username.isNotEmpty || _isExpired) ...[
                           const SizedBox(height: 2),
-                          Text(
-                            _username,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                          Row(
+                            children: [
+                              if (_username.isNotEmpty)
+                                Expanded(
+                                  child: Text(
+                                    _username,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                                  ),
+                                ),
+                              if (_isExpired) ...[
+                                if (_username.isNotEmpty) const SizedBox(width: 8),
+                                Icon(Icons.warning_rounded, size: 14, color: colorScheme.error),
+                                const SizedBox(width: 2),
+                                Text(
+                                  l10n.expired,
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.error),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ],

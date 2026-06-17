@@ -1585,6 +1585,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'没有可导出的条目'**
   String get noEntriesToExport;
+
+  /// No description provided for @expiration.
+  ///
+  /// In zh, this message translates to:
+  /// **'过期时间'**
+  String get expiration;
+
+  /// No description provided for @noExpiration.
+  ///
+  /// In zh, this message translates to:
+  /// **'永不过期'**
+  String get noExpiration;
+
+  /// No description provided for @expired.
+  ///
+  /// In zh, this message translates to:
+  /// **'已过期'**
+  String get expired;
+
+  /// No description provided for @expiresOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'过期于 {date}'**
+  String expiresOn(Object date);
 }
 
 class _AppLocalizationsDelegate

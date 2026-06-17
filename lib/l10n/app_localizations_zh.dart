@@ -782,4 +782,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noEntriesToExport => '没有可导出的条目';
+
+  @override
+  String get expiration => '过期时间';
+
+  @override
+  String get noExpiration => '永不过期';
+
+  @override
+  String get expired => '已过期';
+
+  @override
+  String expiresOn(Object date) {
+    return '过期于 $date';
+  }
 }

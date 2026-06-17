@@ -58,6 +58,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final List<_CustomFieldData> _customFields = [];
   bool _isEdit = false;
   KdbxEntry? _entry;
+  bool _expires = false;
+  DateTime? _expiryDate;
 
   @override
   void initState() {
@@ -77,6 +79,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _notesCtrl.text = entry.fields['Notes']?.text ?? '';
       _isEdit = true;
       _entry = entry;
+      _expires = entry.times.expires;
+      _expiryDate = entry.times.expiry.time;
       _loadCustomFields(entry);
     } else if (group != null) {
       _entry = service.createEntry(group);
@@ -223,6 +227,67 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                   ),
                   maxLines: 4,
                 ),
+              ],
+            ),
+            // Expiration
+            const SizedBox(height: 12),
+            _SectionCard(
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(l10n.expiration, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
+                    ),
+                    Switch(
+                      value: _expires,
+                      onChanged: (v) => setState(() {
+                        _expires = v;
+                        if (v && _expiryDate == null) {
+                          _expiryDate = DateTime.now().add(const Duration(days: 30));
+                        }
+                      }),
+                    ),
+                  ],
+                ),
+                if (_expires) ...[
+                  Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _expiryDate ?? DateTime.now().add(const Duration(days: 30)),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) setState(() => _expiryDate = picked);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _expiryDate != null
+                                  ? '${_expiryDate!.year}-${_expiryDate!.month.toString().padLeft(2, '0')}-${_expiryDate!.day.toString().padLeft(2, '0')}'
+                                  : l10n.noExpiration,
+                              style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
+                            ),
+                          ),
+                          if (_expiryDate != null)
+                            IconButton(
+                              icon: Icon(Icons.clear_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                              onPressed: () => setState(() => _expiryDate = null),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             // Custom fields
@@ -418,6 +483,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _entry!.times.touch();
       _entry!.pushHistory();
     }
+    _entry!.times.expires = _expires;
+    _entry!.times.expiry = KdbxTime(_expires ? _expiryDate : null);
     _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
     _entry!.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
     _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);

@@ -288,5 +288,11 @@
   "@importFailed": { "placeholders": { "error": {} } },
   "exportSuccess": "Export successful",
   "exportFailed": "Export failed",
-  "noEntriesToExport": "No entries to export"
+  "noEntriesToExport": "No entries to export",
+
+  "expiration": "Expiration",
+  "noExpiration": "No Expiration",
+  "expired": "Expired",
+  "expiresOn": "Expires on {date}",
+  "@expiresOn": { "placeholders": { "date": {} } }
 }

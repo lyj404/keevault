@@ -796,4 +796,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noEntriesToExport => 'No entries to export';
+
+  @override
+  String get expiration => 'Expiration';
+
+  @override
+  String get noExpiration => 'No Expiration';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String expiresOn(Object date) {
+    return 'Expires on $date';
+  }
 }

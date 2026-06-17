@@ -30,7 +30,7 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 - [ ] **Key File Authentication** - Support key file as a second authentication factor for password + file dual-factor database unlock
 - [x] **CSV Import/Export** - Import passwords from Chrome, 1Password, LastPass, etc., or export the database to CSV/KDBX format
 - [x] **Change Master Password** - Support changing the database master password
-- [ ] **Entry Expiration** - Set password expiration dates with reminders when passwords expire
+- [x] **Entry Expiration** - Set password expiration dates with reminders when passwords expire
 - [x] **Entry History Viewing** - View historical versions of entries with support for rollback and restoration
 
 ## CSV Import Format

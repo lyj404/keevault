@@ -97,6 +97,13 @@ class EntryDetailScreen extends ConsumerWidget {
                 _FieldRow(label: l10n.notes, value: entry.fields['Notes']?.text ?? '', multiline: true),
               ],
             ),
+          // Expiration
+          if (entry.times.expires && entry.times.expiry.time != null)
+            _SectionCard(
+              children: [
+                _ExpirationRow(expiryDate: entry.times.expiry.time!),
+              ],
+            ),
           // Custom fields
           ...() {
             final custom = entry.fields.entries
@@ -389,6 +396,56 @@ class _PasswordFieldState extends State<_PasswordField> {
               fontFamily: _visible ? null : 'monospace',
               letterSpacing: _visible ? null : 2,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpirationRow extends StatelessWidget {
+  final DateTime expiryDate;
+  const _ExpirationRow({required this.expiryDate});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final now = DateTime.now();
+    final isExpired = expiryDate.isBefore(now);
+    final dateStr = '${expiryDate.year}-${expiryDate.month.toString().padLeft(2, '0')}-${expiryDate.day.toString().padLeft(2, '0')}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.expiration,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                isExpired ? Icons.warning_rounded : Icons.schedule_rounded,
+                size: 18,
+                color: isExpired ? colorScheme.error : colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isExpired ? l10n.expired : l10n.expiresOn(dateStr),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: isExpired ? colorScheme.error : null,
+                  fontWeight: isExpired ? FontWeight.w600 : null,
+                ),
+              ),
+            ],
           ),
         ],
       ),
