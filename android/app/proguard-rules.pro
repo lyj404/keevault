@@ -16,3 +16,8 @@
 
 # flutter_secure_storage
 -keep class androidx.security.crypto.** { *; }
+
+# Google Play Core (referenced by Flutter but not bundled)
+-dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
