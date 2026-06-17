@@ -675,4 +675,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordChanged => 'Master password changed';
+
+  @override
+  String get history => 'History';
+
+  @override
+  String get noHistory => 'No history yet';
+
+  @override
+  String get restoreVersion => 'Restore this version';
+
+  @override
+  String get restoreVersionConfirm =>
+      'Restore entry to this version? The current state will be saved to history first.';
+
+  @override
+  String get versionRestored => 'Restored to historical version';
+
+  @override
+  String get currentVersion => 'Current version';
 }

@@ -47,6 +47,11 @@ class EntryDetailScreen extends ConsumerWidget {
             )
           else ...[
             IconButton(
+              icon: const Icon(Icons.history_rounded, size: 20),
+              tooltip: l10n.history,
+              onPressed: () => context.push('/entry/history?index=$entryIndex&groupPath=${Uri.encodeComponent(groupPath)}'),
+            ),
+            IconButton(
               icon: const Icon(Icons.edit_rounded, size: 20),
               tooltip: l10n.edit,
               onPressed: () => context.push('/entry/edit?index=$entryIndex&groupPath=${Uri.encodeComponent(groupPath)}'),

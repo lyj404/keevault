@@ -29,9 +29,9 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 - [ ] **Custom Field Editing** - Add and edit custom fields in the entry editor for storing security questions, PINs, and other extra information
 - [ ] **Key File Authentication** - Support key file as a second authentication factor for password + file dual-factor database unlock
 - [ ] **CSV Import/Export** - Import passwords from Chrome, 1Password, LastPass, etc., or export the database to CSV format
-- [ ] **Change Master Password** - Support changing the database master password
+- [x] **Change Master Password** - Support changing the database master password
 - [ ] **Entry Expiration** - Set password expiration dates with reminders when passwords expire
-- [ ] **Entry History Viewing** - View historical versions of entries with support for rollback and restoration
+- [x] **Entry History Viewing** - View historical versions of entries with support for rollback and restoration
 
 Download the corresponding platform installer from the [Releases](https://github.com/lyj404/keevault/releases) page.
 

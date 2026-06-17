@@ -250,5 +250,12 @@
   "newPassword": "新密码",
   "pleaseEnterNewPassword": "请输入新密码",
   "confirmNewPassword": "确认新密码",
-  "passwordChanged": "主密码已修改"
+  "passwordChanged": "主密码已修改",
+
+  "history": "历史记录",
+  "noHistory": "暂无历史记录",
+  "restoreVersion": "恢复此版本",
+  "restoreVersionConfirm": "确定将条目恢复到此版本？当前状态会先保存到历史记录。",
+  "versionRestored": "已恢复到历史版本",
+  "currentVersion": "当前版本"
 }

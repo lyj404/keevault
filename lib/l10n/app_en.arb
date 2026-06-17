@@ -242,5 +242,12 @@
   "newPassword": "New Password",
   "pleaseEnterNewPassword": "Please enter new password",
   "confirmNewPassword": "Confirm New Password",
-  "passwordChanged": "Master password changed"
+  "passwordChanged": "Master password changed",
+
+  "history": "History",
+  "noHistory": "No history yet",
+  "restoreVersion": "Restore this version",
+  "restoreVersionConfirm": "Restore entry to this version? The current state will be saved to history first.",
+  "versionRestored": "Restored to historical version",
+  "currentVersion": "Current version"
 }

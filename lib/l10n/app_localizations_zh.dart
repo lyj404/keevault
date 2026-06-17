@@ -664,4 +664,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get passwordChanged => '主密码已修改';
+
+  @override
+  String get history => '历史记录';
+
+  @override
+  String get noHistory => '暂无历史记录';
+
+  @override
+  String get restoreVersion => '恢复此版本';
+
+  @override
+  String get restoreVersionConfirm => '确定将条目恢复到此版本？当前状态会先保存到历史记录。';
+
+  @override
+  String get versionRestored => '已恢复到历史版本';
+
+  @override
+  String get currentVersion => '当前版本';
 }

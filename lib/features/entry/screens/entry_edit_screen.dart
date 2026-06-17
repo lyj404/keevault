@@ -183,12 +183,12 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
     if (_isEdit && widget.entryIndex != null && widget.entryIndex! < group.entries.length) {
       final entry = group.entries[widget.entryIndex!];
+      entry.pushHistory();
       entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
       entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
       entry.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
       entry.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
       entry.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
-      entry.pushHistory();
     } else {
       final entry = service.createEntry(group);
       entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);

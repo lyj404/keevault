@@ -6,6 +6,7 @@ import '../../features/database/screens/create_database_screen.dart';
 import '../../features/explorer/screens/explorer_screen.dart';
 import '../../features/entry/screens/entry_detail_screen.dart';
 import '../../features/entry/screens/entry_edit_screen.dart';
+import '../../features/entry/screens/entry_history_screen.dart';
 import '../../features/group/screens/group_edit_screen.dart';
 import '../../features/search/screens/search_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -56,6 +57,14 @@ final appRouter = GoRouter(
           entryIndex: entryIndex != null ? int.tryParse(entryIndex) : null,
           groupPath: groupPath,
         );
+      },
+    ),
+    GoRoute(
+      path: '/entry/history',
+      builder: (context, state) {
+        final entryIndex = int.tryParse(state.uri.queryParameters['index'] ?? '0') ?? 0;
+        final groupPath = state.uri.queryParameters['groupPath'] ?? '';
+        return EntryHistoryScreen(entryIndex: entryIndex, groupPath: groupPath);
       },
     ),
     GoRoute(

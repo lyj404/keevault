@@ -1369,6 +1369,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'主密码已修改'**
   String get passwordChanged;
+
+  /// No description provided for @history.
+  ///
+  /// In zh, this message translates to:
+  /// **'历史记录'**
+  String get history;
+
+  /// No description provided for @noHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无历史记录'**
+  String get noHistory;
+
+  /// No description provided for @restoreVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复此版本'**
+  String get restoreVersion;
+
+  /// No description provided for @restoreVersionConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定将条目恢复到此版本？当前状态会先保存到历史记录。'**
+  String get restoreVersionConfirm;
+
+  /// No description provided for @versionRestored.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复到历史版本'**
+  String get versionRestored;
+
+  /// No description provided for @currentVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前版本'**
+  String get currentVersion;
 }
 
 class _AppLocalizationsDelegate
