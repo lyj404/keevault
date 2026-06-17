@@ -694,4 +694,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentVersion => 'Current version';
+
+  @override
+  String get attachments => 'Attachments';
+
+  @override
+  String get addAttachment => 'Add Attachment';
+
+  @override
+  String get deleteAttachment => 'Delete Attachment';
+
+  @override
+  String get deleteAttachmentConfirm => 'Delete this attachment?';
+
+  @override
+  String get attachmentDeleted => 'Attachment deleted';
+
+  @override
+  String get attachmentAdded => 'Attachment added';
+
+  @override
+  String get attachmentSaved => 'Attachment saved';
+
+  @override
+  String get saveAttachment => 'Save Attachment';
+
+  @override
+  String get noAttachments => 'No attachments';
 }

@@ -249,5 +249,15 @@
   "restoreVersion": "Restore this version",
   "restoreVersionConfirm": "Restore entry to this version? The current state will be saved to history first.",
   "versionRestored": "Restored to historical version",
-  "currentVersion": "Current version"
+  "currentVersion": "Current version",
+
+  "attachments": "Attachments",
+  "addAttachment": "Add Attachment",
+  "deleteAttachment": "Delete Attachment",
+  "deleteAttachmentConfirm": "Delete this attachment?",
+  "attachmentDeleted": "Attachment deleted",
+  "attachmentAdded": "Attachment added",
+  "attachmentSaved": "Attachment saved",
+  "saveAttachment": "Save Attachment",
+  "noAttachments": "No attachments"
 }

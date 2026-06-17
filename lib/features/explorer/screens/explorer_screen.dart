@@ -9,6 +9,7 @@ import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
+import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/change_password_dialog.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -1285,9 +1286,23 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
   final _urlCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   bool _obscure = true;
+  KdbxEntry? _entry;
+  bool _saved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final service = widget.ref.read(databaseServiceProvider);
+    _entry = service.createEntry(widget.group);
+  }
 
   @override
   void dispose() {
+    if (!_saved && _entry != null) {
+      widget.group.entries.remove(_entry);
+      final service = widget.ref.read(databaseServiceProvider);
+      service.rebuildEntryCache();
+    }
     _titleCtrl.dispose();
     _usernameCtrl.dispose();
     _passwordCtrl.dispose();
@@ -1407,6 +1422,14 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                     maxLines: 3,
                     decoration: InputDecoration(labelText: l10n.notes, prefixIcon: const Icon(Icons.note_outlined)),
                   ),
+                  if (_entry != null) ...[
+                    const SizedBox(height: 8),
+                    AttachmentsSection(
+                      entry: _entry!,
+                      service: widget.ref.read(databaseServiceProvider),
+                      onChanged: () => setState(() {}),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1417,13 +1440,14 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
   }
 
   void _save() {
+    if (_entry == null) return;
+    _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
+    _entry!.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
+    _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
+    _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
+    _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
+    _saved = true;
     final service = widget.ref.read(databaseServiceProvider);
-    final entry = service.createEntry(widget.group);
-    entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
-    entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
-    entry.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
-    entry.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
-    entry.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
     service.markDirty();
     refreshExplorerLists(widget.ref);
     Navigator.pop(context);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -27,6 +28,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final _urlCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   bool _isEdit = false;
+  KdbxEntry? _entry;
 
   @override
   void initState() {
@@ -45,11 +47,24 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _urlCtrl.text = entry.fields['URL']?.text ?? '';
       _notesCtrl.text = entry.fields['Notes']?.text ?? '';
       _isEdit = true;
+      _entry = entry;
+    } else if (group != null) {
+      _entry = service.createEntry(group);
     }
   }
 
+  bool _saved = false;
+
   @override
   void dispose() {
+    if (!_saved && !_isEdit && _entry != null) {
+      final service = ref.read(databaseServiceProvider);
+      final group = service.findGroupByPath(widget.groupPath);
+      if (group != null) {
+        group.entries.remove(_entry);
+        service.rebuildEntryCache();
+      }
+    }
     _titleCtrl.dispose();
     _usernameCtrl.dispose();
     _passwordCtrl.dispose();
@@ -165,6 +180,13 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 ),
               ],
             ),
+            // Attachments
+            if (_entry != null) ...[
+              const SizedBox(height: 4),
+              _AttachmentsSectionWrapper(
+                entry: _entry!,
+              ),
+            ],
           ],
         ),
       ),
@@ -173,31 +195,20 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+    if (_entry == null) return;
 
     final service = ref.read(databaseServiceProvider);
-    final db = service.db;
-    if (db == null) return;
 
-    final group = service.findGroupByPath(widget.groupPath);
-    if (group == null) return;
-
-    if (_isEdit && widget.entryIndex != null && widget.entryIndex! < group.entries.length) {
-      final entry = group.entries[widget.entryIndex!];
-      entry.pushHistory();
-      entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
-      entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
-      entry.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
-      entry.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
-      entry.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
-    } else {
-      final entry = service.createEntry(group);
-      entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
-      entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
-      entry.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
-      entry.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
-      entry.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
+    if (_isEdit) {
+      _entry!.pushHistory();
     }
+    _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
+    _entry!.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
+    _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
+    _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
+    _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
 
+    _saved = true;
     service.markDirty();
     refreshExplorerLists(ref);
     if (mounted) context.pop();
@@ -217,6 +228,27 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         children: children,
       ),
+    );
+  }
+}
+
+class _AttachmentsSectionWrapper extends ConsumerStatefulWidget {
+  final KdbxEntry entry;
+
+  const _AttachmentsSectionWrapper({required this.entry});
+
+  @override
+  ConsumerState<_AttachmentsSectionWrapper> createState() => _AttachmentsSectionWrapperState();
+}
+
+class _AttachmentsSectionWrapperState extends ConsumerState<_AttachmentsSectionWrapper> {
+  @override
+  Widget build(BuildContext context) {
+    final service = ref.read(databaseServiceProvider);
+    return AttachmentsSection(
+      entry: widget.entry,
+      service: service,
+      onChanged: () => setState(() {}),
     );
   }
 }

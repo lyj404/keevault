@@ -682,4 +682,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currentVersion => '当前版本';
+
+  @override
+  String get attachments => '附件';
+
+  @override
+  String get addAttachment => '添加附件';
+
+  @override
+  String get deleteAttachment => '删除附件';
+
+  @override
+  String get deleteAttachmentConfirm => '确定删除此附件？';
+
+  @override
+  String get attachmentDeleted => '附件已删除';
+
+  @override
+  String get attachmentAdded => '附件已添加';
+
+  @override
+  String get attachmentSaved => '附件已保存';
+
+  @override
+  String get saveAttachment => '保存附件';
+
+  @override
+  String get noAttachments => '暂无附件';
 }

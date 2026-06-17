@@ -38,6 +38,8 @@ class DatabaseService {
     _allEntriesCache = _db?.root.allEntries.toList();
   }
 
+  void rebuildEntryCache() => _rebuildEntryCache();
+
   /// Preloads file bytes into memory so openFile doesn't block on I/O.
   Future<void> preloadFile(String filePath) async {
     log.i('Preloading file: $filePath');

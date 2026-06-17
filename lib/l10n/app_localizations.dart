@@ -1405,6 +1405,60 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'当前版本'**
   String get currentVersion;
+
+  /// No description provided for @attachments.
+  ///
+  /// In zh, this message translates to:
+  /// **'附件'**
+  String get attachments;
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加附件'**
+  String get addAttachment;
+
+  /// No description provided for @deleteAttachment.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除附件'**
+  String get deleteAttachment;
+
+  /// No description provided for @deleteAttachmentConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除此附件？'**
+  String get deleteAttachmentConfirm;
+
+  /// No description provided for @attachmentDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'附件已删除'**
+  String get attachmentDeleted;
+
+  /// No description provided for @attachmentAdded.
+  ///
+  /// In zh, this message translates to:
+  /// **'附件已添加'**
+  String get attachmentAdded;
+
+  /// No description provided for @attachmentSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'附件已保存'**
+  String get attachmentSaved;
+
+  /// No description provided for @saveAttachment.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存附件'**
+  String get saveAttachment;
+
+  /// No description provided for @noAttachments.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无附件'**
+  String get noAttachments;
 }
 
 class _AppLocalizationsDelegate

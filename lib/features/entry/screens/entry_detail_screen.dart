@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/clipboard_utils.dart';
+import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/toast.dart';
@@ -111,6 +112,14 @@ class EntryDetailScreen extends ConsumerWidget {
               ),
             ];
           }(),
+          // Attachments
+          if (entry.binaries.isNotEmpty) ...[
+            AttachmentsSection(
+              entry: entry,
+              service: ref.read(databaseServiceProvider),
+              readOnly: true,
+            ),
+          ],
         ],
       ),
     );

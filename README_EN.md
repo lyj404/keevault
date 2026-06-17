@@ -25,7 +25,7 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 ## Planned Features
 
 - [ ] **TOTP Support** - Generate and display one-time passwords for two-factor authentication (GitHub, Google, etc.), eliminating the need for a separate Authenticator app
-- [ ] **File Attachments** - Attach files to entries (SSH keys, certificates, recovery keys), with view, add, and delete support
+- [x] **File Attachments** - Attach files to entries (SSH keys, certificates, recovery keys), with view, add, and delete support
 - [ ] **Custom Field Editing** - Add and edit custom fields in the entry editor for storing security questions, PINs, and other extra information
 - [ ] **Key File Authentication** - Support key file as a second authentication factor for password + file dual-factor database unlock
 - [ ] **CSV Import/Export** - Import passwords from Chrome, 1Password, LastPass, etc., or export the database to CSV format
