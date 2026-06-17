@@ -293,12 +293,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
 
     // eTag check: skip download if local cache is already up-to-date
-    var cachedFile = recentFile;
-    if (cachedFile == null) {
-      // Look up matching cloud entry from recent files
-      final recentFiles = await ref.read(recentFilesServiceProvider).getRecentFiles();
-      cachedFile = recentFiles.where((f) => f.isCloud && f.remotePath == config.remoteFilePath).firstOrNull;
-    }
+    // Always look up latest from service to avoid stale etag from cached provider
+    final recentFiles = await ref.read(recentFilesServiceProvider).getRecentFiles();
+    var cachedFile = recentFiles.where((f) => f.isCloud && f.remotePath == config.remoteFilePath).firstOrNull;
     if (cachedFile != null && cachedFile.isCloud) {
       final localFile = File(cachedFile.path);
       final exists = await localFile.exists();
@@ -326,6 +323,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
         await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
       }
+      ref.invalidate(recentFilesProvider);
       if (context.mounted) {
         Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;

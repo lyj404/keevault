@@ -709,4 +709,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noAttachments => '暂无附件';
+
+  @override
+  String get customFields => '自定义字段';
+
+  @override
+  String get addCustomField => '添加字段';
+
+  @override
+  String get fieldName => '字段名称';
+
+  @override
+  String get fieldValue => '字段值';
+
+  @override
+  String get protectField => '保护字段';
+
+  @override
+  String get unprotectField => '取消保护';
+
+  @override
+  String get fieldNameEmpty => '字段名称不能为空';
+
+  @override
+  String fieldNameDuplicate(Object name) {
+    return '字段名称重复: $name';
+  }
+
+  @override
+  String fieldNameReserved(Object name) {
+    return '字段名称 \"$name\" 是保留名称';
+  }
+
+  @override
+  String deleteCustomFieldConfirm(Object name) {
+    return '确定删除字段 \"$name\"？';
+  }
+
+  @override
+  String get backupPasswordDifferent => '备份使用了不同的密码（可能修改过主密码），请输入备份时的密码';
+
+  @override
+  String get backupPasswordHint => '请输入备份时的主密码';
 }

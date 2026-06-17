@@ -721,4 +721,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noAttachments => 'No attachments';
+
+  @override
+  String get customFields => 'Custom Fields';
+
+  @override
+  String get addCustomField => 'Add Field';
+
+  @override
+  String get fieldName => 'Field Name';
+
+  @override
+  String get fieldValue => 'Field Value';
+
+  @override
+  String get protectField => 'Protect Field';
+
+  @override
+  String get unprotectField => 'Unprotect Field';
+
+  @override
+  String get fieldNameEmpty => 'Field name cannot be empty';
+
+  @override
+  String fieldNameDuplicate(Object name) {
+    return 'Duplicate field name: $name';
+  }
+
+  @override
+  String fieldNameReserved(Object name) {
+    return 'Field name \"$name\" is reserved';
+  }
+
+  @override
+  String deleteCustomFieldConfirm(Object name) {
+    return 'Delete field \"$name\"?';
+  }
+
+  @override
+  String get backupPasswordDifferent =>
+      'Backup uses a different password (master password may have been changed). Please enter the backup password.';
+
+  @override
+  String get backupPasswordHint =>
+      'Enter the master password from when the backup was created';
 }

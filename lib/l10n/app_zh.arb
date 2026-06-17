@@ -267,5 +267,22 @@
   "attachmentAdded": "附件已添加",
   "attachmentSaved": "附件已保存",
   "saveAttachment": "保存附件",
-  "noAttachments": "暂无附件"
+  "noAttachments": "暂无附件",
+
+  "customFields": "自定义字段",
+  "addCustomField": "添加字段",
+  "fieldName": "字段名称",
+  "fieldValue": "字段值",
+  "protectField": "保护字段",
+  "unprotectField": "取消保护",
+  "fieldNameEmpty": "字段名称不能为空",
+  "fieldNameDuplicate": "字段名称重复: {name}",
+  "@fieldNameDuplicate": { "placeholders": { "name": {} } },
+  "fieldNameReserved": "字段名称 \"{name}\" 是保留名称",
+  "@fieldNameReserved": { "placeholders": { "name": {} } },
+  "deleteCustomFieldConfirm": "确定删除字段 \"{name}\"？",
+  "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
+
+  "backupPasswordDifferent": "备份使用了不同的密码（可能修改过主密码），请输入备份时的密码",
+  "backupPasswordHint": "请输入备份时的主密码"
 }

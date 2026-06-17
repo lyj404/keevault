@@ -259,5 +259,22 @@
   "attachmentAdded": "Attachment added",
   "attachmentSaved": "Attachment saved",
   "saveAttachment": "Save Attachment",
-  "noAttachments": "No attachments"
+  "noAttachments": "No attachments",
+
+  "customFields": "Custom Fields",
+  "addCustomField": "Add Field",
+  "fieldName": "Field Name",
+  "fieldValue": "Field Value",
+  "protectField": "Protect Field",
+  "unprotectField": "Unprotect Field",
+  "fieldNameEmpty": "Field name cannot be empty",
+  "fieldNameDuplicate": "Duplicate field name: {name}",
+  "@fieldNameDuplicate": { "placeholders": { "name": {} } },
+  "fieldNameReserved": "Field name \"{name}\" is reserved",
+  "@fieldNameReserved": { "placeholders": { "name": {} } },
+  "deleteCustomFieldConfirm": "Delete field \"{name}\"?",
+  "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
+
+  "backupPasswordDifferent": "Backup uses a different password (master password may have been changed). Please enter the backup password.",
+  "backupPasswordHint": "Enter the master password from when the backup was created"
 }

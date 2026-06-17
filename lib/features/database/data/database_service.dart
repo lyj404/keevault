@@ -88,9 +88,11 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<KdbxDatabase> reloadFromBytes(Uint8List bytes) async {
-    if (_password == null) throw Exception('no_password_cannot_reload');
-    _db = await _loadDatabase(bytes, _password!);
+  Future<KdbxDatabase> reloadFromBytes(Uint8List bytes, {String? password}) async {
+    final pw = password ?? _password;
+    if (pw == null) throw Exception('no_password_cannot_reload');
+    _db = await _loadDatabase(bytes, pw);
+    _password = pw;
     _dirty = false;
     _localizeRecycleBin();
     _rebuildEntryCache();

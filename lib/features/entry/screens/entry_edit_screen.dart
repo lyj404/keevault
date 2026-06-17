@@ -6,9 +6,12 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
+import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
+
+const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
 class EntryEditScreen extends ConsumerStatefulWidget {
   final int? entryIndex;
@@ -20,6 +23,31 @@ class EntryEditScreen extends ConsumerStatefulWidget {
   ConsumerState<EntryEditScreen> createState() => _EntryEditScreenState();
 }
 
+class _CustomFieldData {
+  String originalKey;
+  final TextEditingController nameCtrl;
+  final TextEditingController valueCtrl;
+  final FocusNode nameFocus;
+  bool protected;
+  bool obscure;
+
+  _CustomFieldData({
+    required this.originalKey,
+    required String name,
+    required String value,
+    this.protected = false,
+  })  : nameCtrl = TextEditingController(text: name),
+        valueCtrl = TextEditingController(text: value),
+        nameFocus = FocusNode(),
+        obscure = protected;
+
+  void dispose() {
+    nameCtrl.dispose();
+    valueCtrl.dispose();
+    nameFocus.dispose();
+  }
+}
+
 class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
@@ -27,6 +55,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final _passwordCtrl = TextEditingController();
   final _urlCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final List<_CustomFieldData> _customFields = [];
   bool _isEdit = false;
   KdbxEntry? _entry;
 
@@ -48,8 +77,21 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _notesCtrl.text = entry.fields['Notes']?.text ?? '';
       _isEdit = true;
       _entry = entry;
+      _loadCustomFields(entry);
     } else if (group != null) {
       _entry = service.createEntry(group);
+    }
+  }
+
+  void _loadCustomFields(KdbxEntry entry) {
+    for (final e in entry.fields.entries) {
+      if (_standardKeys.contains(e.key)) continue;
+      _customFields.add(_CustomFieldData(
+        originalKey: e.key,
+        name: e.key,
+        value: e.value.text,
+        protected: e.value is ProtectedTextField,
+      ));
     }
   }
 
@@ -70,6 +112,9 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     _passwordCtrl.dispose();
     _urlCtrl.dispose();
     _notesCtrl.dispose();
+    for (final f in _customFields) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -180,6 +225,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 ),
               ],
             ),
+            // Custom fields
+            if (_entry != null) ...[
+              const SizedBox(height: 12),
+              _buildCustomFieldsSection(colorScheme, l10n),
+            ],
             // Attachments
             if (_entry != null) ...[
               const SizedBox(height: 4),
@@ -193,9 +243,174 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     );
   }
 
+  Widget _buildCustomFieldsSection(ColorScheme colorScheme, AppLocalizations l10n) {
+    return _SectionCard(
+      children: [
+        for (int i = 0; i < _customFields.length; i++) ...[
+          if (i > 0)
+            Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+          _buildCustomFieldRow(_customFields[i], colorScheme, l10n),
+        ],
+        if (_customFields.isNotEmpty)
+          Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: _addCustomField,
+            icon: const Icon(Icons.add_rounded, size: 16),
+            label: Text(l10n.addCustomField),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomFieldRow(_CustomFieldData field, ColorScheme colorScheme, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          // Field name
+          Expanded(
+            flex: 2,
+            child: TextFormField(
+              controller: field.nameCtrl,
+              focusNode: field.nameFocus,
+              decoration: InputDecoration(
+                labelText: l10n.fieldName,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                isDense: true,
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Field value
+          Expanded(
+            flex: 3,
+            child: TextFormField(
+              controller: field.valueCtrl,
+              obscureText: field.obscure,
+              decoration: InputDecoration(
+                labelText: l10n.fieldValue,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                isDense: true,
+                suffixIcon: field.protected
+                    ? IconButton(
+                        icon: Icon(
+                          field.obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          size: 18,
+                        ),
+                        onPressed: () => setState(() => field.obscure = !field.obscure),
+                      )
+                    : null,
+              ),
+            ),
+          ),
+          // Protect toggle
+          SizedBox(
+            width: 36,
+            height: 36,
+            child: IconButton(
+              icon: Icon(
+                field.protected ? Icons.shield_rounded : Icons.shield_outlined,
+                size: 18,
+                color: field.protected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              ),
+              tooltip: field.protected ? l10n.unprotectField : l10n.protectField,
+              padding: EdgeInsets.zero,
+              onPressed: () => setState(() {
+                field.protected = !field.protected;
+                field.obscure = field.protected;
+              }),
+            ),
+          ),
+          // Delete
+          SizedBox(
+            width: 36,
+            height: 36,
+            child: IconButton(
+              icon: Icon(Icons.delete_outline_rounded, size: 18, color: colorScheme.error),
+              padding: EdgeInsets.zero,
+              onPressed: () => _deleteCustomField(field),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addCustomField() {
+    final field = _CustomFieldData(originalKey: '', name: '', value: '');
+    setState(() => _customFields.add(field));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      field.nameFocus.requestFocus();
+    });
+  }
+
+  Future<void> _deleteCustomField(_CustomFieldData field) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (field.valueCtrl.text.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.delete),
+          content: Text(l10n.deleteCustomFieldConfirm(field.nameCtrl.text)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.error,
+                foregroundColor: Theme.of(ctx).colorScheme.onError,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.delete),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    setState(() {
+      _customFields.remove(field);
+      field.dispose();
+    });
+  }
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     if (_entry == null) return;
+
+    final l10n = AppLocalizations.of(context)!;
+
+    // Validate custom field names
+    final names = <String>{};
+    for (final f in _customFields) {
+      final name = f.nameCtrl.text.trim();
+      if (name.isEmpty) {
+        showToast(context, l10n.fieldNameEmpty, isError: true);
+        return;
+      }
+      if (_standardKeys.contains(name)) {
+        showToast(context, l10n.fieldNameReserved(name), isError: true);
+        return;
+      }
+      if (!names.add(name)) {
+        showToast(context, l10n.fieldNameDuplicate(name), isError: true);
+        return;
+      }
+    }
 
     final service = ref.read(databaseServiceProvider);
 
@@ -208,6 +423,26 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
     _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
     _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
+
+    // Save custom fields
+    final currentKeys = names;
+    final keysToRemove = _entry!.fields.keys
+        .where((k) => !_standardKeys.contains(k) && !currentKeys.contains(k))
+        .toList();
+    for (final key in keysToRemove) {
+      _entry!.fields.remove(key);
+    }
+
+    for (final f in _customFields) {
+      final name = f.nameCtrl.text.trim();
+      if (f.originalKey.isNotEmpty && f.originalKey != name) {
+        _entry!.fields.remove(f.originalKey);
+      }
+      _entry!.fields[name] = KdbxTextField.fromText(
+        text: f.valueCtrl.text,
+        protected: f.protected,
+      );
+    }
 
     _saved = true;
     service.markDirty();

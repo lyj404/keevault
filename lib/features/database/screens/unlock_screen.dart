@@ -43,14 +43,13 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     ref.listen(databaseProvider, (prev, next) {
-      next.whenOrNull(
-        data: (db) {
-          if (db != null) context.go('/explorer');
-        },
-        error: (e, _) {
-          setState(() => _error = _friendlyError(e, l10n));
-        },
-      );
+      if (next.isLoading) {
+        setState(() => _error = null);
+      } else if (next.hasValue) {
+        if (next.value != null) context.go('/explorer');
+      } else if (next.hasError) {
+        setState(() => _error = _friendlyError(next.error!, l10n));
+      }
     });
 
     return Scaffold(

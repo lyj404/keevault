@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -236,9 +237,66 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         ref.invalidate(backupListProvider);
         context.go('/explorer');
       }
+    } on InvalidCredentialsError {
+      // Backup was encrypted with a different password (likely changed after backup)
+      if (!mounted) return;
+      final backupPassword = await _askBackupPassword(context);
+      if (backupPassword == null) return;
+      try {
+        await service.reloadFromBytes(bytes, password: backupPassword);
+        await service.save();
+        if (mounted) {
+          showToast(context, l10n.backupRestored);
+          ref.invalidate(backupListProvider);
+          context.go('/explorer');
+        }
+      } catch (e) {
+        if (mounted) showToast(context, l10n.backupRestoreFailed, isError: true);
+      }
     } catch (e) {
-      if (mounted) showToast(context, l10n.backupRestoreFailed);
+      if (mounted) {
+        final msg = e is KdbxError ? e.message : e.toString();
+        showToast(context, '${l10n.backupRestoreFailed}: $msg', isError: true);
+      }
     }
+  }
+
+  Future<String?> _askBackupPassword(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.masterPassword),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.backupPasswordDifferent,
+              style: TextStyle(fontSize: 13, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.backupPasswordHint,
+              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _deleteBackup(BuildContext context, String filename) async {

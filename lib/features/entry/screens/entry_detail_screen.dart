@@ -107,7 +107,10 @@ class EntryDetailScreen extends ConsumerWidget {
               _SectionCard(
                 children: [
                   for (final e in custom)
-                    _FieldRow(label: e.key, value: e.value.text, showCopy: true),
+                    if (e.value is ProtectedTextField)
+                      _PasswordField(value: e.value.text, label: e.key)
+                    else
+                      _FieldRow(label: e.key, value: e.value.text, showCopy: true),
                 ],
               ),
             ];
@@ -322,7 +325,8 @@ class _FieldRow extends StatelessWidget {
 
 class _PasswordField extends StatefulWidget {
   final String value;
-  const _PasswordField({required this.value});
+  final String? label;
+  const _PasswordField({required this.value, this.label});
 
   @override
   State<_PasswordField> createState() => _PasswordFieldState();
@@ -344,7 +348,7 @@ class _PasswordFieldState extends State<_PasswordField> {
           Row(
             children: [
               Text(
-                l10n.password,
+                widget.label ?? l10n.password,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,

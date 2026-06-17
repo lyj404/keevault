@@ -1459,6 +1459,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'暂无附件'**
   String get noAttachments;
+
+  /// No description provided for @customFields.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义字段'**
+  String get customFields;
+
+  /// No description provided for @addCustomField.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加字段'**
+  String get addCustomField;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In zh, this message translates to:
+  /// **'字段名称'**
+  String get fieldName;
+
+  /// No description provided for @fieldValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'字段值'**
+  String get fieldValue;
+
+  /// No description provided for @protectField.
+  ///
+  /// In zh, this message translates to:
+  /// **'保护字段'**
+  String get protectField;
+
+  /// No description provided for @unprotectField.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消保护'**
+  String get unprotectField;
+
+  /// No description provided for @fieldNameEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'字段名称不能为空'**
+  String get fieldNameEmpty;
+
+  /// No description provided for @fieldNameDuplicate.
+  ///
+  /// In zh, this message translates to:
+  /// **'字段名称重复: {name}'**
+  String fieldNameDuplicate(Object name);
+
+  /// No description provided for @fieldNameReserved.
+  ///
+  /// In zh, this message translates to:
+  /// **'字段名称 \"{name}\" 是保留名称'**
+  String fieldNameReserved(Object name);
+
+  /// No description provided for @deleteCustomFieldConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除字段 \"{name}\"？'**
+  String deleteCustomFieldConfirm(Object name);
+
+  /// No description provided for @backupPasswordDifferent.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份使用了不同的密码（可能修改过主密码），请输入备份时的密码'**
+  String get backupPasswordDifferent;
+
+  /// No description provided for @backupPasswordHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入备份时的主密码'**
+  String get backupPasswordHint;
 }
 
 class _AppLocalizationsDelegate

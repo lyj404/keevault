@@ -83,7 +83,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Future<bool> save() async {
     final bytes = await _service.save();
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
-    if (config != null && config.enabled) {
+    // Only sync to cloud if the current database was opened from or created as a cloud database
+    if (config != null && config.enabled && _ref.read(openedFromCloudProvider)) {
       _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
       try {
         final syncService = _ref.read(syncServiceProvider);
