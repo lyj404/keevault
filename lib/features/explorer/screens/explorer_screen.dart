@@ -9,6 +9,7 @@ import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
+import '../../../core/widgets/change_password_dialog.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
@@ -615,6 +616,7 @@ class _WideLayout extends StatelessWidget {
                           switch (v) {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
+                            case 'change_password': showChangePasswordDialog(context);
                             case 'settings': context.push('/settings');
                             case 'about': context.push('/about');
                             case 'close': onClose();
@@ -625,6 +627,7 @@ class _WideLayout extends StatelessWidget {
                             PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                             PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
+                          PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
@@ -755,6 +758,7 @@ class _NarrowLayout extends StatelessWidget {
                 case 'save': onSave();
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
+                case 'change_password': showChangePasswordDialog(context);
                 case 'settings': context.push('/settings');
                 case 'about': context.push('/about');
                 case 'close': onClose();
@@ -770,6 +774,7 @@ class _NarrowLayout extends StatelessWidget {
                 PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
               ],
+              PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),

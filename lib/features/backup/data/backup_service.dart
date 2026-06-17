@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../core/utils/secure_storage_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../core/utils/logger.dart';
 
@@ -21,7 +21,7 @@ class BackupService {
   static const _retentionKey = 'backup_retention_count';
   static const _autoBackupKey = 'backup_auto_enabled';
   static const _defaultRetention = 5;
-  final _storage = const FlutterSecureStorage();
+  final _storage = const SecureStorageHelper();
 
   Future<bool> isAutoBackupEnabled() async {
     final val = await _storage.read(key: _autoBackupKey);

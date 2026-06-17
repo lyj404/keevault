@@ -1327,6 +1327,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'开源许可协议'**
   String get openSourceLicenses;
+
+  /// No description provided for @changeMasterPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改主密码'**
+  String get changeMasterPassword;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前密码'**
+  String get currentPassword;
+
+  /// No description provided for @pleaseEnterCurrentPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入当前密码'**
+  String get pleaseEnterCurrentPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码'**
+  String get newPassword;
+
+  /// No description provided for @pleaseEnterNewPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入新密码'**
+  String get pleaseEnterNewPassword;
+
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认新密码'**
+  String get confirmNewPassword;
+
+  /// No description provided for @passwordChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'主密码已修改'**
+  String get passwordChanged;
 }
 
 class _AppLocalizationsDelegate

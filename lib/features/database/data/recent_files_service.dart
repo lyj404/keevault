@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/secure_storage_helper.dart';
 
 class RecentFile {
   final String path;
@@ -51,7 +51,7 @@ class LastOpenedFile {
 class RecentFilesService {
   static const _key = 'recent_files';
   static const _lastOpenedKey = 'last_opened_file';
-  final _storage = const FlutterSecureStorage();
+  final _storage = const SecureStorageHelper();
 
   Future<List<RecentFile>> getRecentFiles() async {
     final data = await _storage.read(key: _key);

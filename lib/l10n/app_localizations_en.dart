@@ -654,4 +654,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Open source licenses';
+
+  @override
+  String get changeMasterPassword => 'Change Master Password';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get pleaseEnterCurrentPassword => 'Please enter current password';
+
+  @override
+  String get newPassword => 'New Password';
+
+  @override
+  String get pleaseEnterNewPassword => 'Please enter new password';
+
+  @override
+  String get confirmNewPassword => 'Confirm New Password';
+
+  @override
+  String get passwordChanged => 'Master password changed';
 }

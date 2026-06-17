@@ -643,4 +643,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openSourceLicenses => '开源许可协议';
+
+  @override
+  String get changeMasterPassword => '修改主密码';
+
+  @override
+  String get currentPassword => '当前密码';
+
+  @override
+  String get pleaseEnterCurrentPassword => '请输入当前密码';
+
+  @override
+  String get newPassword => '新密码';
+
+  @override
+  String get pleaseEnterNewPassword => '请输入新密码';
+
+  @override
+  String get confirmNewPassword => '确认新密码';
+
+  @override
+  String get passwordChanged => '主密码已修改';
 }

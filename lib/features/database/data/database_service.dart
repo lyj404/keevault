@@ -217,6 +217,22 @@ class DatabaseService {
     return parts.reversed.join('/');
   }
 
+  /// Changes the master password of the currently open database.
+  /// Throws [InvalidCredentialsError] if [oldPassword] is incorrect.
+  /// Does NOT save to disk — caller should invoke save() afterwards.
+  void changePassword(String oldPassword, String newPassword) {
+    if (_db == null) throw Exception('database_not_open');
+    if (_password != oldPassword) {
+      throw const InvalidCredentialsError('invalid key');
+    }
+    _db!.header.credentials = KdbxCredentials(
+      password: ProtectedData.fromString(newPassword),
+    );
+    _password = newPassword;
+    _dirty = true;
+    log.i('Master password changed');
+  }
+
   void close() {
     log.i('Database closed: $_filePath');
     _db = null;

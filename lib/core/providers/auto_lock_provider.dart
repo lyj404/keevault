@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/secure_storage_helper.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/database/providers/database_provider.dart';
 import '../router/app_router.dart';
@@ -8,7 +8,7 @@ import '../router/app_router.dart';
 const _lockTimeoutOptions = [0, 1, 5, 15, 30, 60]; // minutes, 0 = disabled
 
 class AutoLockNotifier extends StateNotifier<int> {
-  static const _storage = FlutterSecureStorage();
+  static const _storage = SecureStorageHelper();
   static const _key = 'auto_lock_minutes';
   final Ref _ref;
   Timer? _timer;

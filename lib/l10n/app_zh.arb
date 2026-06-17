@@ -242,5 +242,13 @@
   "update": "去更新",
   "alreadyLatest": "已是最新版本",
   "licenses": "许可证",
-  "openSourceLicenses": "开源许可协议"
+  "openSourceLicenses": "开源许可协议",
+
+  "changeMasterPassword": "修改主密码",
+  "currentPassword": "当前密码",
+  "pleaseEnterCurrentPassword": "请输入当前密码",
+  "newPassword": "新密码",
+  "pleaseEnterNewPassword": "请输入新密码",
+  "confirmNewPassword": "确认新密码",
+  "passwordChanged": "主密码已修改"
 }

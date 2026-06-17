@@ -234,5 +234,13 @@
   "reportIssue": "Report Issue",
   "reportIssueDescription": "Report bugs or suggestions",
   "licenses": "Licenses",
-  "openSourceLicenses": "Open source licenses"
+  "openSourceLicenses": "Open source licenses",
+
+  "changeMasterPassword": "Change Master Password",
+  "currentPassword": "Current Password",
+  "pleaseEnterCurrentPassword": "Please enter current password",
+  "newPassword": "New Password",
+  "pleaseEnterNewPassword": "Please enter new password",
+  "confirmNewPassword": "Confirm New Password",
+  "passwordChanged": "Master password changed"
 }

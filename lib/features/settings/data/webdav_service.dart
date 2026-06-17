@@ -1,9 +1,9 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../core/utils/secure_storage_helper.dart';
 import 'webdav_config.dart';
 
 class WebDavSettingsService {
   static const _configKey = 'webdav_config';
-  final _storage = const FlutterSecureStorage();
+  final _storage = const SecureStorageHelper();
 
   Future<WebDavConfig?> getConfig() async {
     final json = await _storage.read(key: _configKey);

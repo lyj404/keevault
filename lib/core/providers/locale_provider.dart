@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/secure_storage_helper.dart';
 
 const _storageKey = 'app_locale';
 
-final localeStorageProvider = Provider<FlutterSecureStorage>((ref) {
-  return const FlutterSecureStorage();
+final localeStorageProvider = Provider<SecureStorageHelper>((ref) {
+  return const SecureStorageHelper();
 });
 
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale?>((ref) {

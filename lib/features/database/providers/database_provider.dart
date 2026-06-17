@@ -149,6 +149,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _ref.read(openedFromCloudProvider.notifier).state = false;
     _ref.read(recentFilesServiceProvider).clearLastOpenedFile();
     _ref.read(autoLockProvider.notifier).cancelTimer();
+    _ref.invalidate(recentFilesProvider);
   }
 
   Future<void> reloadFromCloud() async {
@@ -180,6 +181,12 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     if (remoteInfo == null || lastInfo == null) return false;
     return remoteInfo.eTag != null && lastInfo.eTag != null &&
            remoteInfo.eTag != lastInfo.eTag;
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    _service.changePassword(oldPassword, newPassword);
+    // Save + sync to cloud if enabled.
+    await save();
   }
 
   void markDirty() => _service.markDirty();
