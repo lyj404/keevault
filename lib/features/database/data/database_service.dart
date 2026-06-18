@@ -17,6 +17,7 @@ class DatabaseService {
   Uint8List? _keyData;
   bool _dirty = false;
   Uint8List? _preloadedBytes;
+  String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
   Uint8List? _lastSavedBytes;
 
@@ -54,8 +55,14 @@ class DatabaseService {
 
   /// Preloads file bytes into memory so openFile doesn't block on I/O.
   Future<void> preloadFile(String filePath) async {
+    // Skip if already preloaded the same file
+    if (_preloadedBytes != null && _preloadedFilePath == filePath) {
+      log.i('File already preloaded: $filePath');
+      return;
+    }
     log.i('Preloading file: $filePath');
     _preloadedBytes = await File(filePath).readAsBytes();
+    _preloadedFilePath = filePath;
   }
 
   /// Loads a KDBX database in a background isolate to avoid blocking the UI.
@@ -75,6 +82,7 @@ class DatabaseService {
     log.i('Opening database: $filePath');
     final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
     _preloadedBytes = null;
+    _preloadedFilePath = null;
     _db = await _loadDatabase(bytes, password, keyData: keyData);
     _filePath = filePath;
     _password = password;
