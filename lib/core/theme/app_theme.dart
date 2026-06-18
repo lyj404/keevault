@@ -165,7 +165,10 @@ class AppTheme {
   ];
 
   static TextStyle _withFallback(TextStyle? base) {
-    return (base ?? const TextStyle()).copyWith(fontFamilyFallback: _fontFallback);
+    return (base ?? const TextStyle()).copyWith(
+      fontFamily: 'Noto Sans SC',
+      fontFamilyFallback: _fontFallback,
+    );
   }
 
   static TextTheme _applyFallback(TextTheme theme) {
@@ -194,6 +197,7 @@ class AppTheme {
   static ThemeData _buildLight() {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Noto Sans SC',
       brightness: Brightness.light,
       colorScheme: ColorScheme(
         brightness: Brightness.light,
@@ -317,11 +321,13 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceLight,
+          fontFamily: 'Noto Sans SC',
           fontFamilyFallback: _fontFallback,
         ),
         contentTextStyle: TextStyle(
           fontSize: 14,
           color: ClayColors.onSurfaceLight,
+          fontFamily: 'Noto Sans SC',
           fontFamilyFallback: _fontFallback,
         ),
       ),
@@ -363,6 +369,7 @@ class AppTheme {
   static ThemeData _buildDark() {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Noto Sans SC',
       brightness: Brightness.dark,
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
@@ -486,11 +493,13 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceDark,
+          fontFamily: 'Noto Sans SC',
           fontFamilyFallback: _fontFallback,
         ),
         contentTextStyle: TextStyle(
           fontSize: 14,
           color: ClayColors.onSurfaceDark,
+          fontFamily: 'Noto Sans SC',
           fontFamilyFallback: _fontFallback,
         ),
       ),
