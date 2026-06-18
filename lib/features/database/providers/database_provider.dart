@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
+import '../../../core/utils/logger.dart';
 import '../data/csv_service.dart';
 import '../data/database_service.dart';
 import '../data/recent_files_service.dart';
@@ -109,6 +110,13 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             remoteInfo.eTag != lastInfo.eTag) {
           _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
           return false;
+        }
+        // Skip upload if content hasn't changed
+        if (remoteInfo?.eTag != null && lastInfo?.eTag != null &&
+            remoteInfo!.eTag == lastInfo!.eTag) {
+          log.i('Content unchanged, skipping upload');
+          _ref.read(syncStateProvider.notifier).state = SyncState.success;
+          return true;
         }
         await syncService.ensureRemoteDirectory(config);
         await syncService.uploadDatabase(config, bytes);

@@ -18,6 +18,7 @@ class DatabaseService {
   bool _dirty = false;
   Uint8List? _preloadedBytes;
   List<KdbxEntry>? _allEntriesCache;
+  Uint8List? _lastSavedBytes;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -141,9 +142,20 @@ class DatabaseService {
       }));
     }
     await File(_filePath!).writeAsBytes(bytes);
+    _lastSavedBytes = Uint8List.fromList(bytes);
     markClean();
     log.i('Database saved (${bytes.length} bytes)');
     return Uint8List.fromList(bytes);
+  }
+
+  /// Returns true if the given bytes are identical to the last saved bytes.
+  bool isSameAsLastSaved(Uint8List bytes) {
+    if (_lastSavedBytes == null) return false;
+    if (_lastSavedBytes!.length != bytes.length) return false;
+    for (int i = 0; i < bytes.length; i++) {
+      if (_lastSavedBytes![i] != bytes[i]) return false;
+    }
+    return true;
   }
 
   /// Serializes the database to bytes without writing to disk.
