@@ -1586,6 +1586,12 @@ abstract class AppLocalizations {
   /// **'没有可导出的条目'**
   String get noEntriesToExport;
 
+  /// No description provided for @noEntriesInCsv.
+  ///
+  /// In zh, this message translates to:
+  /// **'CSV 文件中未找到有效条目'**
+  String get noEntriesInCsv;
+
   /// No description provided for @expiration.
   ///
   /// In zh, this message translates to:

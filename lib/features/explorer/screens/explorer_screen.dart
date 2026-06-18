@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../core/utils/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -451,15 +452,31 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
+      withData: true,
     );
-    if (result == null || result.files.single.path == null) return;
+    if (result == null) return;
 
     try {
-      final content = await File(result.files.single.path!).readAsString();
+      final file = result.files.single;
+      final bytes = file.bytes ?? await File(file.path!).readAsBytes();
+
+      // Try UTF-8 first, fall back to system encoding (handles GBK/ANSI on Chinese Windows)
+      String content = utf8.decode(bytes, allowMalformed: true);
+      // If UTF-8 decoding produced no line breaks (corrupted encoding), retry with system encoding
+      if (!content.contains('\n') && bytes.length > 10) {
+        final alt = systemEncoding.decode(bytes);
+        if (alt.contains('\n')) {
+          log.i('CSV import: UTF-8 produced no line breaks, using system encoding');
+          content = alt;
+        }
+      }
+
+      log.i('CSV import: file = ${file.name}, bytes = ${bytes.length}');
+      log.i('CSV import: content length = ${content.length}, line count = ${content.split('\n').length}');
       final csvService = ref.read(csvServiceProvider);
       final entries = csvService.importFromCsv(content);
       if (entries.isEmpty) {
-        if (context.mounted) showToast(context, l10n.noEntriesToExport, isError: true);
+        if (context.mounted) showToast(context, l10n.noEntriesInCsv, isError: true);
         return;
       }
 

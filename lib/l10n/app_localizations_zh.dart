@@ -784,6 +784,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noEntriesToExport => '没有可导出的条目';
 
   @override
+  String get noEntriesInCsv => 'CSV 文件中未找到有效条目';
+
+  @override
   String get expiration => '过期时间';
 
   @override

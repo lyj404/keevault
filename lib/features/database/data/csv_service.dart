@@ -52,43 +52,43 @@ class CsvService {
 
     // Detect delimiter
     final delimiter = _detectDelimiter(csvContent);
+    log.i('CSV import: detected delimiter: ${delimiter == '\t' ? 'TAB' : delimiter == '  ' ? 'SPACES' : delimiter}');
 
-    final rows = const CsvToListConverter(
-      shouldParseNumbers: false,
-      allowInvalid: false,
-    ).convert(csvContent, fieldDelimiter: delimiter);
+    final rows = _parseCsvLines(csvContent, delimiter);
 
+    log.i('CSV import: ${rows.length} rows parsed (including header)');
     if (rows.length < 2) return [];
 
-    final headers = rows.first.map((h) => h.toString().trim()).toList();
+    final headers = rows.first.map((h) => h.trim()).toList();
+    log.i('CSV import: headers = $headers');
     final mapping = _mapColumns(headers);
     final entries = <CsvEntry>[];
 
     for (int i = 1; i < rows.length; i++) {
       final row = rows[i];
-      if (row.isEmpty || _isEmptyRow(row)) continue;
+      if (row.isEmpty || row.every((c) => c.trim().isEmpty)) continue;
 
-      String _cell(int idx) =>
-          idx >= 0 && idx < row.length ? row[idx].toString().trim() : '';
+      String cell(int idx) =>
+          idx >= 0 && idx < row.length ? row[idx].trim() : '';
 
       final entry = CsvEntry(
-        title: _cell(mapping.title),
-        username: _cell(mapping.username),
-        password: _cell(mapping.password),
-        url: _cell(mapping.url),
-        notes: _cell(mapping.notes),
-        group: mapping.group >= 0 ? _cell(mapping.group) : null,
+        title: cell(mapping.title),
+        username: cell(mapping.username),
+        password: cell(mapping.password),
+        url: cell(mapping.url),
+        notes: cell(mapping.notes),
+        group: mapping.group >= 0 ? cell(mapping.group) : null,
       );
 
       // TOTP -> custom field
-      final totp = _cell(mapping.totp);
+      final totp = cell(mapping.totp);
       if (totp.isNotEmpty) {
         entry.customFields['TOTP'] = totp;
       }
 
       // Other custom fields
       for (int j = 0; j < mapping.customIndices.length; j++) {
-        final value = _cell(mapping.customIndices[j]);
+        final value = cell(mapping.customIndices[j]);
         if (value.isNotEmpty && j < mapping.customHeaders.length) {
           entry.customFields[mapping.customHeaders[j]] = value;
         }
@@ -99,6 +99,76 @@ class CsvService {
 
     log.i('CSV import: ${entries.length} entries parsed');
     return entries;
+  }
+
+  /// Parse CSV content into rows, handling quoted fields with embedded delimiters.
+  static List<List<String>> _parseCsvLines(String content, String delimiter) {
+    final lines = content.split('\n');
+    final rows = <List<String>>[];
+    List<String>? currentRow;
+    String? pendingField;
+    bool inQuote = false;
+
+    for (final line in lines) {
+      if (line.trim().isEmpty && !inQuote) continue;
+
+      if (!inQuote) {
+        currentRow = [];
+        pendingField = '';
+      }
+
+      final sb = StringBuffer();
+      if (inQuote && pendingField != null && pendingField.isNotEmpty) {
+        sb.write(pendingField);
+        sb.write('\n');
+      }
+
+      int i = 0;
+      while (i < line.length) {
+        final ch = line[i];
+        if (inQuote) {
+          if (ch == '"') {
+            if (i + 1 < line.length && line[i + 1] == '"') {
+              sb.write('"');
+              i += 2;
+            } else {
+              inQuote = false;
+              i++;
+            }
+          } else {
+            sb.write(ch);
+            i++;
+          }
+        } else {
+          if (ch == '"') {
+            inQuote = true;
+            i++;
+          } else if (ch == delimiter) {
+            currentRow!.add(sb.toString());
+            sb.clear();
+            i++;
+          } else {
+            sb.write(ch);
+            i++;
+          }
+        }
+      }
+
+      if (inQuote) {
+        pendingField = sb.toString();
+      } else {
+        final row = currentRow!;
+        row.add(sb.toString());
+        rows.add(row);
+        pendingField = null;
+      }
+    }
+
+    log.i('CSV import: manual parser returned ${rows.length} rows');
+    if (rows.isNotEmpty) {
+      log.i('CSV import: first row has ${rows.first.length} columns: ${rows.first}');
+    }
+    return rows;
   }
 
   /// Create KDBX entries from parsed CSV entries.
@@ -185,7 +255,26 @@ class CsvService {
     }
     if (tabs > commas && tabs > semicolons) return '\t';
     if (semicolons > commas) return ';';
+    if (commas > 0) return ',';
+    // Fallback: check if multiple spaces work as delimiter
+    if (_couldBeSpaceDelimited(lines)) return '  ';
     return ',';
+  }
+
+  /// Heuristic: if splitting on 2+ spaces yields consistent column counts
+  /// across the first few lines, treat as space-delimited.
+  bool _couldBeSpaceDelimited(List<String> lines) {
+    if (lines.length < 2) return false;
+    final pattern = RegExp(r' {2,}');
+    final counts = <int>[];
+    for (final line in lines) {
+      if (line.trim().isEmpty) continue;
+      final parts = line.split(pattern).where((p) => p.isNotEmpty).toList();
+      counts.add(parts.length);
+    }
+    if (counts.isEmpty) return false;
+    final first = counts.first;
+    return first >= 2 && counts.every((c) => c == first);
   }
 
   /// Map CSV headers to column indices.
@@ -236,10 +325,6 @@ class CsvService {
     }
 
     return m;
-  }
-
-  bool _isEmptyRow(List<dynamic> row) {
-    return row.every((cell) => cell.toString().trim().isEmpty);
   }
 
   /// Find or create a group by path (e.g., "Email/Work").

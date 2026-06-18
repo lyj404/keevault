@@ -798,6 +798,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEntriesToExport => 'No entries to export';
 
   @override
+  String get noEntriesInCsv => 'No valid entries found in CSV file';
+
+  @override
   String get expiration => 'Expiration';
 
   @override

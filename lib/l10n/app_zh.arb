@@ -297,6 +297,7 @@
   "exportSuccess": "导出成功",
   "exportFailed": "导出失败",
   "noEntriesToExport": "没有可导出的条目",
+  "noEntriesInCsv": "CSV 文件中未找到有效条目",
 
   "expiration": "过期时间",
   "noExpiration": "永不过期",
