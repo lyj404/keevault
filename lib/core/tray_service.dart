@@ -40,6 +40,8 @@ class TrayService {
         onShowWindow();
       } else if (eventType == kSystemTrayEventDoubleClick) {
         onShowWindow();
+      } else if (eventType == kSystemTrayEventRightClick) {
+        _tray.popUpContextMenu();
       }
     });
 

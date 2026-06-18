@@ -28,8 +28,17 @@ class DatabaseService {
   bool get isOpen => _db != null;
   bool get isDirty => _dirty;
 
-  void markDirty() => _dirty = true;
-  void markClean() => _dirty = false;
+  /// Callback invoked when dirty state changes.
+  void Function(bool isDirty)? onDirtyChanged;
+
+  void markDirty() {
+    _dirty = true;
+    onDirtyChanged?.call(true);
+  }
+  void markClean() {
+    _dirty = false;
+    onDirtyChanged?.call(false);
+  }
 
   /// All entries in a flat cached list. Rebuilt on open/create/mutation.
   List<KdbxEntry> get allEntries => _allEntriesCache ?? [];
@@ -65,7 +74,7 @@ class DatabaseService {
     _db = await _loadDatabase(bytes, password);
     _filePath = filePath;
     _password = password;
-    _dirty = false;
+    markClean();
     _localizeRecycleBin();
     _rebuildEntryCache();
     log.i('Database opened, entries: ${_allEntriesCache!.length}');
@@ -80,7 +89,7 @@ class DatabaseService {
     _db = KdbxDatabase.create(credentials: credentials, name: name);
     _filePath = filePath;
     _password = password;
-    _dirty = true;
+    markDirty();
     _localizeRecycleBin();
     _rebuildEntryCache();
     await save();
@@ -93,7 +102,7 @@ class DatabaseService {
     if (pw == null) throw Exception('no_password_cannot_reload');
     _db = await _loadDatabase(bytes, pw);
     _password = pw;
-    _dirty = false;
+    markClean();
     _localizeRecycleBin();
     _rebuildEntryCache();
     return _db!;
@@ -126,7 +135,7 @@ class DatabaseService {
       }));
     }
     await File(_filePath!).writeAsBytes(bytes);
-    _dirty = false;
+    markClean();
     log.i('Database saved (${bytes.length} bytes)');
     return Uint8List.fromList(bytes);
   }
@@ -147,21 +156,21 @@ class DatabaseService {
 
   KdbxGroup createGroup(KdbxGroup parent, String name) {
     final group = _db!.createGroup(parent: parent, name: name);
-    _dirty = true;
+    markDirty();
     return group;
   }
 
   KdbxEntry createEntry(KdbxGroup parent) {
     final entry = _db!.createEntry(parent: parent);
     entry.times = KdbxTimes.fromTime();
-    _dirty = true;
+    markDirty();
     _rebuildEntryCache();
     return entry;
   }
 
   void deleteItem(KdbxItem item) {
     _db!.remove(item);
-    _dirty = true;
+    markDirty();
     _rebuildEntryCache();
   }
 
@@ -174,14 +183,14 @@ class DatabaseService {
     final target = _db!.getGroup(uuid: prevUuid);
     if (target == null) return false;
     _db!.move(item: item, target: target);
-    _dirty = true;
+    markDirty();
     _rebuildEntryCache();
     return true;
   }
 
   void moveItem(KdbxItem item, KdbxGroup target) {
     _db!.move(item: item, target: target);
-    _dirty = true;
+    markDirty();
     _rebuildEntryCache();
   }
 
@@ -234,7 +243,7 @@ class DatabaseService {
       password: ProtectedData.fromString(newPassword),
     );
     _password = newPassword;
-    _dirty = true;
+    markDirty();
     log.i('Master password changed');
   }
 
@@ -243,7 +252,7 @@ class DatabaseService {
     _db = null;
     _filePath = null;
     _password = null;
-    _dirty = false;
+    markClean();
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
     _allEntriesCache = null;

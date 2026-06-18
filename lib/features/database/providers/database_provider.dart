@@ -30,7 +30,13 @@ final databaseProvider = StateNotifierProvider<DatabaseNotifier, AsyncValue<Kdbx
 class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   final Ref _ref;
 
-  DatabaseNotifier(this._ref) : super(const AsyncValue.data(null));
+  DatabaseNotifier(this._ref) : super(const AsyncValue.data(null)) {
+    _service.onDirtyChanged = (isDirty) {
+      Future.microtask(() {
+        _ref.read(isDirtyProvider.notifier).state = isDirty;
+      });
+    };
+  }
 
   DatabaseService get _service => _ref.read(databaseServiceProvider);
 
@@ -210,3 +216,6 @@ final recentFilesProvider = FutureProvider<List<RecentFile>>((ref) async {
 
 /// Whether the current database was opened from WebDAV (cloud).
 final openedFromCloudProvider = StateProvider<bool>((ref) => false);
+
+/// Whether the database has unsaved changes.
+final isDirtyProvider = StateProvider<bool>((ref) => false);

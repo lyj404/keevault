@@ -138,6 +138,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final service = ref.read(databaseServiceProvider);
     final isRecycleBin = currentGroup?.icon == KdbxIcon.trashBin;
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
+    final isDirty = ref.watch(isDirtyProvider);
     final selectedEntry = ref.watch(selectedEntryProvider);
 
     void onEntrySelect(KdbxEntry entry) {
@@ -166,6 +167,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           selectedEntry: selectedEntry,
           isRecycleBin: isRecycleBin,
           isOpenedFromCloud: isOpenedFromCloud,
+          isDirty: isDirty,
           onGroupTap: (group) {
             ref.read(selectedEntryProvider.notifier).state = null;
             final path = service.getGroupPath(group);
@@ -207,6 +209,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         selectedEntry: selectedEntry,
         isRecycleBin: isRecycleBin,
         isOpenedFromCloud: isOpenedFromCloud,
+        isDirty: isDirty,
         onGroupTap: (group) {
           ref.read(selectedEntryProvider.notifier).state = null;
           final path = service.getGroupPath(group);
@@ -579,6 +582,7 @@ class _WideLayout extends StatelessWidget {
   final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
+  final bool isDirty;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
   final ValueChanged<KdbxEntry> onEntryOpen;
@@ -604,6 +608,7 @@ class _WideLayout extends StatelessWidget {
     this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
+    required this.isDirty,
     required this.onGroupTap,
     required this.onEntrySelect,
     required this.onEntryOpen,
@@ -730,7 +735,7 @@ class _WideLayout extends StatelessWidget {
                       _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: l10n.addGroup, onPressed: currentGroup != null ? onAddGroup : null),
                       if (isOpenedFromCloud)
                         _ToolbarButton(icon: Icons.sync_rounded, tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
-                      _ToolbarButton(icon: Icons.save_outlined, tooltip: l10n.save, onPressed: onSave),
+                      _ToolbarButton(icon: Icons.save_outlined, tooltip: l10n.save, onPressed: onSave, showDot: isDirty),
                       PopupMenuButton<String>(
                         tooltip: l10n.more,
                         icon: Icon(Icons.more_vert, size: 20, color: colorScheme.onSurfaceVariant),
@@ -795,8 +800,9 @@ class _ToolbarButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
+  final bool showDot;
 
-  const _ToolbarButton({required this.icon, required this.tooltip, this.onPressed});
+  const _ToolbarButton({required this.icon, required this.tooltip, this.onPressed, this.showDot = false});
 
   @override
   Widget build(BuildContext context) {
@@ -810,7 +816,13 @@ class _ToolbarButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
-        icon: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+        icon: showDot
+            ? Badge(
+                smallSize: 6,
+                backgroundColor: colorScheme.primary,
+                child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+              )
+            : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         tooltip: tooltip,
         onPressed: onPressed,
         style: IconButton.styleFrom(
@@ -831,6 +843,7 @@ class _NarrowLayout extends StatelessWidget {
   final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
+  final bool isDirty;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
   final ValueChanged<KdbxEntry> onEntryOpen;
@@ -854,6 +867,7 @@ class _NarrowLayout extends StatelessWidget {
     this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
+    required this.isDirty,
     required this.onGroupTap,
     required this.onEntrySelect,
     required this.onEntryOpen,
@@ -873,6 +887,7 @@ class _NarrowLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -908,7 +923,7 @@ class _NarrowLayout extends StatelessWidget {
                 PopupMenuItem(value: 'add_entry', child: ListTile(leading: const Icon(Icons.add_rounded), title: Text(l10n.addEntry), dense: true, contentPadding: EdgeInsets.zero)),
               if (onAddGroup != null)
                 PopupMenuItem(value: 'add_group', child: ListTile(leading: const Icon(Icons.create_new_folder_rounded), title: Text(l10n.addGroup), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'save', child: ListTile(leading: const Icon(Icons.save_outlined), title: Text(l10n.save), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'save', child: ListTile(leading: isDirty ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined)) : const Icon(Icons.save_outlined), title: Text(l10n.save), dense: true, contentPadding: EdgeInsets.zero)),
               if (isOpenedFromCloud) ...[
                 PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
