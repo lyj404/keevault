@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../l10n/app_localizations.dart';
@@ -21,6 +23,8 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _error;
+  Uint8List? _keyData;
+  String? _keyFileName;
 
   @override
   void initState() {
@@ -127,6 +131,8 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                     validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
                     onFieldSubmitted: (_) => _unlock(),
                   ),
+                  const SizedBox(height: 14),
+                  _buildKeyFilePicker(l10n, colorScheme),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Container(
@@ -204,7 +210,66 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void _unlock() {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
-    ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag);
+    ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
+  }
+
+  Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {
+    return _keyData != null
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.key_rounded, size: 18, color: colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _keyFileName ?? l10n.keyFileSelected,
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                  onPressed: () => setState(() {
+                    _keyData = null;
+                    _keyFileName = null;
+                  }),
+                  tooltip: l10n.removeKeyFile,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                ),
+              ],
+            ),
+          )
+        : OutlinedButton.icon(
+            onPressed: _pickKeyFile,
+            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+            label: Text(l10n.selectKeyFile),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(44),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          );
+  }
+
+  Future<void> _pickKeyFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          _keyData = file.bytes;
+          _keyFileName = file.name;
+        });
+      }
+    }
   }
 
   String _friendlyError(Object e, AppLocalizations l10n) {

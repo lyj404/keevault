@@ -14,6 +14,7 @@ class DatabaseService {
   KdbxDatabase? _db;
   String? _filePath;
   String? _password;
+  Uint8List? _keyData;
   bool _dirty = false;
   Uint8List? _preloadedBytes;
   List<KdbxEntry>? _allEntriesCache;
@@ -27,6 +28,7 @@ class DatabaseService {
   String? get filePath => _filePath;
   bool get isOpen => _db != null;
   bool get isDirty => _dirty;
+  bool get hasKeyFile => _keyData != null;
 
   /// Callback invoked when dirty state changes.
   void Function(bool isDirty)? onDirtyChanged;
@@ -57,23 +59,25 @@ class DatabaseService {
 
   /// Loads a KDBX database in a background isolate to avoid blocking the UI.
   /// The isolate initializes its own crypto engine (FFI if available, pure Dart fallback).
-  static Future<KdbxDatabase> _loadDatabase(Uint8List bytes, String password) async {
+  static Future<KdbxDatabase> _loadDatabase(Uint8List bytes, String password, {Uint8List? keyData}) async {
     return await Isolate.run(() {
       CryptoService.initialize();
       final credentials = KdbxCredentials(
         password: ProtectedData.fromString(password),
+        keyData: keyData,
       );
       return KdbxDatabase.fromBytes(data: bytes, credentials: credentials);
     });
   }
 
-  Future<KdbxDatabase> openFile(String filePath, String password) async {
+  Future<KdbxDatabase> openFile(String filePath, String password, {Uint8List? keyData}) async {
     log.i('Opening database: $filePath');
     final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
     _preloadedBytes = null;
-    _db = await _loadDatabase(bytes, password);
+    _db = await _loadDatabase(bytes, password, keyData: keyData);
     _filePath = filePath;
     _password = password;
+    _keyData = keyData;
     markClean();
     _localizeRecycleBin();
     _rebuildEntryCache();
@@ -81,14 +85,16 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<KdbxDatabase> createDatabase(String name, String password, String filePath) async {
+  Future<KdbxDatabase> createDatabase(String name, String password, String filePath, {Uint8List? keyData}) async {
     log.i('Creating database: $name -> $filePath');
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(password),
+      keyData: keyData,
     );
     _db = KdbxDatabase.create(credentials: credentials, name: name);
     _filePath = filePath;
     _password = password;
+    _keyData = keyData;
     markDirty();
     _localizeRecycleBin();
     _rebuildEntryCache();
@@ -100,7 +106,7 @@ class DatabaseService {
   Future<KdbxDatabase> reloadFromBytes(Uint8List bytes, {String? password}) async {
     final pw = password ?? _password;
     if (pw == null) throw Exception('no_password_cannot_reload');
-    _db = await _loadDatabase(bytes, pw);
+    _db = await _loadDatabase(bytes, pw, keyData: _keyData);
     _password = pw;
     markClean();
     _localizeRecycleBin();
@@ -234,15 +240,20 @@ class DatabaseService {
   /// Changes the master password of the currently open database.
   /// Throws [InvalidCredentialsError] if [oldPassword] is incorrect.
   /// Does NOT save to disk — caller should invoke save() afterwards.
-  void changePassword(String oldPassword, String newPassword) {
+  /// If [updateKeyFile] is true, [newKeyData] will be used (null means remove key file).
+  /// If [updateKeyFile] is false, the existing key file is preserved.
+  void changePassword(String oldPassword, String newPassword, {bool updateKeyFile = false, Uint8List? newKeyData}) {
     if (_db == null) throw Exception('database_not_open');
     if (_password != oldPassword) {
       throw const InvalidCredentialsError('invalid key');
     }
+    final keyData = updateKeyFile ? newKeyData : _keyData;
     _db!.header.credentials = KdbxCredentials(
       password: ProtectedData.fromString(newPassword),
+      keyData: keyData,
     );
     _password = newPassword;
+    _keyData = keyData;
     markDirty();
     log.i('Master password changed');
   }
@@ -252,6 +263,7 @@ class DatabaseService {
     _db = null;
     _filePath = null;
     _password = null;
+    _keyData = null;
     markClean();
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;

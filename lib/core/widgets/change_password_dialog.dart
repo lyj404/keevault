@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
+import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
 import 'password_text_field.dart';
 import 'toast.dart';
@@ -28,6 +30,22 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
   final _newPasswordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _saving = false;
+
+  // Key file state
+  late bool _hasExistingKeyFile;
+  Uint8List? _newKeyData;
+  String? _newKeyFileName;
+  bool _removeKeyFile = false;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _hasExistingKeyFile = ref.read(databaseProvider.notifier).hasKeyFile;
+      _initialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -89,6 +107,8 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
                   return null;
                 },
               ),
+              const SizedBox(height: 14),
+              _buildKeyFileSection(l10n, colorScheme),
             ],
           ),
         ),
@@ -112,10 +132,35 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     final l10n = AppLocalizations.of(context)!;
+
+    // Determine if we need to update the key file
+    bool updateKeyFile = false;
+    Uint8List? keyData;
+
+    if (_hasExistingKeyFile) {
+      // Database already has a key file
+      if (_removeKeyFile) {
+        updateKeyFile = true;
+        keyData = null;
+      } else if (_newKeyData != null) {
+        updateKeyFile = true;
+        keyData = _newKeyData;
+      }
+      // else: keep existing key file, don't update
+    } else {
+      // Database doesn't have a key file
+      if (_newKeyData != null) {
+        updateKeyFile = true;
+        keyData = _newKeyData;
+      }
+    }
+
     try {
       await ref.read(databaseProvider.notifier).changePassword(
         _oldPasswordCtrl.text,
         _newPasswordCtrl.text,
+        updateKeyFile: updateKeyFile,
+        newKeyData: keyData,
       );
       if (mounted) {
         Navigator.pop(context);
@@ -130,6 +175,126 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
       if (mounted) {
         setState(() => _saving = false);
         showToast(context, l10n.error(e.toString()), isError: true);
+      }
+    }
+  }
+
+  Widget _buildKeyFileSection(AppLocalizations l10n, ColorScheme colorScheme) {
+    // Show new key file if selected
+    if (_newKeyData != null) {
+      return _buildNewKeyFileChip(l10n, colorScheme);
+    }
+
+    // Show existing key file if present and not removing
+    if (_hasExistingKeyFile && !_removeKeyFile) {
+      return _buildExistingKeyFileChip(l10n, colorScheme);
+    }
+
+    // Show add button
+    return _buildAddKeyFileButton(l10n, colorScheme);
+  }
+
+  Widget _buildExistingKeyFileChip(AppLocalizations l10n, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.key_rounded, size: 18, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.keyFileSelected,
+              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          TextButton(
+            onPressed: _pickNewKeyFile,
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(l10n.changeKeyFile ?? '更换'),
+          ),
+          const SizedBox(width: 4),
+          TextButton(
+            onPressed: () => setState(() => _removeKeyFile = true),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              foregroundColor: colorScheme.error,
+            ),
+            child: Text(l10n.removeKeyFile),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewKeyFileChip(AppLocalizations l10n, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.key_rounded, size: 18, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _newKeyFileName ?? l10n.keyFileSelected,
+              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+            onPressed: () => setState(() {
+              _newKeyData = null;
+              _newKeyFileName = null;
+            }),
+            tooltip: l10n.removeKeyFile,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddKeyFileButton(AppLocalizations l10n, ColorScheme colorScheme) {
+    return OutlinedButton.icon(
+      onPressed: _pickNewKeyFile,
+      icon: const Icon(Icons.vpn_key_rounded, size: 18),
+      label: Text(l10n.selectKeyFile),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
+
+  Future<void> _pickNewKeyFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          _newKeyData = file.bytes;
+          _newKeyFileName = file.name;
+          _removeKeyFile = false;
+        });
       }
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../data/csv_service.dart';
@@ -42,10 +43,10 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<void> preloadFile(String filePath) => _service.preloadFile(filePath);
 
-  Future<void> openFile(String filePath, String password, {bool isCloud = false, String? syncedETag}) async {
+  Future<void> openFile(String filePath, String password, {bool isCloud = false, String? syncedETag, Uint8List? keyData}) async {
     state = const AsyncValue.loading();
     try {
-      final db = await _service.openFile(filePath, password);
+      final db = await _service.openFile(filePath, password, keyData: keyData);
       String? remotePath;
       String? eTag = syncedETag;
       if (isCloud) {
@@ -74,10 +75,10 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     }
   }
 
-  Future<void> createDatabase(String name, String password, String filePath) async {
+  Future<void> createDatabase(String name, String password, String filePath, {Uint8List? keyData}) async {
     state = const AsyncValue.loading();
     try {
-      final db = await _service.createDatabase(name, password, filePath);
+      final db = await _service.createDatabase(name, password, filePath, keyData: keyData);
       final recentSvc = _ref.read(recentFilesServiceProvider);
       await Future.wait([
         recentSvc.addRecentFile(filePath),
@@ -200,14 +201,15 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
            remoteInfo.eTag != lastInfo.eTag;
   }
 
-  Future<void> changePassword(String oldPassword, String newPassword) async {
-    _service.changePassword(oldPassword, newPassword);
+  Future<void> changePassword(String oldPassword, String newPassword, {bool updateKeyFile = false, Uint8List? newKeyData}) async {
+    _service.changePassword(oldPassword, newPassword, updateKeyFile: updateKeyFile, newKeyData: newKeyData);
     // Save + sync to cloud if enabled.
     await save();
   }
 
   void markDirty() => _service.markDirty();
   bool get isDirty => _service.isDirty;
+  bool get hasKeyFile => _service.hasKeyFile;
 }
 
 final recentFilesProvider = FutureProvider<List<RecentFile>>((ref) async {

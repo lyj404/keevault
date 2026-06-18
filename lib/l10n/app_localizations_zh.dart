@@ -799,4 +799,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String expiresOn(Object date) {
     return '过期于 $date';
   }
+
+  @override
+  String get keyFile => '密钥文件';
+
+  @override
+  String get selectKeyFile => '选择密钥文件（可选）';
+
+  @override
+  String get keyFileSelected => '已选择密钥文件';
+
+  @override
+  String get changeKeyFile => '更换';
+
+  @override
+  String get removeKeyFile => '移除密钥文件';
 }

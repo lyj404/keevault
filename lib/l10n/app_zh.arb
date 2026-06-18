@@ -303,5 +303,11 @@
   "noExpiration": "永不过期",
   "expired": "已过期",
   "expiresOn": "过期于 {date}",
-  "@expiresOn": { "placeholders": { "date": {} } }
+  "@expiresOn": { "placeholders": { "date": {} } },
+
+  "keyFile": "密钥文件",
+  "selectKeyFile": "选择密钥文件（可选）",
+  "keyFileSelected": "已选择密钥文件",
+  "changeKeyFile": "更换",
+  "removeKeyFile": "移除密钥文件"
 }

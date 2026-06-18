@@ -14,7 +14,6 @@ import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/attachments_section.dart';
-import '../../../core/widgets/change_password_dialog.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
@@ -743,7 +742,6 @@ class _WideLayout extends StatelessWidget {
                           switch (v) {
                             case 'sync_up': _syncToCloud(context);
                             case 'sync_down': _syncFromCloud(context);
-                            case 'change_password': showChangePasswordDialog(context);
                             case 'import_csv': onImportCsv?.call();
                             case 'export_csv': onExportCsv?.call();
                             case 'export_kdbx': onExportKdbx?.call();
@@ -755,9 +753,8 @@ class _WideLayout extends StatelessWidget {
                         itemBuilder: (_) => [
                           if (isOpenedFromCloud) ...[
                             PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                            PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                            PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
                           ],
-                          PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
                           const PopupMenuDivider(),
                           PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
@@ -909,7 +906,6 @@ class _NarrowLayout extends StatelessWidget {
                 case 'save': onSave();
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
-                case 'change_password': showChangePasswordDialog(context);
                 case 'import_csv': onImportCsv?.call();
                 case 'export_csv': onExportCsv?.call();
                 case 'export_kdbx': onExportKdbx?.call();
@@ -926,9 +922,8 @@ class _NarrowLayout extends StatelessWidget {
               PopupMenuItem(value: 'save', child: ListTile(leading: isDirty ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined)) : const Icon(Icons.save_outlined), title: Text(l10n.save), dense: true, contentPadding: EdgeInsets.zero)),
               if (isOpenedFromCloud) ...[
                 PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.downloadFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
               ],
-              PopupMenuItem(value: 'change_password', child: ListTile(leading: const Icon(Icons.key_rounded), title: Text(l10n.changeMasterPassword), dense: true, contentPadding: EdgeInsets.zero)),
               const PopupMenuDivider(),
               PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),

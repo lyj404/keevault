@@ -813,4 +813,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String expiresOn(Object date) {
     return 'Expires on $date';
   }
+
+  @override
+  String get keyFile => 'Key File';
+
+  @override
+  String get selectKeyFile => 'Select Key File (optional)';
+
+  @override
+  String get keyFileSelected => 'Key file selected';
+
+  @override
+  String get changeKeyFile => 'Change';
+
+  @override
+  String get removeKeyFile => 'Remove Key File';
 }

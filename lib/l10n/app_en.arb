@@ -295,5 +295,11 @@
   "noExpiration": "No Expiration",
   "expired": "Expired",
   "expiresOn": "Expires on {date}",
-  "@expiresOn": { "placeholders": { "date": {} } }
+  "@expiresOn": { "placeholders": { "date": {} } },
+
+  "keyFile": "Key File",
+  "selectKeyFile": "Select Key File (optional)",
+  "keyFileSelected": "Key file selected",
+  "changeKeyFile": "Change",
+  "removeKeyFile": "Remove Key File"
 }

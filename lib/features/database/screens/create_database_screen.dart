@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -22,6 +23,8 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _savePath;
   bool _initialized = false;
+  Uint8List? _keyData;
+  String? _keyFileName;
 
   @override
   void didChangeDependencies() {
@@ -128,6 +131,8 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  _buildKeyFilePicker(l10n, colorScheme),
                   const SizedBox(height: 24),
                   dbState.isLoading
                       ? SizedBox(
@@ -183,6 +188,66 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
           _nameController.text,
           _passwordController.text,
           _savePath!,
+          keyData: _keyData,
         );
+  }
+
+  Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {
+    return _keyData != null
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.key_rounded, size: 18, color: colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _keyFileName ?? l10n.keyFileSelected,
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                  onPressed: () => setState(() {
+                    _keyData = null;
+                    _keyFileName = null;
+                  }),
+                  tooltip: l10n.removeKeyFile,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                ),
+              ],
+            ),
+          )
+        : OutlinedButton.icon(
+            onPressed: _pickKeyFile,
+            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+            label: Text(l10n.selectKeyFile),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            ),
+          );
+  }
+
+  Future<void> _pickKeyFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      if (file.bytes != null) {
+        setState(() {
+          _keyData = file.bytes;
+          _keyFileName = file.name;
+        });
+      }
+    }
   }
 }

@@ -1615,6 +1615,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'过期于 {date}'**
   String expiresOn(Object date);
+
+  /// No description provided for @keyFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'密钥文件'**
+  String get keyFile;
+
+  /// No description provided for @selectKeyFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择密钥文件（可选）'**
+  String get selectKeyFile;
+
+  /// No description provided for @keyFileSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选择密钥文件'**
+  String get keyFileSelected;
+
+  /// No description provided for @changeKeyFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'更换'**
+  String get changeKeyFile;
+
+  /// No description provided for @removeKeyFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除密钥文件'**
+  String get removeKeyFile;
 }
 
 class _AppLocalizationsDelegate
