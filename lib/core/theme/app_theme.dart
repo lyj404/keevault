@@ -313,10 +313,11 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceLight,
+          fontFamilyFallback: _fontFallback,
         ),
         contentTextStyle: TextStyle(
           fontSize: 14,
@@ -481,10 +482,11 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: ClayColors.surfaceCardDark,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: ClayColors.onSurfaceDark,
+          fontFamilyFallback: _fontFallback,
         ),
         contentTextStyle: TextStyle(
           fontSize: 14,
