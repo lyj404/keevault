@@ -41,7 +41,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # Biometric authentication (Android only)
-  local_auth: ^2.3.0
+  local_auth_android: ^1.0.56
 
   # System tray & window management
   system_tray: ^2.0.3

@@ -1,18 +1,21 @@
-import 'package:local_auth/local_auth.dart';
-
-final LocalAuthentication _localAuth = LocalAuthentication();
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_platform_interface/local_auth_platform_interface.dart';
 
 Future<bool> isBiometricAvailable() async {
-  return await _localAuth.canCheckBiometrics;
+  final platform = LocalAuthPlatform.instance;
+  return await platform.isDeviceSupported();
 }
 
 Future<List<BiometricType>> getAvailableBiometrics() async {
-  return await _localAuth.getAvailableBiometrics();
+  final platform = LocalAuthPlatform.instance;
+  return await platform.getEnrolledBiometrics();
 }
 
 Future<bool> authenticate(String reason) async {
-  return await _localAuth.authenticate(
+  final platform = LocalAuthPlatform.instance;
+  return await platform.authenticate(
     localizedReason: reason,
+    authMessages: const [AndroidAuthMessages()],
     options: const AuthenticationOptions(
       stickyAuth: true,
       biometricOnly: true,
