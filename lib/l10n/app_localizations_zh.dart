@@ -874,4 +874,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get switchCamera => '切换摄像头';
+
+  @override
+  String get biometricUnlock => '指纹解锁';
+
+  @override
+  String get biometricUnlockDescription => '使用指纹或面部识别解锁数据库';
+
+  @override
+  String get authenticateToEnableBiometric => '验证身份以启用指纹解锁';
+
+  @override
+  String get biometricEnabled => '指纹解锁已启用';
+
+  @override
+  String get biometricDisabled => '指纹解锁已禁用';
+
+  @override
+  String get unlockWithBiometric => '使用指纹解锁';
+
+  @override
+  String get authenticateToUnlock => '验证身份以解锁数据库';
+
+  @override
+  String get noStoredPassword => '没有存储的密码，请先使用密码解锁';
 }

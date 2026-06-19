@@ -8,31 +8,14 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 
 ## Features
 
-- **KDBX Format Support** - Fully compatible with KeePass database files (.kdbx)
-- **Password Management** - Store usernames, passwords, URLs, notes, and custom fields
-- **Group Management** - Hierarchical folder structure to organize your entries
-- **Quick Search** - Search all entries by title, username, URL, or notes
-- **Password Generator** - Built-in cryptographically secure random password generation
-- **Password Strength Indicator** - Real-time password strength display when creating databases and editing entries
-- **Key File Authentication** - Support key file as a second authentication factor for password + file dual-factor database unlock
-- **Recycle Bin** - Soft delete with restore support
-- **File Attachments** - Attach files to entries (SSH keys, certificates, recovery keys), with view, add, and delete support
-- **Custom Field Editing** - Add and edit custom fields in the entry editor for storing security questions, PINs, and other extra information
-- **CSV Import/Export** - Import passwords from Chrome, 1Password, LastPass, etc., or export the database to CSV/KDBX format
-- **Change Master Password** - Support changing the database master password
-- **Entry Expiration** - Set password expiration dates with reminders when passwords expire
-- **Entry History Viewing** - View historical versions of entries with support for rollback and restoration
-- **WebDAV Cloud Sync** - Sync database via WebDAV protocol with conflict detection (ETag/mTime) and automatic conflict resolution
-- **Database Backup** - Auto backup before save and cloud sync, manual backup/restore/delete, configurable retention count
-- **Auto Lock** - Lock database after inactivity, configurable timeout
-- **Recent Files** - Quick access to recently opened database files, distinguishing local and cloud sources
-- **System Tray** - Desktop support for minimizing to system tray, configurable close behavior
+- **WebDAV Cloud Sync** - Sync database via WebDAV protocol with conflict detection and automatic resolution
+- **TOTP Support** - Generate one-time passwords, KeePassXC storage format compatible
+- **Fingerprint Unlock** - Android support for unlocking databases with fingerprint/face recognition
+- **Key File Authentication** - Support key file as a second authentication factor for dual-factor unlock
+- **CSV Import/Export** - Import passwords from Chrome, 1Password, LastPass, Bitwarden, etc.
+- **File Attachments** - Attach files to entries (SSH keys, certificates, recovery keys)
+- **Entry History** - View historical versions of entries with rollback and restoration support
 - **Cross-Platform** - Supports Android, Linux, Windows
-- **TOTP Support** - Generate and display one-time passwords for two-factor authentication (GitHub, Google, etc.), eliminating the need for a separate Authenticator app, KeePassXC storage format compatible
-
-## Planned Features
-
-- [ ] **Fingerprint Unlock** - Android support for unlocking databases with fingerprint/face recognition, eliminating the need to enter the master password every time
 
 ## CSV Import Format
 
@@ -145,9 +128,10 @@ flutter run -d android    # Android
 - **Routing**: go_router
 - **KDBX Parsing**: kpasslib
 - **Local Storage**: flutter_secure_storage
+- **Biometric Auth**: local_auth
 - **File Picking**: file_picker
 - **CSV Parsing**: csv
-- **System Tray**: system_tray
+- **System Tray**: system_tray / dart_xdg_status_notifier_item
 - **Window Management**: window_manager
 - **WebDAV Sync**: webdav_client
 - **Logging**: logger

@@ -330,5 +330,14 @@
   "scanQrCode": "扫描二维码",
   "scanQrHint": "将摄像头对准 TOTP 二维码",
   "toggleFlashlight": "切换闪光灯",
-  "switchCamera": "切换摄像头"
+  "switchCamera": "切换摄像头",
+
+  "biometricUnlock": "指纹解锁",
+  "biometricUnlockDescription": "使用指纹或面部识别解锁数据库",
+  "authenticateToEnableBiometric": "验证身份以启用指纹解锁",
+  "biometricEnabled": "指纹解锁已启用",
+  "biometricDisabled": "指纹解锁已禁用",
+  "unlockWithBiometric": "使用指纹解锁",
+  "authenticateToUnlock": "验证身份以解锁数据库",
+  "noStoredPassword": "没有存储的密码，请先使用密码解锁"
 }

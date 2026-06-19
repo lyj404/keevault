@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/password_text_field.dart';
+import '../../../core/providers/biometric_provider.dart';
+import '../../../core/services/biometric_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/database_provider.dart';
 
@@ -178,25 +180,41 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                             ),
                           ],
                         )
-                      : Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: ClayColors.primary.withValues(alpha: 0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
+                      : Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: ClayColors.primary.withValues(alpha: 0.3),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: FilledButton(
+                                onPressed: _unlock,
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                ),
+                                child: Text(l10n.unlock),
+                              ),
+                            ),
+                            if (Platform.isAndroid && ref.watch(biometricEnabledProvider)) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: _biometricUnlock,
+                                icon: const Icon(Icons.fingerprint_rounded, size: 24),
+                                label: Text(l10n.unlockWithBiometric),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                ),
                               ),
                             ],
-                          ),
-                          child: FilledButton(
-                            onPressed: _unlock,
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(50),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                            ),
-                            child: Text(l10n.unlock),
-                          ),
+                          ],
                         ),
                 ],
               ),
@@ -210,7 +228,35 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void _unlock() {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
+
+    // Store password if biometric is enabled
+    if (Platform.isAndroid && ref.read(biometricEnabledProvider)) {
+      BiometricService().storePassword(widget.filePath, _passwordController.text);
+    }
+
     ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
+  }
+
+  Future<void> _biometricUnlock() async {
+    final l10n = AppLocalizations.of(context)!;
+    final biometricService = BiometricService();
+
+    final authenticated = await biometricService.authenticate(l10n.authenticateToUnlock);
+    if (!authenticated) return;
+
+    final storedPassword = await biometricService.getStoredPassword(widget.filePath);
+    if (storedPassword == null) {
+      // No stored password, need to unlock with password first
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.noStoredPassword)),
+        );
+      }
+      return;
+    }
+
+    setState(() => _error = null);
+    ref.read(databaseProvider.notifier).openFile(widget.filePath, storedPassword, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
   }
 
   Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {

@@ -10,6 +10,8 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
+import '../../../core/providers/biometric_provider.dart';
+import '../../../core/services/biometric_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
@@ -259,6 +261,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
 
                   const SizedBox(height: 16),
+
+                  // Biometric unlock card (Android only)
+                  if (Platform.isAndroid) ...[
+                    _SectionCard(
+                      brightness: brightness,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: ClayDecoration.iconContainer(brightness: brightness),
+                            child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l10n.biometricUnlock, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                                Text(l10n.biometricUnlockDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: ref.watch(biometricEnabledProvider),
+                            onChanged: (v) => _toggleBiometric(v, l10n),
+                            activeThumbColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Change master password card
                   _SectionCard(
@@ -567,6 +602,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (mounted) {
       showToast(context, l10n.saved);
       Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _toggleBiometric(bool enable, AppLocalizations l10n) async {
+    if (enable) {
+      final biometricService = BiometricService();
+      final authenticated = await biometricService.authenticate(l10n.authenticateToEnableBiometric);
+      if (authenticated) {
+        await ref.read(biometricEnabledProvider.notifier).setEnabled(true);
+        if (mounted) {
+          showToast(context, l10n.biometricEnabled);
+        }
+      }
+    } else {
+      await ref.read(biometricEnabledProvider.notifier).setEnabled(false);
+      await BiometricService().clearAllStoredPasswords();
+      if (mounted) {
+        showToast(context, l10n.biometricDisabled);
+      }
     }
   }
 }

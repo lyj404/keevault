@@ -322,5 +322,14 @@
   "scanQrCode": "Scan QR Code",
   "scanQrHint": "Point camera at a TOTP QR code",
   "toggleFlashlight": "Toggle Flashlight",
-  "switchCamera": "Switch Camera"
+  "switchCamera": "Switch Camera",
+
+  "biometricUnlock": "Biometric Unlock",
+  "biometricUnlockDescription": "Unlock with fingerprint or face recognition",
+  "authenticateToEnableBiometric": "Authenticate to enable biometric unlock",
+  "biometricEnabled": "Biometric unlock enabled",
+  "biometricDisabled": "Biometric unlock disabled",
+  "unlockWithBiometric": "Unlock with Biometric",
+  "authenticateToUnlock": "Authenticate to unlock database",
+  "noStoredPassword": "No stored password. Please unlock with password first."
 }

@@ -1765,6 +1765,54 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'切换摄像头'**
   String get switchCamera;
+
+  /// No description provided for @biometricUnlock.
+  ///
+  /// In zh, this message translates to:
+  /// **'指纹解锁'**
+  String get biometricUnlock;
+
+  /// No description provided for @biometricUnlockDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用指纹或面部识别解锁数据库'**
+  String get biometricUnlockDescription;
+
+  /// No description provided for @authenticateToEnableBiometric.
+  ///
+  /// In zh, this message translates to:
+  /// **'验证身份以启用指纹解锁'**
+  String get authenticateToEnableBiometric;
+
+  /// No description provided for @biometricEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'指纹解锁已启用'**
+  String get biometricEnabled;
+
+  /// No description provided for @biometricDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'指纹解锁已禁用'**
+  String get biometricDisabled;
+
+  /// No description provided for @unlockWithBiometric.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用指纹解锁'**
+  String get unlockWithBiometric;
+
+  /// No description provided for @authenticateToUnlock.
+  ///
+  /// In zh, this message translates to:
+  /// **'验证身份以解锁数据库'**
+  String get authenticateToUnlock;
+
+  /// No description provided for @noStoredPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有存储的密码，请先使用密码解锁'**
+  String get noStoredPassword;
 }
 
 class _AppLocalizationsDelegate

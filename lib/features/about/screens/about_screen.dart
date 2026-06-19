@@ -184,8 +184,13 @@ class _AboutScreenState extends State<AboutScreen> {
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: () => _openUrl(context, '$_githubUrl/releases/latest'),
-                    icon: const Icon(Icons.system_update_rounded),
+                    icon: const Icon(Icons.system_update_rounded, size: 18),
                     label: Text(l10n.update),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
                 ] else if (_hasChecked)
                   Container(

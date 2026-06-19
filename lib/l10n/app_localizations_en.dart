@@ -888,4 +888,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get switchCamera => 'Switch Camera';
+
+  @override
+  String get biometricUnlock => 'Biometric Unlock';
+
+  @override
+  String get biometricUnlockDescription =>
+      'Unlock with fingerprint or face recognition';
+
+  @override
+  String get authenticateToEnableBiometric =>
+      'Authenticate to enable biometric unlock';
+
+  @override
+  String get biometricEnabled => 'Biometric unlock enabled';
+
+  @override
+  String get biometricDisabled => 'Biometric unlock disabled';
+
+  @override
+  String get unlockWithBiometric => 'Unlock with Biometric';
+
+  @override
+  String get authenticateToUnlock => 'Authenticate to unlock database';
+
+  @override
+  String get noStoredPassword =>
+      'No stored password. Please unlock with password first.';
 }
