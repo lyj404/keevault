@@ -40,7 +40,7 @@ dependencies:
   # Secure storage (recent files only, never passwords)
   flutter_secure_storage: ^9.2.4
 
-  # Biometric authentication
+  # Biometric authentication (Android only)
   local_auth: ^2.3.0
 
   # System tray & window management

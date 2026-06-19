@@ -1,14 +1,16 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+// Conditional import - only import on Android
+import 'biometric_service_impl_stub.dart'
+    if (dart.library.io) 'biometric_service_impl.dart' as biometric;
 
 class BiometricService {
   static final BiometricService _instance = BiometricService._();
   factory BiometricService() => _instance;
   BiometricService._();
 
-  final LocalAuthentication _localAuth = LocalAuthentication();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   static const String _biometricEnabledKey = 'biometric_enabled';
@@ -17,17 +19,17 @@ class BiometricService {
   Future<bool> isBiometricAvailable() async {
     if (!Platform.isAndroid) return false;
     try {
-      return await _localAuth.canCheckBiometrics;
+      return await biometric.isBiometricAvailable();
     } catch (e) {
       debugPrint('BiometricService: Error checking biometric availability: $e');
       return false;
     }
   }
 
-  Future<List<BiometricType>> getAvailableBiometrics() async {
+  Future<List<dynamic>> getAvailableBiometrics() async {
     if (!Platform.isAndroid) return [];
     try {
-      return await _localAuth.getAvailableBiometrics();
+      return await biometric.getAvailableBiometrics();
     } catch (e) {
       debugPrint('BiometricService: Error getting available biometrics: $e');
       return [];
@@ -37,13 +39,7 @@ class BiometricService {
   Future<bool> authenticate(String reason) async {
     if (!Platform.isAndroid) return false;
     try {
-      return await _localAuth.authenticate(
-        localizedReason: reason,
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
+      return await biometric.authenticate(reason);
     } catch (e) {
       debugPrint('BiometricService: Authentication error: $e');
       return false;
@@ -84,7 +80,6 @@ class BiometricService {
   }
 
   String _hashPath(String path) {
-    // Simple hash for storage key
     return path.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
   }
 }
