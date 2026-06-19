@@ -29,9 +29,10 @@
 - **系统托盘** - 桌面端支持最小化到系统托盘，关闭窗口时可选择行为
 - **跨平台** - 支持 Android、Linux、Windows
 
+- **TOTP 支持** - 一次性动态验证码生成与显示，支持两步验证场景（如 GitHub、Google 等），无需额外安装 Authenticator 应用，兼容 KeePassXC 存储格式
+
 ## 计划实现
 
-- [ ] **TOTP 支持** - 一次性动态验证码生成与显示，支持两步验证场景（如 GitHub、Google 等），无需额外安装 Authenticator 应用
 - [ ] **指纹解锁** - Android 端支持使用指纹/面部识别解锁数据库，无需每次输入主密码
 
 ## CSV 导入格式说明

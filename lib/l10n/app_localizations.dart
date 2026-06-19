@@ -1645,6 +1645,126 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'移除密钥文件'**
   String get removeKeyFile;
+
+  /// No description provided for @setupTotp.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置 TOTP'**
+  String get setupTotp;
+
+  /// No description provided for @totpUriLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴 otpauth:// 链接'**
+  String get totpUriLabel;
+
+  /// No description provided for @totpParseUri.
+  ///
+  /// In zh, this message translates to:
+  /// **'解析链接'**
+  String get totpParseUri;
+
+  /// No description provided for @totpManualConfig.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动配置'**
+  String get totpManualConfig;
+
+  /// No description provided for @totpPasteUri.
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴链接'**
+  String get totpPasteUri;
+
+  /// No description provided for @totpSecretLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'密钥 (Base32)'**
+  String get totpSecretLabel;
+
+  /// No description provided for @totpPeriodLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'周期（秒）'**
+  String get totpPeriodLabel;
+
+  /// No description provided for @totpDigitsLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'位数'**
+  String get totpDigitsLabel;
+
+  /// No description provided for @totpAlgorithmLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'算法'**
+  String get totpAlgorithmLabel;
+
+  /// No description provided for @totpAlgoSha1.
+  ///
+  /// In zh, this message translates to:
+  /// **'SHA-1'**
+  String get totpAlgoSha1;
+
+  /// No description provided for @totpAlgoSha256.
+  ///
+  /// In zh, this message translates to:
+  /// **'SHA-256'**
+  String get totpAlgoSha256;
+
+  /// No description provided for @totpAlgoSha512.
+  ///
+  /// In zh, this message translates to:
+  /// **'SHA-512'**
+  String get totpAlgoSha512;
+
+  /// No description provided for @totpInvalidUri.
+  ///
+  /// In zh, this message translates to:
+  /// **'无效的 otpauth:// 链接或 Base32 密钥'**
+  String get totpInvalidUri;
+
+  /// No description provided for @copiedTotp.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 TOTP'**
+  String get copiedTotp;
+
+  /// No description provided for @deleteTotp.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除 TOTP'**
+  String get deleteTotp;
+
+  /// No description provided for @deleteTotpConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定移除此条目的 TOTP 配置？'**
+  String get deleteTotpConfirm;
+
+  /// No description provided for @scanQrCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'扫描二维码'**
+  String get scanQrCode;
+
+  /// No description provided for @scanQrHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'将摄像头对准 TOTP 二维码'**
+  String get scanQrHint;
+
+  /// No description provided for @toggleFlashlight.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换闪光灯'**
+  String get toggleFlashlight;
+
+  /// No description provided for @switchCamera.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换摄像头'**
+  String get switchCamera;
 }
 
 class _AppLocalizationsDelegate

@@ -814,4 +814,64 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get removeKeyFile => '移除密钥文件';
+
+  @override
+  String get setupTotp => '设置 TOTP';
+
+  @override
+  String get totpUriLabel => '粘贴 otpauth:// 链接';
+
+  @override
+  String get totpParseUri => '解析链接';
+
+  @override
+  String get totpManualConfig => '手动配置';
+
+  @override
+  String get totpPasteUri => '粘贴链接';
+
+  @override
+  String get totpSecretLabel => '密钥 (Base32)';
+
+  @override
+  String get totpPeriodLabel => '周期（秒）';
+
+  @override
+  String get totpDigitsLabel => '位数';
+
+  @override
+  String get totpAlgorithmLabel => '算法';
+
+  @override
+  String get totpAlgoSha1 => 'SHA-1';
+
+  @override
+  String get totpAlgoSha256 => 'SHA-256';
+
+  @override
+  String get totpAlgoSha512 => 'SHA-512';
+
+  @override
+  String get totpInvalidUri => '无效的 otpauth:// 链接或 Base32 密钥';
+
+  @override
+  String get copiedTotp => '已复制 TOTP';
+
+  @override
+  String get deleteTotp => '删除 TOTP';
+
+  @override
+  String get deleteTotpConfirm => '确定移除此条目的 TOTP 配置？';
+
+  @override
+  String get scanQrCode => '扫描二维码';
+
+  @override
+  String get scanQrHint => '将摄像头对准 TOTP 二维码';
+
+  @override
+  String get toggleFlashlight => '切换闪光灯';
+
+  @override
+  String get switchCamera => '切换摄像头';
 }

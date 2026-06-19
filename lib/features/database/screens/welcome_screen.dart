@@ -18,7 +18,8 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
-  bool _autoOpened = false;
+  // Static to persist across widget rebuilds; resets only on app restart
+  static bool _autoOpened = false;
 
   @override
   void initState() {
@@ -28,16 +29,19 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   Future<void> _tryAutoOpen() async {
     if (_autoOpened) return;
-    final lastFile = await ref.read(recentFilesServiceProvider).getLastOpenedFile();
-    if (lastFile == null || !mounted) return;
+    // Only auto-open when there's exactly one recent file
+    final files = await ref.read(recentFilesServiceProvider).getRecentFiles();
+    if (files.length != 1) return;
+    if (!mounted) return;
 
-    final localFile = File(lastFile.path);
+    final file = files.first;
+    final localFile = File(file.path);
     final exists = await localFile.exists();
 
-    if (!lastFile.isCloud) {
+    if (!file.isCloud) {
       if (exists && mounted) {
         _autoOpened = true;
-        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}');
+        context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
       }
       return;
     }
@@ -48,7 +52,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (config == null || !config.enabled) {
       if (mounted) {
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+        context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
       }
       return;
     }
@@ -56,10 +60,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (!mounted) return;
     if (remoteInfo != null) {
-      final lastETag = lastFile.lastSyncedETag;
+      final lastETag = file.lastSyncedETag;
       if (lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
+        context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
         return;
       }
       final l10n = AppLocalizations.of(context)!;
@@ -85,12 +89,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+          context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
         }
       }
     } else {
       ref.read(openedFromCloudProvider.notifier).state = true;
-      context.push('/unlock?path=${Uri.encodeComponent(lastFile.path)}&cloud=true');
+      context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
     }
   }
 

@@ -28,10 +28,10 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 - **Recent Files** - Quick access to recently opened database files, distinguishing local and cloud sources
 - **System Tray** - Desktop support for minimizing to system tray, configurable close behavior
 - **Cross-Platform** - Supports Android, Linux, Windows
+- **TOTP Support** - Generate and display one-time passwords for two-factor authentication (GitHub, Google, etc.), eliminating the need for a separate Authenticator app, KeePassXC storage format compatible
 
 ## Planned Features
 
-- [ ] **TOTP Support** - Generate and display one-time passwords for two-factor authentication (GitHub, Google, etc.), eliminating the need for a separate Authenticator app
 - [ ] **Fingerprint Unlock** - Android support for unlocking databases with fingerprint/face recognition, eliminating the need to enter the master password every time
 
 ## CSV Import Format

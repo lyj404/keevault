@@ -309,5 +309,26 @@
   "selectKeyFile": "选择密钥文件（可选）",
   "keyFileSelected": "已选择密钥文件",
   "changeKeyFile": "更换",
-  "removeKeyFile": "移除密钥文件"
+  "removeKeyFile": "移除密钥文件",
+
+  "setupTotp": "设置 TOTP",
+  "totpUriLabel": "粘贴 otpauth:// 链接",
+  "totpParseUri": "解析链接",
+  "totpManualConfig": "手动配置",
+  "totpPasteUri": "粘贴链接",
+  "totpSecretLabel": "密钥 (Base32)",
+  "totpPeriodLabel": "周期（秒）",
+  "totpDigitsLabel": "位数",
+  "totpAlgorithmLabel": "算法",
+  "totpAlgoSha1": "SHA-1",
+  "totpAlgoSha256": "SHA-256",
+  "totpAlgoSha512": "SHA-512",
+  "totpInvalidUri": "无效的 otpauth:// 链接或 Base32 密钥",
+  "copiedTotp": "已复制 TOTP",
+  "deleteTotp": "删除 TOTP",
+  "deleteTotpConfirm": "确定移除此条目的 TOTP 配置？",
+  "scanQrCode": "扫描二维码",
+  "scanQrHint": "将摄像头对准 TOTP 二维码",
+  "toggleFlashlight": "切换闪光灯",
+  "switchCamera": "切换摄像头"
 }

@@ -301,5 +301,26 @@
   "selectKeyFile": "Select Key File (optional)",
   "keyFileSelected": "Key file selected",
   "changeKeyFile": "Change",
-  "removeKeyFile": "Remove Key File"
+  "removeKeyFile": "Remove Key File",
+
+  "setupTotp": "Setup TOTP",
+  "totpUriLabel": "Paste otpauth:// URI",
+  "totpParseUri": "Parse URI",
+  "totpManualConfig": "Configure manually",
+  "totpPasteUri": "Paste URI instead",
+  "totpSecretLabel": "Secret Key (Base32)",
+  "totpPeriodLabel": "Period (seconds)",
+  "totpDigitsLabel": "Digits",
+  "totpAlgorithmLabel": "Algorithm",
+  "totpAlgoSha1": "SHA-1",
+  "totpAlgoSha256": "SHA-256",
+  "totpAlgoSha512": "SHA-512",
+  "totpInvalidUri": "Invalid otpauth:// URI or Base32 secret",
+  "copiedTotp": "Copied TOTP",
+  "deleteTotp": "Delete TOTP",
+  "deleteTotpConfirm": "Remove TOTP configuration from this entry?",
+  "scanQrCode": "Scan QR Code",
+  "scanQrHint": "Point camera at a TOTP QR code",
+  "toggleFlashlight": "Toggle Flashlight",
+  "switchCamera": "Switch Camera"
 }

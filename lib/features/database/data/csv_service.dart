@@ -1,6 +1,7 @@
 import 'package:csv/csv.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/utils/logger.dart';
+import '../../totp/data/totp_service.dart';
 
 const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
@@ -191,9 +192,19 @@ class CsvService {
       entry.fields['Notes'] = KdbxTextField.fromText(text: csv.notes);
 
       // Custom fields
+      final totpService = TotpService();
       for (final e in csv.customFields.entries) {
         if (!_standardKeys.contains(e.key) && e.value.isNotEmpty) {
-          entry.fields[e.key] = KdbxTextField.fromText(text: e.value);
+          if (e.key == 'TOTP') {
+            final config = totpService.parseUri(e.value);
+            if (config != null) {
+              totpService.saveToEntry(entry, config);
+            } else {
+              entry.fields[e.key] = KdbxTextField.fromText(text: e.value);
+            }
+          } else {
+            entry.fields[e.key] = KdbxTextField.fromText(text: e.value);
+          }
         }
       }
 
@@ -205,8 +216,9 @@ class CsvService {
 
   /// Export all entries to CSV string (KeePass-compatible format).
   String exportToCsv(List<KdbxEntry> entries) {
+    final totpService = TotpService();
     final rows = <List<String>>[
-      ['Group', 'Title', 'Username', 'Password', 'URL', 'Notes'],
+      ['Group', 'Title', 'Username', 'Password', 'URL', 'Notes', 'TOTP'],
     ];
 
     for (final entry in entries) {
@@ -228,7 +240,23 @@ class CsvService {
         groupPath = pathParts.reversed.join('/');
       }
 
-      rows.add([groupPath, title, username, password, url, notes]);
+      // TOTP
+      String totp = '';
+      final totpConfig = totpService.loadFromEntry(entry);
+      if (totpConfig != null) {
+        final algo = totpConfig.algorithm == 'SHA1' ? 'SHA1'
+            : totpConfig.algorithm == 'SHA256' ? 'SHA256'
+            : 'SHA512';
+        totp = 'otpauth://totp/${Uri.encodeComponent(title)}'
+            '?secret=${totpConfig.secret}'
+            '&digits=${totpConfig.digits}'
+            '&period=${totpConfig.period}'
+            '&algorithm=$algo';
+      } else {
+        totp = entry.fields['TOTP']?.text ?? '';
+      }
+
+      rows.add([groupPath, title, username, password, url, notes, totp]);
     }
 
     return const ListToCsvConverter().convert(rows);

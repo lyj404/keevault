@@ -10,6 +10,8 @@ import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
+import '../../totp/data/totp_service.dart';
+import '../../totp/widgets/totp_edit_sheet.dart';
 
 const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
@@ -60,6 +62,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   KdbxEntry? _entry;
   bool _expires = false;
   DateTime? _expiryDate;
+  TotpConfig? _totpConfig;
+  final _totpService = TotpService();
 
   @override
   void initState() {
@@ -81,6 +85,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _entry = entry;
       _expires = entry.times.expires;
       _expiryDate = entry.times.expiry.time;
+      _totpConfig = _totpService.loadFromEntry(entry);
       _loadCustomFields(entry);
     } else if (group != null) {
       _entry = service.createEntry(group);
@@ -295,6 +300,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               const SizedBox(height: 12),
               _buildCustomFieldsSection(colorScheme, l10n),
             ],
+            // TOTP
+            if (_entry != null) ...[
+              const SizedBox(height: 12),
+              _buildTotpSection(colorScheme, l10n),
+            ],
             // Attachments
             if (_entry != null) ...[
               const SizedBox(height: 4),
@@ -305,6 +315,99 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTotpSection(ColorScheme colorScheme, AppLocalizations l10n) {
+    return _SectionCard(
+      children: [
+        Row(
+          children: [
+            Icon(Icons.timer_outlined, size: 20, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'TOTP',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+              ),
+            ),
+            if (_totpConfig != null)
+              IconButton(
+                icon: Icon(Icons.delete_outline_rounded, size: 18, color: colorScheme.error),
+                tooltip: l10n.deleteTotp,
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.deleteTotp),
+                      content: Text(l10n.deleteTotpConfirm),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Theme.of(ctx).colorScheme.error,
+                            foregroundColor: Theme.of(ctx).colorScheme.onError,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(l10n.delete),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) setState(() => _totpConfig = null);
+                },
+              ),
+          ],
+        ),
+        Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+        if (_totpConfig != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${l10n.totpSecretLabel}: ${_totpConfig!.secret.substring(0, _totpConfig!.secret.length > 8 ? 8 : _totpConfig!.secret.length)}...',
+                        style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant, fontFamily: 'monospace'),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${_totpConfig!.digits} digits / ${_totpConfig!.period}s / ${_totpConfig!.algorithm}',
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final result = await showTotpEditSheet(context, initial: _totpConfig);
+                    if (result != null) setState(() => _totpConfig = result.config);
+                  },
+                  child: Text(l10n.edit),
+                ),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final result = await showTotpEditSheet(context);
+                  if (result != null) setState(() => _totpConfig = result.config);
+                },
+                icon: const Icon(Icons.add_rounded, size: 16),
+                label: Text(l10n.setupTotp),
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -509,6 +612,13 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         text: f.valueCtrl.text,
         protected: f.protected,
       );
+    }
+
+    // Save TOTP
+    if (_totpConfig != null) {
+      _totpService.saveToEntry(_entry!, _totpConfig!);
+    } else if (_isEdit) {
+      _totpService.removeFromEntry(_entry!);
     }
 
     _saved = true;

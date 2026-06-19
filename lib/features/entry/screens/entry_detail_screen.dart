@@ -11,6 +11,7 @@ import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
+import '../../totp/widgets/totp_display_widget.dart';
 
 class EntryDetailScreen extends ConsumerWidget {
   final int entryIndex;
@@ -89,6 +90,8 @@ class EntryDetailScreen extends ConsumerWidget {
               _PasswordField(value: entry.fields['Password']?.text ?? ''),
             ],
           ),
+          // TOTP
+          TotpDisplayWidget(entry: entry),
           // Details card
           if ((entry.fields['URL']?.text ?? '').isNotEmpty || (entry.fields['Notes']?.text ?? '').isNotEmpty)
             _SectionCard(

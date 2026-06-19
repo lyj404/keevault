@@ -828,4 +828,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeKeyFile => 'Remove Key File';
+
+  @override
+  String get setupTotp => 'Setup TOTP';
+
+  @override
+  String get totpUriLabel => 'Paste otpauth:// URI';
+
+  @override
+  String get totpParseUri => 'Parse URI';
+
+  @override
+  String get totpManualConfig => 'Configure manually';
+
+  @override
+  String get totpPasteUri => 'Paste URI instead';
+
+  @override
+  String get totpSecretLabel => 'Secret Key (Base32)';
+
+  @override
+  String get totpPeriodLabel => 'Period (seconds)';
+
+  @override
+  String get totpDigitsLabel => 'Digits';
+
+  @override
+  String get totpAlgorithmLabel => 'Algorithm';
+
+  @override
+  String get totpAlgoSha1 => 'SHA-1';
+
+  @override
+  String get totpAlgoSha256 => 'SHA-256';
+
+  @override
+  String get totpAlgoSha512 => 'SHA-512';
+
+  @override
+  String get totpInvalidUri => 'Invalid otpauth:// URI or Base32 secret';
+
+  @override
+  String get copiedTotp => 'Copied TOTP';
+
+  @override
+  String get deleteTotp => 'Delete TOTP';
+
+  @override
+  String get deleteTotpConfirm => 'Remove TOTP configuration from this entry?';
+
+  @override
+  String get scanQrCode => 'Scan QR Code';
+
+  @override
+  String get scanQrHint => 'Point camera at a TOTP QR code';
+
+  @override
+  String get toggleFlashlight => 'Toggle Flashlight';
+
+  @override
+  String get switchCamera => 'Switch Camera';
 }
