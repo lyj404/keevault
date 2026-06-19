@@ -20,6 +20,10 @@ final entriesProvider = StateProvider<List<KdbxEntry>>((ref) {
 /// Currently selected entry in the explorer (for keyboard shortcuts).
 final selectedEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
 
+/// Active entry for global keyboard shortcuts (Ctrl+B/C).
+/// Updated by explorer, search, and detail screens.
+final activeEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
+
 /// Call after any mutation (add/delete/edit) to refresh the entry list.
 void refreshExplorerLists(WidgetRef ref) {
   final group = ref.read(currentGroupProvider);

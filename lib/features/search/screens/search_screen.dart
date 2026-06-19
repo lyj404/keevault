@@ -2,12 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kpasslib/kpasslib.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../providers/search_provider.dart';
+import '../../explorer/providers/explorer_provider.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -19,6 +21,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
+  KdbxEntry? _selectedEntry;
 
   @override
   void dispose() {
@@ -70,7 +73,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       child: EntryListTile(
                         key: ValueKey(entry.uuid),
                         entry: entry,
+                        isSelected: entry == _selectedEntry,
                         onTap: () {
+                          setState(() => _selectedEntry = entry);
+                          ref.read(activeEntryProvider.notifier).state = entry;
+                        },
+                        onOpen: () {
                           final idx = entry.parent?.entries.indexOf(entry) ?? 0;
                           context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(groupPath)}');
                         },

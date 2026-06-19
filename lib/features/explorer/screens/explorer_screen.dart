@@ -2,13 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/utils/logger.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -50,8 +48,6 @@ class _ExplorerBody extends ConsumerStatefulWidget {
 }
 
 class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindingObserver {
-  final _focusNode = FocusNode();
-
   @override
   void initState() {
     super.initState();
@@ -60,32 +56,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
   @override
   void dispose() {
-    _focusNode.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  void _handleKeyEvent(KeyEvent event) {
-    if (event is! KeyDownEvent) return;
-    final selected = ref.read(selectedEntryProvider);
-    if (selected == null) return;
-
-    final isCtrl = HardwareKeyboard.instance.isControlPressed;
-    if (!isCtrl) return;
-
-    if (event.logicalKey == LogicalKeyboardKey.keyB) {
-      final username = selected.fields['UserName']?.text ?? '';
-      if (username.isNotEmpty) {
-        copyToClipboardWithAutoClear(username);
-        if (mounted) showToast(context, AppLocalizations.of(context)!.copiedUsername);
-      }
-    } else if (event.logicalKey == LogicalKeyboardKey.keyC) {
-      final password = selected.fields['Password']?.text ?? '';
-      if (password.isNotEmpty) {
-        copyToClipboardWithAutoClear(password);
-        if (mounted) showToast(context, AppLocalizations.of(context)!.copiedPassword);
-      }
-    }
   }
 
   @override
@@ -142,24 +114,19 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
     void onEntrySelect(KdbxEntry entry) {
       ref.read(selectedEntryProvider.notifier).state = entry;
+      ref.read(activeEntryProvider.notifier).state = entry;
     }
 
     void onEntryOpen(KdbxEntry entry) {
       ref.read(selectedEntryProvider.notifier).state = entry;
+      ref.read(activeEntryProvider.notifier).state = entry;
       final idx = currentGroup?.entries.indexOf(entry) ?? 0;
       final path = service.getGroupPath(currentGroup!);
       context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
     }
 
     if (isWide) {
-      return Focus(
-        focusNode: _focusNode,
-        autofocus: true,
-        onKeyEvent: (node, event) {
-          _handleKeyEvent(event);
-          return KeyEventResult.ignored;
-        },
-        child: _WideLayout(
+      return _WideLayout(
           breadcrumbs: breadcrumbs,
           currentGroup: currentGroup,
           entries: entries,
@@ -169,6 +136,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           isDirty: isDirty,
           onGroupTap: (group) {
             ref.read(selectedEntryProvider.notifier).state = null;
+            ref.read(activeEntryProvider.notifier).state = null;
             final path = service.getGroupPath(group);
             ref.read(currentGroupPathProvider.notifier).state = path;
           },
@@ -190,18 +158,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onImportCsv: () => _importCsv(context, ref),
           onExportCsv: () => _exportCsv(context, ref),
           onExportKdbx: () => _exportKdbx(context, ref),
-        ),
-      );
+        );
     }
 
-    return Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        _handleKeyEvent(event);
-        return KeyEventResult.ignored;
-      },
-      child: _NarrowLayout(
+    return _NarrowLayout(
         breadcrumbs: breadcrumbs,
         currentGroup: currentGroup,
         entries: entries,
@@ -211,6 +171,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         isDirty: isDirty,
         onGroupTap: (group) {
           ref.read(selectedEntryProvider.notifier).state = null;
+          ref.read(activeEntryProvider.notifier).state = null;
           final path = service.getGroupPath(group);
           ref.read(currentGroupPathProvider.notifier).state = path;
         },
@@ -230,8 +191,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onImportCsv: () => _importCsv(context, ref),
         onExportCsv: () => _exportCsv(context, ref),
         onExportKdbx: () => _exportKdbx(context, ref),
-      ),
-    );
+      );
   }
 
   void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
@@ -781,8 +741,8 @@ class _WideLayout extends StatelessWidget {
                     onMoveEntry: onMoveEntry,
                   ),
                 ),
-                // Shortcut hint bar
-                if (selectedEntry != null)
+                // Shortcut hint bar (hidden on Android where keyboard shortcuts are unavailable)
+                if (selectedEntry != null && !Platform.isAndroid)
                   _ShortcutHintBar(entry: selectedEntry!),
               ],
             ),
@@ -951,7 +911,7 @@ class _NarrowLayout extends StatelessWidget {
               onMoveEntry: onMoveEntry,
             ),
           ),
-          if (selectedEntry != null)
+          if (selectedEntry != null && !Platform.isAndroid)
             _ShortcutHintBar(entry: selectedEntry!),
         ],
       ),
