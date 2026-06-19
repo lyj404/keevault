@@ -1,14 +1,27 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:system_tray/system_tray.dart';
+
+// Conditional import: use system_tray on Windows/macOS, dart_xdg_status_notifier_item on Linux
+import 'tray_service_desktop.dart'
+    if (dart.library.io) 'tray_service_linux.dart';
+
+abstract class TrayServiceBase {
+  Future<void> init({
+    required String showLabel,
+    required String exitLabel,
+    required VoidCallback onShowWindow,
+    required VoidCallback onExitApp,
+  });
+  Future<void> dispose();
+}
 
 class TrayService {
   static final TrayService _instance = TrayService._();
   factory TrayService() => _instance;
   TrayService._();
 
-  final SystemTray _tray = SystemTray();
-  bool _initialized = false;
+  TrayServiceBase? _impl;
 
   Future<void> init({
     required String showLabel,
@@ -16,42 +29,22 @@ class TrayService {
     required VoidCallback onShowWindow,
     required VoidCallback onExitApp,
   }) async {
-    if (_initialized) return;
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return;
 
-    final String iconPath = Platform.isWindows
-        ? 'assets/icons/app_icon.ico'
-        : 'assets/icons/app_icon.png';
-
-    await _tray.initSystemTray(
-      title: 'KeeVault',
-      iconPath: iconPath,
-    );
-
-    final Menu menu = Menu();
-    await menu.buildFrom([
-      MenuItemLabel(label: showLabel, onClicked: (_) => onShowWindow()),
-      MenuItemLabel(label: exitLabel, onClicked: (_) => onExitApp()),
-    ]);
-
-    await _tray.setContextMenu(menu);
-    _tray.registerSystemTrayEventHandler((String eventType) {
-      if (eventType == kSystemTrayEventClick) {
-        onShowWindow();
-      } else if (eventType == kSystemTrayEventDoubleClick) {
-        onShowWindow();
-      } else if (eventType == kSystemTrayEventRightClick) {
-        _tray.popUpContextMenu();
-      }
-    });
-
-    _initialized = true;
+    try {
+      _impl = createTrayService();
+      await _impl!.init(
+        showLabel: showLabel,
+        exitLabel: exitLabel,
+        onShowWindow: onShowWindow,
+        onExitApp: onExitApp,
+      );
+    } catch (e) {
+      debugPrint('TrayService: Initialization failed: $e');
+    }
   }
 
   Future<void> dispose() async {
-    if (_initialized) {
-      await _tray.destroy();
-      _initialized = false;
-    }
+    await _impl?.dispose();
   }
 }
