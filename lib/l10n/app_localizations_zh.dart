@@ -888,7 +888,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get biometricEnabled => '指纹解锁已启用';
 
   @override
+  String get biometricAuthFailed => '指纹验证失败';
+
+  @override
   String get biometricDisabled => '指纹解锁已禁用';
+
+  @override
+  String get unlockMethod => '解锁方式';
+
+  @override
+  String get unlockByPassword => '密码认证';
+
+  @override
+  String get unlockByBiometric => '指纹认证';
 
   @override
   String get unlockWithBiometric => '使用指纹解锁';

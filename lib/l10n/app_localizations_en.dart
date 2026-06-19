@@ -904,7 +904,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricEnabled => 'Biometric unlock enabled';
 
   @override
+  String get biometricAuthFailed => 'Biometric authentication failed';
+
+  @override
   String get biometricDisabled => 'Biometric unlock disabled';
+
+  @override
+  String get unlockMethod => 'Unlock Method';
+
+  @override
+  String get unlockByPassword => 'Password';
+
+  @override
+  String get unlockByBiometric => 'Biometric';
 
   @override
   String get unlockWithBiometric => 'Unlock with Biometric';

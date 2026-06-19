@@ -262,32 +262,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Biometric unlock card (Android only)
-                  if (Platform.isAndroid) ...[
+                  // Unlock method card (Android only, requires biometric support)
+                  if (Platform.isAndroid && ref.watch(biometricAvailableProvider).valueOrNull == true) ...[
                     _SectionCard(
                       brightness: brightness,
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: ClayDecoration.iconContainer(brightness: brightness),
-                            child: Icon(Icons.fingerprint_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: ClayDecoration.iconContainer(brightness: brightness),
+                                child: Icon(Icons.lock_open_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(l10n.unlockMethod, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(l10n.biometricUnlock, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                                Text(l10n.biometricUnlockDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: ref.watch(biometricEnabledProvider),
-                            onChanged: (v) => _toggleBiometric(v, l10n),
-                            activeThumbColor: Theme.of(context).colorScheme.primary,
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              _UnlockMethodChip(
+                                icon: Icons.password_rounded,
+                                label: l10n.unlockByPassword,
+                                selected: ref.watch(unlockMethodProvider) == UnlockMethod.password,
+                                onTap: () => _setUnlockMethod(UnlockMethod.password, l10n),
+                              ),
+                              const SizedBox(width: 10),
+                              _UnlockMethodChip(
+                                icon: Icons.fingerprint_rounded,
+                                label: l10n.unlockByBiometric,
+                                selected: ref.watch(unlockMethodProvider) == UnlockMethod.biometric,
+                                onTap: () => _setUnlockMethod(UnlockMethod.biometric, l10n),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -605,23 +617,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _toggleBiometric(bool enable, AppLocalizations l10n) async {
-    if (enable) {
+  Future<void> _setUnlockMethod(UnlockMethod method, AppLocalizations l10n) async {
+    if (method == UnlockMethod.biometric) {
       final biometricService = BiometricService();
       final authenticated = await biometricService.authenticate(l10n.authenticateToEnableBiometric);
-      if (authenticated) {
-        await ref.read(biometricEnabledProvider.notifier).setEnabled(true);
-        if (mounted) {
-          showToast(context, l10n.biometricEnabled);
-        }
+      if (!authenticated) {
+        if (mounted) showToast(context, l10n.biometricAuthFailed, isError: true);
+        return;
       }
     } else {
-      await ref.read(biometricEnabledProvider.notifier).setEnabled(false);
       await BiometricService().clearAllStoredPasswords();
-      if (mounted) {
-        showToast(context, l10n.biometricDisabled);
-      }
     }
+    await ref.read(unlockMethodProvider.notifier).setMethod(method);
+    if (mounted) {
+      showToast(context, method == UnlockMethod.biometric ? l10n.biometricEnabled : l10n.biometricDisabled);
+    }
+  }
+}
+
+class _UnlockMethodChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _UnlockMethodChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? colorScheme.primary : colorScheme.outlineVariant.withValues(alpha: 0.3),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

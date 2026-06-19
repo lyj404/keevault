@@ -336,7 +336,11 @@
   "biometricUnlockDescription": "使用指纹或面部识别解锁数据库",
   "authenticateToEnableBiometric": "验证身份以启用指纹解锁",
   "biometricEnabled": "指纹解锁已启用",
+  "biometricAuthFailed": "指纹验证失败",
   "biometricDisabled": "指纹解锁已禁用",
+  "unlockMethod": "解锁方式",
+  "unlockByPassword": "密码认证",
+  "unlockByBiometric": "指纹认证",
   "unlockWithBiometric": "使用指纹解锁",
   "authenticateToUnlock": "验证身份以解锁数据库",
   "noStoredPassword": "没有存储的密码，请先使用密码解锁"

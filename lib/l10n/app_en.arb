@@ -328,7 +328,11 @@
   "biometricUnlockDescription": "Unlock with fingerprint or face recognition",
   "authenticateToEnableBiometric": "Authenticate to enable biometric unlock",
   "biometricEnabled": "Biometric unlock enabled",
+  "biometricAuthFailed": "Biometric authentication failed",
   "biometricDisabled": "Biometric unlock disabled",
+  "unlockMethod": "Unlock Method",
+  "unlockByPassword": "Password",
+  "unlockByBiometric": "Biometric",
   "unlockWithBiometric": "Unlock with Biometric",
   "authenticateToUnlock": "Authenticate to unlock database",
   "noStoredPassword": "No stored password. Please unlock with password first."

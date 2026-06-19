@@ -1790,11 +1790,35 @@ abstract class AppLocalizations {
   /// **'指纹解锁已启用'**
   String get biometricEnabled;
 
+  /// No description provided for @biometricAuthFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'指纹验证失败'**
+  String get biometricAuthFailed;
+
   /// No description provided for @biometricDisabled.
   ///
   /// In zh, this message translates to:
   /// **'指纹解锁已禁用'**
   String get biometricDisabled;
+
+  /// No description provided for @unlockMethod.
+  ///
+  /// In zh, this message translates to:
+  /// **'解锁方式'**
+  String get unlockMethod;
+
+  /// No description provided for @unlockByPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码认证'**
+  String get unlockByPassword;
+
+  /// No description provided for @unlockByBiometric.
+  ///
+  /// In zh, this message translates to:
+  /// **'指纹认证'**
+  String get unlockByBiometric;
 
   /// No description provided for @unlockWithBiometric.
   ///
