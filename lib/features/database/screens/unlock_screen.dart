@@ -35,23 +35,6 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void initState() {
     super.initState();
     ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
-    final bioEnabled = ref.read(biometricEnabledProvider);
-    debugPrint('UnlockScreen: initState, biometricEnabled=$bioEnabled');
-    // Auto-trigger biometric auth when provider loads
-    ref.listen<bool>(biometricEnabledProvider, (prev, next) {
-      debugPrint('UnlockScreen: biometricEnabledProvider changed $prev -> $next');
-      if (next && !_biometricTriggered) {
-        _biometricTriggered = true;
-        debugPrint('UnlockScreen: triggering biometric from listen');
-        WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
-      }
-    });
-    // Also check if already loaded
-    if (bioEnabled && !_biometricTriggered) {
-      _biometricTriggered = true;
-      debugPrint('UnlockScreen: triggering biometric from immediate check');
-      WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
-    }
   }
 
   @override
@@ -65,8 +48,15 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   @override
   Widget build(BuildContext context) {
     final dbState = ref.watch(databaseProvider);
+    final bioEnabled = ref.watch(biometricEnabledProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+
+    // Auto-trigger biometric when provider finishes loading
+    if (bioEnabled && !_biometricTriggered) {
+      _biometricTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
+    }
 
     ref.listen(databaseProvider, (prev, next) {
       if (next.isLoading) {
