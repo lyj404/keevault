@@ -107,7 +107,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final breadcrumbs = ref.watch(breadcrumbProvider);
     final isWide = MediaQuery.sizeOf(context).width >= 700;
     final service = ref.read(databaseServiceProvider);
-    final isRecycleBin = currentGroup?.icon == KdbxIcon.trashBin;
+    final isRecycleBin = _isInRecycleBin(currentGroup);
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
     final isDirty = ref.watch(isDirtyProvider);
     final selectedEntry = ref.watch(selectedEntryProvider);
@@ -149,6 +149,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
           onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
           onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
+          onRestoreGroup: isRecycleBin ? (group) => _restoreGroup(context, ref, group) : null,
+          onPermanentDeleteGroup: isRecycleBin ? (group) => _permanentDeleteGroup(context, ref, group) : null,
           onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
           onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
           onSave: () => _save(context, ref),
@@ -184,6 +186,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
         onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
         onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
+        onRestoreGroup: isRecycleBin ? (group) => _restoreGroup(context, ref, group) : null,
+        onPermanentDeleteGroup: isRecycleBin ? (group) => _permanentDeleteGroup(context, ref, group) : null,
         onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
         onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
         onSave: () => _save(context, ref),
@@ -268,6 +272,50 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     }
   }
 
+  void _restoreGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+    final service = ref.read(databaseServiceProvider);
+    final success = service.restoreItem(group);
+    final l10n = AppLocalizations.of(context)!;
+    if (success) {
+      refreshExplorerLists(ref);
+      showToast(context, l10n.restored);
+    } else {
+      showToast(context, l10n.restoreFailed, isError: true);
+    }
+  }
+
+  void _permanentDeleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.permanentDelete),
+        content: Text(l10n.permanentDeleteConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
+            ),
+            onPressed: () {
+              final db = ref.read(databaseServiceProvider).db;
+              if (db != null) {
+                db.move(item: group, target: null);
+                ref.read(databaseServiceProvider).markDirty();
+              }
+              refreshExplorerLists(ref);
+              Navigator.pop(ctx);
+              if (context.mounted) showToast(context, l10n.permanentlyDeleted);
+            },
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _moveEntry(BuildContext context, WidgetRef ref, KdbxEntry entry, KdbxGroup currentGroup) async {
     final db = ref.read(databaseServiceProvider).db;
     if (db == null) return;
@@ -340,6 +388,15 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         ],
       ),
     );
+  }
+
+  bool _isInRecycleBin(KdbxGroup? group) {
+    KdbxGroup? current = group;
+    while (current != null) {
+      if (current.icon == KdbxIcon.trashBin) return true;
+      current = current.parent;
+    }
+    return false;
   }
 
   VoidCallback? _popPath(WidgetRef ref) {
@@ -555,6 +612,8 @@ class _WideLayout extends StatelessWidget {
   final ValueChanged<KdbxEntry>? onMoveEntry;
   final ValueChanged<KdbxGroup>? onDeleteGroup;
   final ValueChanged<KdbxGroup>? onRenameGroup;
+  final ValueChanged<KdbxGroup>? onRestoreGroup;
+  final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
   final VoidCallback? onAddEntry;
   final VoidCallback? onAddGroup;
   final VoidCallback onSave;
@@ -581,6 +640,8 @@ class _WideLayout extends StatelessWidget {
     this.onMoveEntry,
     this.onDeleteGroup,
     this.onRenameGroup,
+    this.onRestoreGroup,
+    this.onPermanentDeleteGroup,
     this.onAddEntry,
     this.onAddGroup,
     required this.onSave,
@@ -657,9 +718,12 @@ class _WideLayout extends StatelessWidget {
                 Expanded(
                   child: _GroupTreeView(
                     currentGroup: currentGroup,
+                    isRecycleBin: isRecycleBin,
                     onGroupTap: onGroupTap,
                     onDeleteGroup: onDeleteGroup ?? (_) {},
                     onRenameGroup: onRenameGroup ?? (_) {},
+                    onRestoreGroup: onRestoreGroup,
+                    onPermanentDeleteGroup: onPermanentDeleteGroup,
                   ),
                 ),
               ],
@@ -814,6 +878,8 @@ class _NarrowLayout extends StatelessWidget {
   final ValueChanged<KdbxEntry>? onMoveEntry;
   final ValueChanged<KdbxGroup>? onDeleteGroup;
   final ValueChanged<KdbxGroup>? onRenameGroup;
+  final ValueChanged<KdbxGroup>? onRestoreGroup;
+  final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
   final VoidCallback? onAddEntry;
   final VoidCallback? onAddGroup;
   final VoidCallback onSave;
@@ -840,6 +906,8 @@ class _NarrowLayout extends StatelessWidget {
     this.onMoveEntry,
     this.onDeleteGroup,
     this.onRenameGroup,
+    this.onRestoreGroup,
+    this.onPermanentDeleteGroup,
     this.onAddEntry,
     this.onAddGroup,
     required this.onSave,
@@ -925,6 +993,8 @@ class _NarrowLayout extends StatelessWidget {
               onMoveEntry: onMoveEntry,
               onDeleteGroup: onDeleteGroup,
               onRenameGroup: onRenameGroup,
+              onRestoreGroup: onRestoreGroup,
+              onPermanentDeleteGroup: onPermanentDeleteGroup,
             ),
           ),
           if (selectedEntry != null && !Platform.isAndroid)
@@ -946,11 +1016,14 @@ class _NarrowLayout extends StatelessWidget {
 
 class _GroupTreeView extends ConsumerStatefulWidget {
   final KdbxGroup? currentGroup;
+  final bool isRecycleBin;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxGroup> onDeleteGroup;
   final ValueChanged<KdbxGroup> onRenameGroup;
+  final ValueChanged<KdbxGroup>? onRestoreGroup;
+  final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
 
-  const _GroupTreeView({required this.currentGroup, required this.onGroupTap, required this.onDeleteGroup, required this.onRenameGroup});
+  const _GroupTreeView({required this.currentGroup, required this.isRecycleBin, required this.onGroupTap, required this.onDeleteGroup, required this.onRenameGroup, this.onRestoreGroup, this.onPermanentDeleteGroup});
 
   @override
   ConsumerState<_GroupTreeView> createState() => _GroupTreeViewState();
@@ -1009,7 +1082,8 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
     final isSelected = group == widget.currentGroup;
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-    final canDelete = depth > 0 && group.icon != KdbxIcon.trashBin;
+    final isTrashGroup = group.icon == KdbxIcon.trashBin;
+    final canDelete = depth > 0 && !isTrashGroup;
     final hasChildren = group.groups.isNotEmpty;
     final isExpanded = _expanded.contains(group);
 
@@ -1038,12 +1112,22 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
             onTap: () => widget.onGroupTap(group),
-            onSecondaryTapUp: canDelete ? (details) => _showContextMenu(context, details.globalPosition, group) : null,
+            onSecondaryTapUp: canDelete ? (details) {
+              if (group == widget.currentGroup) {
+                _showContextMenu(context, details.globalPosition, group);
+              } else {
+                widget.onGroupTap(group);
+              }
+            } : null,
             onLongPress: canDelete ? () {
-              final box = context.findRenderObject() as RenderBox?;
-              final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
-              final size = box?.size ?? Size.zero;
-              _showContextMenu(context, Offset(pos.dx + size.width / 2, pos.dy + size.height / 2), group);
+              if (group == widget.currentGroup) {
+                final box = context.findRenderObject() as RenderBox?;
+                final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
+                final size = box?.size ?? Size.zero;
+                _showContextMenu(context, Offset(pos.dx + size.width / 2, pos.dy + size.height / 2), group);
+              } else {
+                widget.onGroupTap(group);
+              }
             } : null,
             borderRadius: BorderRadius.circular(12),
             child: Container(
@@ -1122,6 +1206,7 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
 
   void _showContextMenu(BuildContext context, Offset globalPos, KdbxGroup group) {
     final l10n = AppLocalizations.of(context)!;
+    final isTrashGroup = group.icon == KdbxIcon.trashBin;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final screenSize = overlay.size;
@@ -1135,19 +1220,33 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
       context: context,
       position: position,
       items: [
-        PopupMenuItem(
-          value: 'rename',
-          child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename), dense: true, contentPadding: EdgeInsets.zero),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
-        ),
+        if (!widget.isRecycleBin && !isTrashGroup) ...[
+          PopupMenuItem(
+            value: 'rename',
+            child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+        ],
+        if (widget.isRecycleBin && !isTrashGroup) ...[
+          PopupMenuItem(
+            value: 'restore',
+            child: ListTile(leading: const Icon(Icons.restore_rounded), title: Text(l10n.restore), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+          PopupMenuItem(
+            value: 'permanent_delete',
+            child: ListTile(leading: const Icon(Icons.delete_forever_rounded), title: Text(l10n.permanentDelete), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+        ],
       ],
     ).then((value) {
       if (!context.mounted) return;
       if (value == 'rename') widget.onRenameGroup(group);
       if (value == 'delete') widget.onDeleteGroup(group);
+      if (value == 'restore') widget.onRestoreGroup?.call(group);
+      if (value == 'permanent_delete') widget.onPermanentDeleteGroup?.call(group);
     });
   }
 }
@@ -1255,6 +1354,8 @@ class _MobileEntryListBody extends StatelessWidget {
   final ValueChanged<KdbxEntry>? onMoveEntry;
   final ValueChanged<KdbxGroup>? onDeleteGroup;
   final ValueChanged<KdbxGroup>? onRenameGroup;
+  final ValueChanged<KdbxGroup>? onRestoreGroup;
+  final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
 
   const _MobileEntryListBody({
     required this.currentGroup,
@@ -1268,6 +1369,8 @@ class _MobileEntryListBody extends StatelessWidget {
     this.onMoveEntry,
     this.onDeleteGroup,
     this.onRenameGroup,
+    this.onRestoreGroup,
+    this.onPermanentDeleteGroup,
   });
 
   @override
@@ -1290,6 +1393,8 @@ class _MobileEntryListBody extends StatelessWidget {
               onTap: () => onGroupTap(subGroups[index]),
               onDeleteGroup: onDeleteGroup,
               onRenameGroup: onRenameGroup,
+              onRestoreGroup: onRestoreGroup,
+              onPermanentDeleteGroup: onPermanentDeleteGroup,
             ),
           );
         }
@@ -1318,14 +1423,16 @@ class _MobileGroupTile extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<KdbxGroup>? onDeleteGroup;
   final ValueChanged<KdbxGroup>? onRenameGroup;
+  final ValueChanged<KdbxGroup>? onRestoreGroup;
+  final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
 
-  const _MobileGroupTile({required this.group, required this.onTap, this.onDeleteGroup, this.onRenameGroup});
+  const _MobileGroupTile({required this.group, required this.onTap, this.onDeleteGroup, this.onRenameGroup, this.onRestoreGroup, this.onPermanentDeleteGroup});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final canModify = group.icon != KdbxIcon.trashBin;
+    final hasMenu = onDeleteGroup != null || onRenameGroup != null || onRestoreGroup != null || onPermanentDeleteGroup != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
@@ -1334,7 +1441,7 @@ class _MobileGroupTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
-          onLongPress: canModify && (onDeleteGroup != null || onRenameGroup != null)
+          onLongPress: hasMenu
               ? () {
                   final box = context.findRenderObject() as RenderBox?;
                   final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
@@ -1438,11 +1545,23 @@ class _MobileGroupTile extends StatelessWidget {
             value: 'delete',
             child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
           ),
+        if (onRestoreGroup != null)
+          PopupMenuItem(
+            value: 'restore',
+            child: ListTile(leading: const Icon(Icons.restore_rounded), title: Text(l10n.restore), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+        if (onPermanentDeleteGroup != null)
+          PopupMenuItem(
+            value: 'permanent_delete',
+            child: ListTile(leading: const Icon(Icons.delete_forever_rounded), title: Text(l10n.permanentDelete), dense: true, contentPadding: EdgeInsets.zero),
+          ),
       ],
     ).then((value) {
       if (!context.mounted) return;
       if (value == 'rename') onRenameGroup?.call(group);
       if (value == 'delete') onDeleteGroup?.call(group);
+      if (value == 'restore') onRestoreGroup?.call(group);
+      if (value == 'permanent_delete') onPermanentDeleteGroup?.call(group);
     });
   }
 }
