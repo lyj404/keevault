@@ -155,6 +155,7 @@ class EntryDetailScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               ref.read(databaseServiceProvider).deleteItem(entry);
@@ -185,6 +186,7 @@ class EntryDetailScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               final db = ref.read(databaseServiceProvider).db;

@@ -182,6 +182,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
             : (entry) => _deleteEntry(context, ref, entry),
         onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
         onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
+        onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
+        onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
         onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
         onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
         onSave: () => _save(context, ref),
@@ -207,6 +209,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               ref.read(databaseServiceProvider).deleteItem(entry);
@@ -234,6 +237,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               final db = ref.read(databaseServiceProvider).db;
@@ -293,6 +297,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               ref.read(databaseServiceProvider).deleteItem(group);
@@ -807,6 +812,8 @@ class _NarrowLayout extends StatelessWidget {
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
+  final ValueChanged<KdbxGroup>? onDeleteGroup;
+  final ValueChanged<KdbxGroup>? onRenameGroup;
   final VoidCallback? onAddEntry;
   final VoidCallback? onAddGroup;
   final VoidCallback onSave;
@@ -831,6 +838,8 @@ class _NarrowLayout extends StatelessWidget {
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
+    this.onDeleteGroup,
+    this.onRenameGroup,
     this.onAddEntry,
     this.onAddGroup,
     required this.onSave,
@@ -857,13 +866,19 @@ class _NarrowLayout extends StatelessWidget {
           if (isOpenedFromCloud)
             IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
           IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: onSearch),
+          IconButton(
+            icon: isDirty
+                ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined, size: 20))
+                : const Icon(Icons.save_outlined, size: 20),
+            tooltip: l10n.save,
+            onPressed: onSave,
+          ),
           PopupMenuButton<String>(
             tooltip: l10n.more,
             onSelected: (v) {
               switch (v) {
                 case 'add_entry': onAddEntry?.call();
                 case 'add_group': onAddGroup?.call();
-                case 'save': onSave();
                 case 'sync_up': _syncToCloud(context);
                 case 'sync_down': _syncFromCloud(context);
                 case 'import_csv': onImportCsv?.call();
@@ -879,7 +894,6 @@ class _NarrowLayout extends StatelessWidget {
                 PopupMenuItem(value: 'add_entry', child: ListTile(leading: const Icon(Icons.add_rounded), title: Text(l10n.addEntry), dense: true, contentPadding: EdgeInsets.zero)),
               if (onAddGroup != null)
                 PopupMenuItem(value: 'add_group', child: ListTile(leading: const Icon(Icons.create_new_folder_rounded), title: Text(l10n.addGroup), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'save', child: ListTile(leading: isDirty ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined)) : const Icon(Icons.save_outlined), title: Text(l10n.save), dense: true, contentPadding: EdgeInsets.zero)),
               if (isOpenedFromCloud) ...[
                 PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
                 PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
@@ -909,6 +923,8 @@ class _NarrowLayout extends StatelessWidget {
               onDeleteEntry: onDeleteEntry,
               onRestoreEntry: onRestoreEntry,
               onMoveEntry: onMoveEntry,
+              onDeleteGroup: onDeleteGroup,
+              onRenameGroup: onRenameGroup,
             ),
           ),
           if (selectedEntry != null && !Platform.isAndroid)
@@ -1237,6 +1253,8 @@ class _MobileEntryListBody extends StatelessWidget {
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
+  final ValueChanged<KdbxGroup>? onDeleteGroup;
+  final ValueChanged<KdbxGroup>? onRenameGroup;
 
   const _MobileEntryListBody({
     required this.currentGroup,
@@ -1248,6 +1266,8 @@ class _MobileEntryListBody extends StatelessWidget {
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
+    this.onDeleteGroup,
+    this.onRenameGroup,
   });
 
   @override
@@ -1268,6 +1288,8 @@ class _MobileEntryListBody extends StatelessWidget {
             child: _MobileGroupTile(
               group: subGroups[index],
               onTap: () => onGroupTap(subGroups[index]),
+              onDeleteGroup: onDeleteGroup,
+              onRenameGroup: onRenameGroup,
             ),
           );
         }
@@ -1294,13 +1316,16 @@ class _MobileEntryListBody extends StatelessWidget {
 class _MobileGroupTile extends StatelessWidget {
   final KdbxGroup group;
   final VoidCallback onTap;
+  final ValueChanged<KdbxGroup>? onDeleteGroup;
+  final ValueChanged<KdbxGroup>? onRenameGroup;
 
-  const _MobileGroupTile({required this.group, required this.onTap});
+  const _MobileGroupTile({required this.group, required this.onTap, this.onDeleteGroup, this.onRenameGroup});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final canModify = group.icon != KdbxIcon.trashBin;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
@@ -1309,6 +1334,14 @@ class _MobileGroupTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
+          onLongPress: canModify && (onDeleteGroup != null || onRenameGroup != null)
+              ? () {
+                  final box = context.findRenderObject() as RenderBox?;
+                  final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
+                  final size = box?.size ?? Size.zero;
+                  _showContextMenu(context, Offset(pos.dx + size.width / 2, pos.dy + size.height / 2));
+                }
+              : null,
           borderRadius: BorderRadius.circular(12),
           child: Container(
             height: 52,
@@ -1378,6 +1411,39 @@ class _MobileGroupTile extends StatelessWidget {
     if (group.groups.isNotEmpty) parts.add('${group.groups.length} ${l10n.groups}');
     if (group.entries.isNotEmpty) parts.add('${group.entries.length} ${l10n.entries}');
     return parts.join(' · ');
+  }
+
+  void _showContextMenu(BuildContext context, Offset globalPos) {
+    final l10n = AppLocalizations.of(context)!;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+    final screenSize = overlay.size;
+    final position = RelativeRect.fromLTRB(
+      globalPos.dx,
+      globalPos.dy,
+      screenSize.width - globalPos.dx,
+      screenSize.height - globalPos.dy,
+    );
+    showMenu<String>(
+      context: context,
+      position: position,
+      items: [
+        if (onRenameGroup != null)
+          PopupMenuItem(
+            value: 'rename',
+            child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+        if (onDeleteGroup != null)
+          PopupMenuItem(
+            value: 'delete',
+            child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
+          ),
+      ],
+    ).then((value) {
+      if (!context.mounted) return;
+      if (value == 'rename') onRenameGroup?.call(group);
+      if (value == 'delete') onDeleteGroup?.call(group);
+    });
   }
 }
 

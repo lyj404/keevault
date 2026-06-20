@@ -150,6 +150,7 @@ class AttachmentsSection extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
               foregroundColor: Theme.of(ctx).colorScheme.onError,
+              visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
               entry.binaries.remove(name);
