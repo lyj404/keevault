@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,16 +35,21 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void initState() {
     super.initState();
     ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
+    final bioEnabled = ref.read(biometricEnabledProvider);
+    debugPrint('UnlockScreen: initState, biometricEnabled=$bioEnabled');
     // Auto-trigger biometric auth when provider loads
     ref.listen<bool>(biometricEnabledProvider, (prev, next) {
+      debugPrint('UnlockScreen: biometricEnabledProvider changed $prev -> $next');
       if (next && !_biometricTriggered) {
         _biometricTriggered = true;
+        debugPrint('UnlockScreen: triggering biometric from listen');
         WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
       }
     });
     // Also check if already loaded
-    if (ref.read(biometricEnabledProvider) && !_biometricTriggered) {
+    if (bioEnabled && !_biometricTriggered) {
       _biometricTriggered = true;
+      debugPrint('UnlockScreen: triggering biometric from immediate check');
       WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
     }
   }
