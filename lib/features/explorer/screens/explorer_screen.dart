@@ -1031,16 +1031,17 @@ class _GroupTreeView extends ConsumerStatefulWidget {
 
 class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
   final Set<KdbxGroup> _expanded = {};
-  bool _didInitExpand = false;
+  KdbxDatabase? _lastDb;
 
   @override
   Widget build(BuildContext context) {
     final db = ref.watch(databaseProvider).valueOrNull;
     if (db == null) return const SizedBox.shrink();
 
-    // Expand all groups by default on first build after database opens.
-    if (!_didInitExpand) {
-      _didInitExpand = true;
+    // Expand all groups when database changes (first open or reload from cloud).
+    if (!identical(db, _lastDb)) {
+      _lastDb = db;
+      _expanded.clear();
       _expandAll(db.root);
     }
 

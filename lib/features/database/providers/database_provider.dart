@@ -95,6 +95,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   /// Saves locally and syncs to WebDAV if enabled.
   /// Returns true on success, false if a conflict was detected (caller should show dialog).
   Future<bool> save() async {
+    final wasDirty = _service.isDirty;
     final bytes = await _service.save();
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     // Only sync to cloud if the current database was opened from or created as a cloud database
@@ -111,9 +112,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
           return false;
         }
-        // Skip upload if content hasn't changed
-        if (remoteInfo?.eTag != null && lastInfo?.eTag != null &&
-            remoteInfo!.eTag == lastInfo!.eTag) {
+        // Skip upload if local content hasn't changed since last save
+        if (!wasDirty) {
           log.i('Content unchanged, skipping upload');
           _ref.read(syncStateProvider.notifier).state = SyncState.success;
           return true;
