@@ -32,6 +32,12 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   void initState() {
     super.initState();
     ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
+    // Auto-trigger biometric auth if enabled
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(biometricEnabledProvider)) {
+        _biometricUnlock();
+      }
+    });
   }
 
   @override
