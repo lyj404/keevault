@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/logger.dart';
 
@@ -17,14 +18,20 @@ class BiometricService {
   static const String _storedPasswordPrefix = 'biometric_password_';
 
   Future<bool> isBiometricAvailable() async {
-    log.e('BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}');
+    final msg = 'BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}';
+    debugPrint(msg);
+    log.e(msg);
     if (!Platform.isAndroid) return false;
     try {
       final result = await biometric.isBiometricAvailable();
-      log.e('BiometricService: isBiometricAvailable result=$result');
+      final msg2 = 'BiometricService: isBiometricAvailable result=$result';
+      debugPrint(msg2);
+      log.e(msg2);
       return result;
     } catch (e) {
-      log.e('BiometricService: Error checking biometric availability: $e');
+      final msg2 = 'BiometricService: Error checking biometric availability: $e';
+      debugPrint(msg2);
+      log.e(msg2);
       return false;
     }
   }
@@ -34,20 +41,28 @@ class BiometricService {
     try {
       return await biometric.getAvailableBiometrics();
     } catch (e) {
-      log.e('BiometricService: Error getting available biometrics: $e');
+      final msg = 'BiometricService: Error getting available biometrics: $e';
+      debugPrint(msg);
+      log.e(msg);
       return [];
     }
   }
 
   Future<bool> authenticate(String reason) async {
-    log.e('BiometricService: authenticate called, isAndroid=${Platform.isAndroid}');
+    final msg = 'BiometricService: authenticate called, isAndroid=${Platform.isAndroid}';
+    debugPrint(msg);
+    log.e(msg);
     if (!Platform.isAndroid) return false;
     try {
       final result = await biometric.authenticate(reason);
-      log.e('BiometricService: authenticate result=$result');
+      final msg2 = 'BiometricService: authenticate result=$result';
+      debugPrint(msg2);
+      log.e(msg2);
       return result;
     } catch (e) {
-      log.e('BiometricService: Authentication error: $e');
+      final msg2 = 'BiometricService: Authentication error: $e';
+      debugPrint(msg2);
+      log.e(msg2);
       return false;
     }
   }

@@ -264,10 +264,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 16),
 
                   // Unlock method card (Android only, requires biometric support)
-                  if (() {
+                  if (Platform.isAndroid && (() {
                     final bioVal = ref.watch(biometricAvailableProvider);
-                    log.e('Settings: biometricAvailableProvider=$bioVal, isAndroid=${Platform.isAndroid}');
-                    return Platform.isAndroid && bioVal.valueOrNull == true;
+                    final msg = 'Settings: biometricAvailableProvider=$bioVal';
+                    debugPrint(msg);
+                    log.e(msg);
+                    return bioVal.valueOrNull == true;
                   }()) ...[
                     _SectionCard(
                       brightness: brightness,
