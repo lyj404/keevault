@@ -67,6 +67,9 @@ class FileLogOutput extends LogOutput {
       // Use XDG_DATA_HOME (~/.local/share) directly to avoid APPLICATION_ID prefix.
       final xdg = Platform.environment['XDG_DATA_HOME'];
       base = xdg ?? '${Platform.environment['HOME']}/.local/share/keevault';
+    } else if (Platform.isAndroid) {
+      final ext = await getExternalStorageDirectory();
+      base = ext?.path ?? (await getApplicationSupportDirectory()).path;
     } else {
       base = (await getApplicationSupportDirectory()).path;
     }

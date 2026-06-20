@@ -18,7 +18,7 @@ Future<bool> authenticate(String reason) async {
     authMessages: const [AndroidAuthMessages()],
     options: const AuthenticationOptions(
       stickyAuth: true,
-      biometricOnly: true,
+      biometricOnly: false,
     ),
   );
 }
