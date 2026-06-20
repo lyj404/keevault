@@ -28,16 +28,24 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   Uint8List? _keyData;
   String? _keyFileName;
 
+  bool _biometricTriggered = false;
+
   @override
   void initState() {
     super.initState();
     ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
-    // Auto-trigger biometric auth if enabled
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ref.read(biometricEnabledProvider)) {
-        _biometricUnlock();
+    // Auto-trigger biometric auth when provider loads
+    ref.listen<bool>(biometricEnabledProvider, (prev, next) {
+      if (next && !_biometricTriggered) {
+        _biometricTriggered = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
       }
     });
+    // Also check if already loaded
+    if (ref.read(biometricEnabledProvider) && !_biometricTriggered) {
+      _biometricTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _biometricUnlock());
+    }
   }
 
   @override
