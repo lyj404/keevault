@@ -17,9 +17,12 @@ class BiometricService {
   static const String _storedPasswordPrefix = 'biometric_password_';
 
   Future<bool> isBiometricAvailable() async {
+    log.e('BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}');
     if (!Platform.isAndroid) return false;
     try {
-      return await biometric.isBiometricAvailable();
+      final result = await biometric.isBiometricAvailable();
+      log.e('BiometricService: isBiometricAvailable result=$result');
+      return result;
     } catch (e) {
       log.e('BiometricService: Error checking biometric availability: $e');
       return false;
@@ -37,9 +40,12 @@ class BiometricService {
   }
 
   Future<bool> authenticate(String reason) async {
+    log.e('BiometricService: authenticate called, isAndroid=${Platform.isAndroid}');
     if (!Platform.isAndroid) return false;
     try {
-      return await biometric.authenticate(reason);
+      final result = await biometric.authenticate(reason);
+      log.e('BiometricService: authenticate result=$result');
+      return result;
     } catch (e) {
       log.e('BiometricService: Authentication error: $e');
       return false;
