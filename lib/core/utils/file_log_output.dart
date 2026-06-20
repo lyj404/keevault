@@ -36,6 +36,9 @@ class FileLogOutput extends LogOutput {
         _writeEvent(event);
       }
       _buffer.clear();
+      // Write a startup marker so we know the log is working.
+      _sink?.writeln('${DateTime.now()} [INFO] FileLogOutput initialized, path=${_file?.path}');
+      _sink?.flush();
     } catch (_) {
       // If file init fails, silently skip — console still works.
     }

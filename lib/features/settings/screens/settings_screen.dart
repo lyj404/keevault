@@ -12,6 +12,7 @@ import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
 import '../../../core/providers/biometric_provider.dart';
 import '../../../core/services/biometric_service.dart';
+import '../../../core/utils/logger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
@@ -263,7 +264,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 16),
 
                   // Unlock method card (Android only, requires biometric support)
-                  if (Platform.isAndroid && ref.watch(biometricAvailableProvider).valueOrNull == true) ...[
+                  if (() {
+                    final bioVal = ref.watch(biometricAvailableProvider);
+                    log.e('Settings: biometricAvailableProvider=$bioVal, isAndroid=${Platform.isAndroid}');
+                    return Platform.isAndroid && bioVal.valueOrNull == true;
+                  }()) ...[
                     _SectionCard(
                       brightness: brightness,
                       child: Column(
