@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/logger.dart';
 
 // Conditional import - only import on Android
 import 'biometric_service_impl_stub.dart'
@@ -21,7 +21,7 @@ class BiometricService {
     try {
       return await biometric.isBiometricAvailable();
     } catch (e) {
-      debugPrint('BiometricService: Error checking biometric availability: $e');
+      log.e('BiometricService: Error checking biometric availability: $e');
       return false;
     }
   }
@@ -31,7 +31,7 @@ class BiometricService {
     try {
       return await biometric.getAvailableBiometrics();
     } catch (e) {
-      debugPrint('BiometricService: Error getting available biometrics: $e');
+      log.e('BiometricService: Error getting available biometrics: $e');
       return [];
     }
   }
@@ -41,7 +41,7 @@ class BiometricService {
     try {
       return await biometric.authenticate(reason);
     } catch (e) {
-      debugPrint('BiometricService: Authentication error: $e');
+      log.e('BiometricService: Authentication error: $e');
       return false;
     }
   }
