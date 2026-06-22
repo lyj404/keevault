@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
@@ -252,9 +253,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           context.go('/explorer');
         }
       } catch (e) {
+        log.e('Backup restore with alternate password failed', error: e);
         if (mounted) showToast(context, l10n.backupRestoreFailed, isError: true);
       }
     } catch (e) {
+      log.e('Backup restore failed', error: e);
       if (mounted) {
         final msg = e is KdbxError ? e.message : e.toString();
         showToast(context, '${l10n.backupRestoreFailed}: $msg', isError: true);

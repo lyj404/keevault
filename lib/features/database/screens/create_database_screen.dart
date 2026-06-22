@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/database_provider.dart';
@@ -170,15 +171,19 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   }
 
   Future<void> _pickSaveLocation() async {
-    final l10n = AppLocalizations.of(context)!;
-    final result = await FilePicker.platform.saveFile(
-      dialogTitle: l10n.saveDatabase,
-      fileName: '${_nameController.text}${AppConstants.kdbxExtension}',
-      type: FileType.custom,
-      allowedExtensions: ['kdbx'],
-    );
-    if (result != null) {
-      setState(() => _savePath = result);
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: l10n.saveDatabase,
+        fileName: '${_nameController.text}${AppConstants.kdbxExtension}',
+        type: FileType.custom,
+        allowedExtensions: ['kdbx'],
+      );
+      if (result != null) {
+        setState(() => _savePath = result);
+      }
+    } catch (e) {
+      log.e('Failed to pick save location', error: e);
     }
   }
 
@@ -236,18 +241,22 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   }
 
   Future<void> _pickKeyFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      withData: true,
-    );
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.first;
-      if (file.bytes != null) {
-        setState(() {
-          _keyData = file.bytes;
-          _keyFileName = file.name;
-        });
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        withData: true,
+      );
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.bytes != null) {
+          setState(() {
+            _keyData = file.bytes;
+            _keyFileName = file.name;
+          });
+        }
       }
+    } catch (e) {
+      log.e('Failed to pick key file', error: e);
     }
   }
 }

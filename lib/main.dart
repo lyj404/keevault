@@ -69,14 +69,18 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     try {
       await windowManager.show();
       await windowManager.focus();
-    } catch (_) {}
+    } catch (e) {
+      log.w('Failed to show window', error: e);
+    }
   }
 
   Future<void> _exitApp() async {
     try {
       await windowManager.setPreventClose(false);
       await windowManager.close();
-    } catch (_) {}
+    } catch (e) {
+      log.w('Failed to exit app', error: e);
+    }
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/widgets/change_password_dialog.dart';
@@ -600,20 +601,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final config = WebDavConfig(
-      serverUrl: _urlController.text.trim(),
-      username: _userController.text.trim(),
-      password: _passwordController.text,
-      remotePath: _pathController.text.trim(),
-      remoteFilename: _filenameController.text.trim(),
-      enabled: _enabled,
-    );
-    await ref.read(webDavSettingsServiceProvider).saveConfig(config);
-    ref.invalidate(webDavConfigProvider);
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      showToast(context, l10n.saved);
-      context.pop();
+    try {
+      final config = WebDavConfig(
+        serverUrl: _urlController.text.trim(),
+        username: _userController.text.trim(),
+        password: _passwordController.text,
+        remotePath: _pathController.text.trim(),
+        remoteFilename: _filenameController.text.trim(),
+        enabled: _enabled,
+      );
+      await ref.read(webDavSettingsServiceProvider).saveConfig(config);
+      ref.invalidate(webDavConfigProvider);
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showToast(context, l10n.saved);
+        context.pop();
+      }
+    } catch (e) {
+      log.e('Failed to save WebDAV config', error: e);
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showToast(context, l10n.error(e.toString()), isError: true);
+      }
     }
   }
 

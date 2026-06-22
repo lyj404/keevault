@@ -104,6 +104,7 @@ class SyncService {
       final file = await client.readProps(config.remoteFilePath);
       return RemoteFileInfo(eTag: file.eTag, mTime: file.mTime);
     } catch (_) {
+      log.w('Failed to get remote file info');
       return null;
     }
   }
@@ -139,9 +140,9 @@ class SyncService {
       // Atomic rename to final path (WebDAV MOVE is atomic on compliant servers)
       try {
         await client.rename(tmpPath, config.remoteFilePath, true);
-      } catch (_) {
+      } catch (e) {
         // If MOVE is not supported, fall back to direct write
-        log.w('MOVE not supported, falling back to direct write');
+        log.w('MOVE not supported, falling back to direct write: $e');
         await client.write(config.remoteFilePath, bytes);
         try { await client.remove(tmpPath); } catch (_) {}
       }
@@ -159,6 +160,7 @@ class SyncService {
       await client.readProps(config.remoteFilePath);
       return true;
     } catch (_) {
+      log.w('Remote file does not exist or cannot be read');
       return false;
     }
   }

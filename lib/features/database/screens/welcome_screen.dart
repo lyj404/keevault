@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
@@ -99,6 +100,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
         }
       } catch (e) {
+        log.e('Auto-open cloud download failed', error: e);
         _autoOpened = false;
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
@@ -349,6 +351,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
       }
     } catch (e) {
+      log.e('WebDAV download failed', error: e);
       if (context.mounted) {
         Navigator.of(context).pop();
         final msg = e.toString().replaceFirst('Exception: ', '');

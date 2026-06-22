@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/utils/logger.dart';
 import '../../../l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
-  static const String _version = '0.4.9';
+  static const String _version = '0.5.0';
   static const String _buildNumber = '1';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
@@ -57,7 +58,7 @@ class _AboutScreenState extends State<AboutScreen> {
         }
       }
     } catch (e) {
-      // 忽略网络错误
+      log.w('Update check failed', error: e);
     } finally {
       client.close();
       if (mounted) {
@@ -87,6 +88,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Future<void> _openUrl(BuildContext context, String url) async {
     final l10n = AppLocalizations.of(context)!;
+    try {
     if (Platform.isLinux) {
       await Process.run('xdg-open', [url]);
     } else if (Platform.isMacOS) {
@@ -103,6 +105,9 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
         );
       }
+    }
+    } catch (e) {
+      log.e('Failed to open URL: $url', error: e);
     }
   }
 

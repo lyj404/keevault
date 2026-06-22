@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/logger.dart';
 import '../utils/secure_storage_helper.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/database/providers/database_provider.dart';
@@ -27,7 +28,11 @@ class AutoLockNotifier extends StateNotifier<int> {
 
   Future<void> setMinutes(int minutes) async {
     state = minutes;
-    await _storage.write(key: _key, value: minutes.toString());
+    try {
+      await _storage.write(key: _key, value: minutes.toString());
+    } catch (e) {
+      log.w('Failed to persist auto-lock setting', error: e);
+    }
     resetTimer();
   }
 

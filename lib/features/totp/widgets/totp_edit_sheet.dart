@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/logger.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/totp_service.dart';
 import 'qr_scan.dart';
@@ -76,10 +77,14 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
   }
 
   Future<void> _scanQrCode() async {
-    final scanned = await openQrScanner(context);
-    if (scanned == null) return;
-    _uriCtrl.text = scanned;
-    _parseUri();
+    try {
+      final scanned = await openQrScanner(context);
+      if (scanned == null) return;
+      _uriCtrl.text = scanned;
+      _parseUri();
+    } catch (e) {
+      log.e('QR scan failed', error: e);
+    }
   }
 
   void _submit() {

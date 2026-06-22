@@ -70,11 +70,15 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   }
 
   Future<void> _checkRemoteChangesOnResume() async {
-    final isOpenedFromCloud = ref.read(openedFromCloudProvider);
-    if (!isOpenedFromCloud) return;
-    final hasChanges = await ref.read(databaseProvider.notifier).checkRemoteChanges();
-    if (hasChanges && mounted) {
-      _showAutoSyncDialog();
+    try {
+      final isOpenedFromCloud = ref.read(openedFromCloudProvider);
+      if (!isOpenedFromCloud) return;
+      final hasChanges = await ref.read(databaseProvider.notifier).checkRemoteChanges();
+      if (hasChanges && mounted) {
+        _showAutoSyncDialog();
+      }
+    } catch (e) {
+      log.w('Failed to check remote changes on resume', error: e);
     }
   }
 
@@ -530,6 +534,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         showToast(context, l10n.importSuccess(count));
       }
     } catch (e) {
+      log.e('CSV import failed', error: e);
       if (context.mounted) {
         showToast(context, l10n.importFailed(e.toString()), isError: true);
       }
@@ -561,6 +566,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       await file.writeAsString(csvContent, encoding: utf8);
       if (context.mounted) showToast(context, l10n.exportSuccess);
     } catch (e) {
+      log.e('CSV export failed', error: e);
       if (context.mounted) showToast(context, l10n.exportFailed, isError: true);
     }
   }
@@ -584,6 +590,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       await file.writeAsBytes(bytes);
       if (context.mounted) showToast(context, l10n.exportSuccess);
     } catch (e) {
+      log.e('KDBX export failed', error: e);
       if (context.mounted) showToast(context, l10n.exportFailed, isError: true);
     }
   }
@@ -1974,6 +1981,7 @@ Future<void> _syncToCloud(BuildContext context) async {
       }
     }
   } catch (e) {
+    log.e('Sync to cloud failed', error: e);
     if (context.mounted) {
       Navigator.of(context).pop();
       showToast(context, l10n.syncFailedWithError(e.toString()), isError: true);
@@ -2028,6 +2036,7 @@ Future<void> _syncFromCloud(BuildContext context) async {
       showToast(context, l10n.syncedFromCloud);
     }
   } catch (e) {
+    log.e('Sync from cloud failed', error: e);
     if (context.mounted) {
       Navigator.of(context).pop();
       _showSyncErrorDialog(context, _translateSyncError(e, l10n));

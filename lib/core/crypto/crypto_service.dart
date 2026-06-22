@@ -43,7 +43,8 @@ class CryptoService {
     } else if (Platform.isIOS) {
       try {
         return DynamicLibrary.process();
-      } catch (_) {
+      } catch (e) {
+        log.w('iOS dynamic library process failed', error: e);
         return null;
       }
     }
@@ -53,7 +54,8 @@ class CryptoService {
   static DynamicLibrary? _tryLoad(String name) {
     try {
       return DynamicLibrary.open(name);
-    } catch (_) {
+    } catch (e) {
+      log.w('Failed to load native library: $name', error: e);
       return null;
     }
   }

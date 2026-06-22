@@ -87,6 +87,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
+      log.e('Failed to open file', error: e, stackTrace: st);
       if (!_disposed) state = AsyncValue.error(e, st);
     }
   }
@@ -105,6 +106,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
+      log.e('Failed to create database', error: e, stackTrace: st);
       if (!_disposed) state = AsyncValue.error(e, st);
     }
   }
@@ -192,6 +194,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       }
       _ref.read(syncStateProvider.notifier).state = SyncState.success;
     } catch (e) {
+      log.e('Force upload failed', error: e);
       _ref.read(syncStateProvider.notifier).state = SyncState.error;
     }
   }

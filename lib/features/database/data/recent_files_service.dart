@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/utils/secure_storage_helper.dart';
 
 class RecentFile {
@@ -45,7 +46,8 @@ class RecentFilesService {
         if (e is String) return RecentFile(path: e);
         return RecentFile.fromJson(e as Map<String, dynamic>);
       }).toList();
-    } catch (_) {
+    } catch (e) {
+      log.w('Failed to parse recent files, resetting list', error: e);
       return [];
     }
   }
@@ -77,7 +79,8 @@ class RecentFilesService {
     if (data == null) return null;
     try {
       return RecentFile.fromJson(jsonDecode(data) as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e) {
+      log.w('Failed to parse last opened file', error: e);
       return null;
     }
   }

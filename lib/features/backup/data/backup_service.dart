@@ -83,20 +83,29 @@ class BackupService {
   }
 
   Future<List<BackupInfo>> listBackups() async {
-    final dir = await _backupDir();
-    final files = await dir.list().where((f) => f.path.endsWith('.kdbx')).toList();
-    final backups = <BackupInfo>[];
-    for (final f in files) {
-      final stat = await f.stat();
-      final name = f.path.split(Platform.pathSeparator).last;
-      backups.add(BackupInfo(
-        filename: name,
-        timestamp: stat.modified,
-        sizeBytes: stat.size,
-      ));
+    try {
+      final dir = await _backupDir();
+      final files = await dir.list().where((f) => f.path.endsWith('.kdbx')).toList();
+      final backups = <BackupInfo>[];
+      for (final f in files) {
+        try {
+          final stat = await f.stat();
+          final name = f.path.split(Platform.pathSeparator).last;
+          backups.add(BackupInfo(
+            filename: name,
+            timestamp: stat.modified,
+            sizeBytes: stat.size,
+          ));
+        } catch (e) {
+          log.w('Failed to stat backup file: ${f.path}', error: e);
+        }
+      }
+      backups.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return backups;
+    } catch (e) {
+      log.e('Failed to list backups', error: e);
+      return [];
     }
-    backups.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return backups;
   }
 
   Future<String?> getBackupPath(String filename) async {
@@ -122,12 +131,16 @@ class BackupService {
   }
 
   Future<void> _cleanupOldBackups() async {
-    final retention = await getRetentionCount();
-    final backups = await listBackups();
-    if (backups.length <= retention) return;
-    final toRemove = backups.sublist(retention);
-    for (final b in toRemove) {
-      await deleteBackup(b.filename);
+    try {
+      final retention = await getRetentionCount();
+      final backups = await listBackups();
+      if (backups.length <= retention) return;
+      final toRemove = backups.sublist(retention);
+      for (final b in toRemove) {
+        await deleteBackup(b.filename);
+      }
+    } catch (e) {
+      log.e('Backup cleanup failed', error: e);
     }
   }
 }
