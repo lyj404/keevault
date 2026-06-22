@@ -12,6 +12,7 @@ class AutoLockNotifier extends StateNotifier<int> {
   static const _key = 'auto_lock_minutes';
   final Ref _ref;
   Timer? _timer;
+  bool _locked = false;
 
   AutoLockNotifier(this._ref) : super(0) {
     _load();
@@ -32,15 +33,19 @@ class AutoLockNotifier extends StateNotifier<int> {
 
   void resetTimer() {
     _timer?.cancel();
+    _locked = false;
     if (state <= 0) return;
     _timer = Timer(Duration(minutes: state), _lock);
   }
 
   void cancelTimer() {
     _timer?.cancel();
+    _locked = false;
   }
 
   void _lock() {
+    if (_locked) return;
+    _locked = true;
     final dbNotifier = _ref.read(databaseProvider.notifier);
     final dbState = _ref.read(databaseProvider);
     final hasDb = dbState.valueOrNull != null;

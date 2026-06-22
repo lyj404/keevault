@@ -43,6 +43,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         _autoOpened = true;
         context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
       }
+      // If file doesn't exist, don't set _autoOpened so user can retry
       return;
     }
 
@@ -55,6 +56,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         }
       } else {
         // Local cache missing and no WebDAV config — remove stale record.
+        _autoOpened = false;
         await ref.read(recentFilesServiceProvider).removeRecentFile(file.path);
         ref.invalidate(recentFilesProvider);
         if (mounted) {

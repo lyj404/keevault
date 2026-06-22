@@ -29,6 +29,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   String? _keyFileName;
 
   bool _biometricTriggered = false;
+  bool _biometricUnlocking = false;
 
   @override
   void initState() {
@@ -62,13 +63,14 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         setState(() => _error = null);
       } else if (next.hasValue) {
         if (next.value != null) {
-          // Store password for biometric only after successful unlock
-          if (Platform.isAndroid && ref.read(biometricEnabledProvider)) {
+          // Store password for biometric only after successful manual unlock
+          if (Platform.isAndroid && ref.read(biometricEnabledProvider) && !_biometricUnlocking) {
             BiometricService().storePassword(widget.filePath, _passwordController.text);
           }
           context.go('/explorer');
         }
       } else if (next.hasError) {
+        _biometricUnlocking = false;
         setState(() => _error = _friendlyError(next.error!, l10n));
       }
     });
@@ -267,6 +269,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     }
 
     if (!mounted) return;
+    _biometricUnlocking = true;
     setState(() => _error = null);
     ref.read(databaseProvider.notifier).openFile(widget.filePath, storedPassword, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
   }

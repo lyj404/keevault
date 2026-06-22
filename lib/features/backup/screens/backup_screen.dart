@@ -297,7 +297,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           ),
         ],
       ),
-    );
+    ).then((result) {
+      controller.dispose();
+      return result;
+    });
   }
 
   Future<void> _deleteBackup(BuildContext context, String filename) async {

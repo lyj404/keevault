@@ -167,7 +167,7 @@ class CsvService {
 
     log.i('CSV import: manual parser returned ${rows.length} rows');
     if (rows.isNotEmpty) {
-      log.i('CSV import: first row has ${rows.first.length} columns: ${rows.first}');
+      log.i('CSV import: first row has ${rows.first.length} columns');
     }
     return rows;
   }

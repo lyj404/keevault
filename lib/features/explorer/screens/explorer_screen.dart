@@ -388,7 +388,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           ),
         ],
       ),
-    );
+    ).then((_) => ctrl.dispose());
   }
 
   bool _isInRecycleBin(KdbxGroup? group) {
@@ -412,12 +412,15 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
   void _save(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    ref.read(databaseProvider.notifier).save().then((success) {
+    ref.read(databaseProvider.notifier).save().then((result) {
       if (!context.mounted) return;
-      if (success) {
-        showToast(context, l10n.saved);
-      } else {
-        _showConflictDialog(context, ref);
+      switch (result) {
+        case SaveResult.success:
+          showToast(context, l10n.saved);
+        case SaveResult.conflict:
+          _showConflictDialog(context, ref);
+        case SaveResult.syncError:
+          showToast(context, l10n.syncFailed, isError: true);
       }
     });
   }

@@ -109,13 +109,15 @@ class SyncService {
   }
 
   /// Downloads database bytes along with remote file metadata.
+  /// Reads props FIRST to capture the eTag, then downloads. This avoids the
+  /// TOCTOU race where the file could change between download and eTag fetch.
   Future<({Uint8List bytes, RemoteFileInfo info})?> downloadWithInfo(WebDavConfig config) async {
     log.i('Downloading with metadata from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      final bytes = await client.read(config.remoteFilePath);
-      // Read props after download to get the eTag of the version we actually received.
+      // Read props first to capture the eTag of the current version
       final file = await client.readProps(config.remoteFilePath);
+      final bytes = await client.read(config.remoteFilePath);
       log.i('Downloaded ${bytes.length} bytes, eTag: ${file.eTag}');
       return (bytes: Uint8List.fromList(bytes), info: RemoteFileInfo(eTag: file.eTag, mTime: file.mTime));
     } catch (e) {
@@ -124,10 +126,30 @@ class SyncService {
     }
   }
 
+  /// Uploads database to WebDAV using an atomic temp-file-then-rename pattern.
+  /// This prevents a partially written file from corrupting the remote database
+  /// if the connection drops mid-transfer.
   Future<void> uploadDatabase(WebDavConfig config, Uint8List bytes) async {
     log.i('Uploading ${bytes.length} bytes to: ${config.remoteFilePath}');
     final client = _buildClient(config);
-    await client.write(config.remoteFilePath, bytes);
+    final tmpPath = '${config.remoteFilePath}.tmp';
+    try {
+      // Write to a temporary file first
+      await client.write(tmpPath, bytes);
+      // Atomic rename to final path (WebDAV MOVE is atomic on compliant servers)
+      try {
+        await client.rename(tmpPath, config.remoteFilePath, true);
+      } catch (_) {
+        // If MOVE is not supported, fall back to direct write
+        log.w('MOVE not supported, falling back to direct write');
+        await client.write(config.remoteFilePath, bytes);
+        try { await client.remove(tmpPath); } catch (_) {}
+      }
+    } catch (e) {
+      // Clean up temp file on failure
+      try { await client.remove(tmpPath); } catch (_) {}
+      rethrow;
+    }
     log.i('Upload complete');
   }
 

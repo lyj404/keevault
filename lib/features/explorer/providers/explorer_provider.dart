@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../database/providers/database_provider.dart';
+import '../../search/providers/search_provider.dart';
 
 final currentGroupPathProvider = StateProvider<String>((ref) => '');
 
@@ -29,6 +30,8 @@ void refreshExplorerLists(WidgetRef ref) {
   final group = ref.read(currentGroupProvider);
   ref.read(entriesProvider.notifier).state = [...?group?.entries];
   ref.read(selectedEntryProvider.notifier).state = null;
+  // Bump version so search results are invalidated
+  ref.read(entryVersionProvider.notifier).state++;
 }
 
 final breadcrumbProvider = Provider<List<String>>((ref) {

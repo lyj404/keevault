@@ -19,6 +19,7 @@ class DatabaseService {
   String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
   Uint8List? _lastSavedBytes;
+  Completer<void>? _saveCompleter;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -60,8 +61,14 @@ class DatabaseService {
       return;
     }
     log.i('Preloading file: $filePath');
-    _preloadedBytes = await File(filePath).readAsBytes();
-    _preloadedFilePath = filePath;
+    try {
+      _preloadedBytes = await File(filePath).readAsBytes();
+      _preloadedFilePath = filePath;
+    } catch (e) {
+      log.e('Preload file failed: $filePath', error: e);
+      _preloadedBytes = null;
+      _preloadedFilePath = null;
+    }
   }
 
   /// Loads a KDBX database in a background isolate to avoid blocking the UI.
@@ -130,25 +137,42 @@ class DatabaseService {
   /// Saves the database to disk and returns the serialized bytes.
   /// The serialization+encryption runs in a background isolate to avoid blocking the UI.
   /// Returns the serialized bytes so callers can reuse them (e.g. for cloud upload).
+  /// Uses a mutex to prevent concurrent save corruption.
   Future<Uint8List> save() async {
-    if (_db == null || _filePath == null) return Uint8List(0);
-    log.i('Saving database: $_filePath');
-    final db = _db!;
-    final bytes = await Isolate.run(() {
-      CryptoService.initialize();
-      return db.save();
-    });
-    if (await _backupService.isAutoBackupEnabled()) {
-      unawaited(_backupService.createBackup(_filePath!).catchError((e) {
-        log.e('Auto-backup failed', error: e);
-        return null;
-      }));
+    // Wait for any in-flight save to complete before starting a new one.
+    while (_saveCompleter != null && !_saveCompleter!.isCompleted) {
+      await _saveCompleter!.future;
     }
-    await File(_filePath!).writeAsBytes(bytes);
-    _lastSavedBytes = Uint8List.fromList(bytes);
-    markClean();
-    log.i('Database saved (${bytes.length} bytes)');
-    return Uint8List.fromList(bytes);
+    if (_db == null || _filePath == null) return Uint8List(0);
+    _saveCompleter = Completer<void>();
+    try {
+      log.i('Saving database: $_filePath');
+      final db = _db!;
+      final filePath = _filePath!;
+      final bytes = await Isolate.run(() {
+        CryptoService.initialize();
+        return db.save();
+      });
+      // Re-check after await — close() may have been called concurrently.
+      if (_db == null || _filePath == null) {
+        log.w('Save aborted: database was closed during serialization');
+        return Uint8List(0);
+      }
+      if (await _backupService.isAutoBackupEnabled()) {
+        unawaited(_backupService.createBackup(filePath).catchError((e) {
+          log.e('Auto-backup failed', error: e);
+          return null;
+        }));
+      }
+      await File(filePath).writeAsBytes(bytes);
+      _lastSavedBytes = Uint8List.fromList(bytes);
+      markClean();
+      log.i('Database saved (${bytes.length} bytes)');
+      return Uint8List.fromList(bytes);
+    } finally {
+      _saveCompleter!.complete();
+      _saveCompleter = null;
+    }
   }
 
   /// Returns true if the given bytes are identical to the last saved bytes.
@@ -293,6 +317,8 @@ class DatabaseService {
     markClean();
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
+    _preloadedFilePath = null;
     _allEntriesCache = null;
+    _lastSavedBytes = null;
   }
 }

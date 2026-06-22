@@ -18,13 +18,27 @@ class KeeVaultApp extends ConsumerStatefulWidget {
   ConsumerState<KeeVaultApp> createState() => _KeeVaultAppState();
 }
 
-class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
+class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingObserver {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(autoLockProvider.notifier).resetTimer();
+    }
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
