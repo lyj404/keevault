@@ -35,13 +35,11 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Build kreepto and flutter
-        shell: bash
-        run: |
-          cargo build --release --manifest-path native/kreepto-rust/Cargo.toml &
-          CARGO_PID=$!
-          flutter build windows --release
-          wait $CARGO_PID || exit 1
+      - name: Build kreepto native library
+        run: cargo build --release
+        working-directory: native/kreepto-rust
+
+      - run: flutter build windows --release
 
       - name: Bundle native library
         run: cp native/kreepto-rust/target/release/kreepto.dll build/windows/x64/runner/Release/
@@ -81,12 +79,11 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev clang cmake pkg-config libsecret-1-dev libayatana-appindicator3-dev
       - run: flutter pub get
 
-      - name: Build kreepto and flutter
-        run: |
-          cargo build --release --manifest-path native/kreepto-rust/Cargo.toml &
-          CARGO_PID=$!
-          flutter build linux --release
-          wait $CARGO_PID || exit 1
+      - name: Build kreepto native library
+        run: cargo build --release
+        working-directory: native/kreepto-rust
+
+      - run: flutter build linux --release
 
       - name: Bundle native library
         run: cp native/kreepto-rust/target/release/libkreepto.so build/linux/x64/release/bundle/lib/
