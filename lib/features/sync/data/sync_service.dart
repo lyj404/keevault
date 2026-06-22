@@ -113,10 +113,9 @@ class SyncService {
     log.i('Downloading with metadata from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      // Get remote info first to capture the eTag before downloading bytes.
-      // This avoids a race where the file changes between read and readProps.
-      final file = await client.readProps(config.remoteFilePath);
       final bytes = await client.read(config.remoteFilePath);
+      // Read props after download to get the eTag of the version we actually received.
+      final file = await client.readProps(config.remoteFilePath);
       log.i('Downloaded ${bytes.length} bytes, eTag: ${file.eTag}');
       return (bytes: Uint8List.fromList(bytes), info: RemoteFileInfo(eTag: file.eTag, mTime: file.mTime));
     } catch (e) {

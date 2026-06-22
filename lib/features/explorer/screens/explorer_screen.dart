@@ -122,9 +122,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     void onEntryOpen(KdbxEntry entry) {
       ref.read(selectedEntryProvider.notifier).state = entry;
       ref.read(activeEntryProvider.notifier).state = entry;
-      final idx = currentGroup?.entries.indexOf(entry) ?? 0;
       final path = currentGroup != null ? service.getGroupPath(currentGroup) : '';
-      context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
+      context.push('/entry/detail?uuid=${entry.uuid.string}&groupPath=${Uri.encodeComponent(path)}');
     }
 
     if (isWide) {
@@ -1596,11 +1595,13 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
   bool _obscure = true;
   KdbxEntry? _entry;
   bool _saved = false;
+  bool _wasDirtyBeforeCreate = false;
 
   @override
   void initState() {
     super.initState();
     final service = ref.read(databaseServiceProvider);
+    _wasDirtyBeforeCreate = service.isDirty;
     _entry = service.createEntry(widget.group);
   }
 
@@ -1610,6 +1611,11 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
       widget.group.entries.remove(_entry);
       final service = ref.read(databaseServiceProvider);
       service.rebuildEntryCache();
+      // Restore dirty state: if database was clean before createEntry,
+      // revert to clean since we're discarding the only change.
+      if (!_wasDirtyBeforeCreate) {
+        service.markClean();
+      }
     }
     _titleCtrl.dispose();
     _usernameCtrl.dispose();

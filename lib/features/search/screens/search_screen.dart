@@ -79,8 +79,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ref.read(activeEntryProvider.notifier).state = entry;
                         },
                         onOpen: () {
-                          final idx = entry.parent?.entries.indexOf(entry) ?? 0;
-                          context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(groupPath)}');
+                          context.push('/entry/detail?uuid=${entry.uuid.string}&groupPath=${Uri.encodeComponent(groupPath)}');
                         },
                       ),
                     );

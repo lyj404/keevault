@@ -46,21 +46,33 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       return;
     }
 
-    if (!exists) return;
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
-      if (mounted) {
-        ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
+      if (exists) {
+        // Local file exists but WebDAV not configured — open as local file.
+        if (mounted) {
+          context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
+        }
+      } else {
+        // Local cache missing and no WebDAV config — remove stale record.
+        await ref.read(recentFilesServiceProvider).removeRecentFile(file.path);
+        ref.invalidate(recentFilesProvider);
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          _showErrorDialog(context, l10n.cloudDatabaseNotExist);
+        }
       }
       return;
+    }
+    if (!exists) {
+      // Local cache missing but WebDAV is configured — fall through to download.
     }
     final syncService = ref.read(syncServiceProvider);
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (!mounted) return;
     if (remoteInfo != null) {
       final lastETag = file.lastSyncedETag;
-      if (lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
+      if (exists && lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
         ref.read(openedFromCloudProvider.notifier).state = true;
         context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
         return;

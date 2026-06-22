@@ -218,6 +218,14 @@ class DatabaseService {
     _rebuildEntryCache();
   }
 
+  KdbxEntry? findEntryByUuid(KdbxUuid uuid) {
+    if (_db == null) return null;
+    for (final entry in allEntries) {
+      if (entry.uuid == uuid) return entry;
+    }
+    return null;
+  }
+
   List<KdbxEntry> search(String query) {
     if (_db == null || query.isEmpty) return [];
     final lowerQuery = query.toLowerCase();

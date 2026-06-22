@@ -16,10 +16,10 @@ import '../../totp/widgets/totp_edit_sheet.dart';
 const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
 class EntryEditScreen extends ConsumerStatefulWidget {
-  final int? entryIndex;
+  final String? entryUuid;
   final String groupPath;
 
-  const EntryEditScreen({super.key, this.entryIndex, required this.groupPath});
+  const EntryEditScreen({super.key, this.entryUuid, required this.groupPath});
 
   @override
   ConsumerState<EntryEditScreen> createState() => _EntryEditScreenState();
@@ -73,21 +73,30 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
   void _loadEntry() {
     final service = ref.read(databaseServiceProvider);
+
+    // Look up by UUID if provided
+    if (widget.entryUuid != null && widget.entryUuid!.isNotEmpty) {
+      final entry = service.findEntryByUuid(KdbxUuid.fromString(widget.entryUuid!));
+      if (entry != null) {
+        _titleCtrl.text = entry.fields['Title']?.text ?? '';
+        _usernameCtrl.text = entry.fields['UserName']?.text ?? '';
+        _passwordCtrl.text = entry.fields['Password']?.text ?? '';
+        _urlCtrl.text = entry.fields['URL']?.text ?? '';
+        _notesCtrl.text = entry.fields['Notes']?.text ?? '';
+        _isEdit = true;
+        _entry = entry;
+        _expires = entry.times.expires;
+        _expiryDate = entry.times.expiry.time;
+        _totpConfig = _totpService.loadFromEntry(entry);
+        _loadCustomFields(entry);
+        return;
+      }
+    }
+
+    // Create new entry
     final group = service.findGroupByPath(widget.groupPath);
-    if (group != null && widget.entryIndex != null && widget.entryIndex! >= 0 && widget.entryIndex! < group.entries.length) {
-      final entry = group.entries[widget.entryIndex!];
-      _titleCtrl.text = entry.fields['Title']?.text ?? '';
-      _usernameCtrl.text = entry.fields['UserName']?.text ?? '';
-      _passwordCtrl.text = entry.fields['Password']?.text ?? '';
-      _urlCtrl.text = entry.fields['URL']?.text ?? '';
-      _notesCtrl.text = entry.fields['Notes']?.text ?? '';
-      _isEdit = true;
-      _entry = entry;
-      _expires = entry.times.expires;
-      _expiryDate = entry.times.expiry.time;
-      _totpConfig = _totpService.loadFromEntry(entry);
-      _loadCustomFields(entry);
-    } else if (group != null) {
+    if (group != null) {
+      _wasDirtyBeforeCreate = service.isDirty;
       _entry = service.createEntry(group);
     }
   }
@@ -105,6 +114,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   }
 
   bool _saved = false;
+  bool _wasDirtyBeforeCreate = false;
 
   @override
   void dispose() {
@@ -114,6 +124,9 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       if (group != null) {
         group.entries.remove(_entry);
         service.rebuildEntryCache();
+        if (!_wasDirtyBeforeCreate) {
+          service.markClean();
+        }
       }
     }
     _titleCtrl.dispose();

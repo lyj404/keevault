@@ -8,25 +8,23 @@ import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
 
 class EntryHistoryScreen extends ConsumerWidget {
-  final int entryIndex;
+  final String entryUuid;
   final String groupPath;
 
-  const EntryHistoryScreen({super.key, required this.entryIndex, required this.groupPath});
+  const EntryHistoryScreen({super.key, required this.entryUuid, required this.groupPath});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.read(databaseServiceProvider);
-    final group = service.findGroupByPath(groupPath);
     final l10n = AppLocalizations.of(context)!;
 
-    if (group == null || entryIndex < 0 || entryIndex >= group.entries.length) {
+    final entry = entryUuid.isNotEmpty ? service.findEntryByUuid(KdbxUuid.fromString(entryUuid)) : null;
+    if (entry == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.history)),
         body: Center(child: Text(l10n.entryNotFound)),
       );
     }
-
-    final entry = group.entries[entryIndex];
     final history = List<KdbxEntry>.from(entry.history)
       ..sort((a, b) => (b.times.modification.timeOrZero).compareTo(a.times.modification.timeOrZero));
 

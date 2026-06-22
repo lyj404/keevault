@@ -43,18 +43,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/entry/detail',
       builder: (context, state) {
-        final entryIndex = int.tryParse(state.uri.queryParameters['index'] ?? '0') ?? 0;
+        final entryUuid = state.uri.queryParameters['uuid'] ?? '';
         final groupPath = state.uri.queryParameters['groupPath'] ?? '';
-        return EntryDetailScreen(entryIndex: entryIndex, groupPath: groupPath);
+        return EntryDetailScreen(entryUuid: entryUuid, groupPath: groupPath);
       },
     ),
     GoRoute(
       path: '/entry/edit',
       builder: (context, state) {
-        final entryIndex = state.uri.queryParameters['index'];
+        final entryUuid = state.uri.queryParameters['uuid'];
         final groupPath = state.uri.queryParameters['groupPath'] ?? '';
         return EntryEditScreen(
-          entryIndex: entryIndex != null ? int.tryParse(entryIndex) : null,
+          entryUuid: entryUuid,
           groupPath: groupPath,
         );
       },
@@ -62,9 +62,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/entry/history',
       builder: (context, state) {
-        final entryIndex = int.tryParse(state.uri.queryParameters['index'] ?? '0') ?? 0;
+        final entryUuid = state.uri.queryParameters['uuid'] ?? '';
         final groupPath = state.uri.queryParameters['groupPath'] ?? '';
-        return EntryHistoryScreen(entryIndex: entryIndex, groupPath: groupPath);
+        return EntryHistoryScreen(entryUuid: entryUuid, groupPath: groupPath);
       },
     ),
     GoRoute(

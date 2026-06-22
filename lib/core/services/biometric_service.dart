@@ -88,7 +88,13 @@ class BiometricService {
 
   String _hashPath(String path) {
     final bytes = utf8.encode(path);
-    // Simple hash: use hashCode as hex string for collision-free key mapping
-    return bytes.hashCode.toRadixString(16);
+    // FNV-1a 64-bit hash — stable across platforms and runs.
+    int hash = 0xcbf29ce484222325;
+    const int prime = 0x100000001b3;
+    for (final byte in bytes) {
+      hash ^= byte;
+      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
+    }
+    return hash.toRadixString(16);
   }
 }

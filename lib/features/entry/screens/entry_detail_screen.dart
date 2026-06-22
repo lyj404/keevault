@@ -14,25 +14,24 @@ import '../../explorer/providers/explorer_provider.dart';
 import '../../totp/widgets/totp_display_widget.dart';
 
 class EntryDetailScreen extends ConsumerWidget {
-  final int entryIndex;
+  final String entryUuid;
   final String groupPath;
 
-  const EntryDetailScreen({super.key, required this.entryIndex, required this.groupPath});
+  const EntryDetailScreen({super.key, required this.entryUuid, required this.groupPath});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final service = ref.read(databaseServiceProvider);
-    final group = service.findGroupByPath(groupPath);
     final l10n = AppLocalizations.of(context)!;
 
-    if (group == null || entryIndex < 0 || entryIndex >= group.entries.length) {
+    final entry = entryUuid.isNotEmpty ? service.findEntryByUuid(KdbxUuid.fromString(entryUuid)) : null;
+    if (entry == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.entry)),
         body: EmptyState(icon: Icons.error_outline_rounded, message: l10n.entryNotFound),
       );
     }
 
-    final entry = group.entries[entryIndex];
     // Set active entry for global keyboard shortcuts (Ctrl+B/Ctrl+Shift+C)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
@@ -41,7 +40,8 @@ class EntryDetailScreen extends ConsumerWidget {
     });
     final title = entry.fields['Title']?.text ?? '';
     final colorScheme = Theme.of(context).colorScheme;
-    final isInRecycleBin = group.icon == KdbxIcon.trashBin;
+    final group = entry.parent;
+    final isInRecycleBin = group?.icon == KdbxIcon.trashBin;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,17 +57,17 @@ class EntryDetailScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.history_rounded, size: 20),
               tooltip: l10n.history,
-              onPressed: () => context.push('/entry/history?index=$entryIndex&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push('/entry/history?uuid=${entryUuid}&groupPath=${Uri.encodeComponent(groupPath)}'),
             ),
             IconButton(
               icon: const Icon(Icons.edit_rounded, size: 20),
               tooltip: l10n.edit,
-              onPressed: () => context.push('/entry/edit?index=$entryIndex&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push('/entry/edit?uuid=${entryUuid}&groupPath=${Uri.encodeComponent(groupPath)}'),
             ),
             IconButton(
               icon: const Icon(Icons.drive_file_move_rounded, size: 20),
               tooltip: l10n.move,
-              onPressed: () => _moveEntry(context, ref, entry, group),
+              onPressed: group != null ? () => _moveEntry(context, ref, entry, group) : null,
             ),
           ],
           IconButton(
@@ -75,7 +75,7 @@ class EntryDetailScreen extends ConsumerWidget {
             tooltip: isInRecycleBin ? l10n.permanentDelete : l10n.delete,
             onPressed: () => isInRecycleBin
                 ? _permanentDeleteEntry(context, ref, entry)
-                : _deleteEntry(context, ref, entry, group),
+                : group != null ? _deleteEntry(context, ref, entry, group) : null,
           ),
         ],
       ),
