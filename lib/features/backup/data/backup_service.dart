@@ -62,7 +62,8 @@ class BackupService {
           '${now.day.toString().padLeft(2, '0')}_'
           '${now.hour.toString().padLeft(2, '0')}'
           '${now.minute.toString().padLeft(2, '0')}'
-          '${now.second.toString().padLeft(2, '0')}';
+          '${now.second.toString().padLeft(2, '0')}_'
+          '${now.millisecond.toString().padLeft(3, '0')}';
       final dbName = filePath.split(Platform.pathSeparator).last.replaceAll('.kdbx', '');
       final filename = '${dbName}_$ts.kdbx';
       final backupFile = File('${dir.path}/$filename');

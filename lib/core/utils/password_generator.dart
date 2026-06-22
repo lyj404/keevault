@@ -22,6 +22,7 @@ class PasswordGenerator {
     bool useParentheses = true,
     String? customSymbols,
   }) {
+    length = length.clamp(1, 200);
     var chars = '';
     if (useUppercase) chars += defaultUppercase;
     if (useLowercase) chars += defaultLowercase;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/secure_storage_helper.dart';
 
@@ -30,6 +31,11 @@ class RecentFilesService {
   static const _lastOpenedKey = 'last_opened_file';
   final _storage = const SecureStorageHelper();
 
+  static bool _pathsEqual(String a, String b) {
+    if (Platform.isWindows) return a.toLowerCase() == b.toLowerCase();
+    return a == b;
+  }
+
   Future<List<RecentFile>> getRecentFiles() async {
     final data = await _storage.read(key: _key);
     if (data == null) return [];
@@ -46,7 +52,7 @@ class RecentFilesService {
 
   Future<void> addRecentFile(String filePath, {bool isCloud = false, String? remotePath, String? lastSyncedETag}) async {
     final files = await getRecentFiles();
-    files.removeWhere((f) => f.path == filePath);
+    files.removeWhere((f) => _pathsEqual(f.path, filePath));
     files.insert(0, RecentFile(path: filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: lastSyncedETag));
     if (files.length > AppConstants.maxRecentFiles) {
       files.removeRange(AppConstants.maxRecentFiles, files.length);
@@ -59,7 +65,7 @@ class RecentFilesService {
 
   Future<void> removeRecentFile(String filePath) async {
     final files = await getRecentFiles();
-    files.removeWhere((f) => f.path == filePath);
+    files.removeWhere((f) => _pathsEqual(f.path, filePath));
     await _storage.write(
       key: _key,
       value: jsonEncode(files.map((f) => f.toJson()).toList()),

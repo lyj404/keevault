@@ -193,8 +193,20 @@ class EntryHistoryScreen extends ConsumerWidget {
     // Restore times
     currentEntry.times.expires = historyEntry.times.expires;
     currentEntry.times.expiry = historyEntry.times.expiry;
-    // Restore custom data (e.g. TOTP configuration)
-    currentEntry.customData = historyEntry.customData;
+    // Deep copy custom data (e.g. TOTP configuration) to avoid shared reference
+    if (historyEntry.customData != null) {
+      currentEntry.customData = KdbxCustomData();
+      for (final e in historyEntry.customData!.map.entries) {
+        currentEntry.customData!.map[e.key] = KdbxCustomItem(value: e.value.value);
+      }
+    } else {
+      currentEntry.customData = null;
+    }
+    // Restore attachments (binaries)
+    currentEntry.binaries.clear();
+    for (final e in historyEntry.binaries.entries) {
+      currentEntry.binaries[e.key] = e.value;
+    }
     ref.read(databaseServiceProvider).markDirty();
     refreshExplorerLists(ref);
   }

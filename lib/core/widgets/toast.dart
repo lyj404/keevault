@@ -57,10 +57,12 @@ void showToast(BuildContext context, String message, {bool isError = false, Dura
     if (controller.isDismissed) return;
     try {
       await controller.reverse();
+    } catch (_) {}
+    try {
       entry.remove();
+    } catch (_) {}
+    try {
       controller.dispose();
-    } catch (_) {
-      // Controller or entry already disposed — safe to ignore.
-    }
+    } catch (_) {}
   });
 }

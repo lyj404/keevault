@@ -290,6 +290,7 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
       if (file.bytes != null) {
+        if (!mounted) return;
         setState(() {
           _newKeyData = file.bytes;
           _newKeyFileName = file.name;
