@@ -47,7 +47,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
 
     if (!exists) return;
-    _autoOpened = true;
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
       if (mounted) {
@@ -86,6 +85,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
         }
       } catch (e) {
+        _autoOpened = false;
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;

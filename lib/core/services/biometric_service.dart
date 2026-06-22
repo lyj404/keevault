@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/logger.dart';
+import '../utils/secure_storage_helper.dart';
 
 // Conditional import - only import on Android
 import 'biometric_service_impl_stub.dart'
@@ -12,26 +12,20 @@ class BiometricService {
   factory BiometricService() => _instance;
   BiometricService._();
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  static const _secureStorage = SecureStorageHelper();
 
   static const String _biometricEnabledKey = 'biometric_enabled';
   static const String _storedPasswordPrefix = 'biometric_password_';
 
   Future<bool> isBiometricAvailable() async {
-    final msg = 'BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}';
-    debugPrint(msg);
-    log.e(msg);
+    log.d('BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}');
     if (!Platform.isAndroid) return false;
     try {
       final result = await biometric.isBiometricAvailable();
-      final msg2 = 'BiometricService: isBiometricAvailable result=$result';
-      debugPrint(msg2);
-      log.e(msg2);
+      log.d('BiometricService: isBiometricAvailable result=$result');
       return result;
     } catch (e) {
-      final msg2 = 'BiometricService: Error checking biometric availability: $e';
-      debugPrint(msg2);
-      log.e(msg2);
+      log.e('BiometricService: Error checking biometric availability', error: e);
       return false;
     }
   }
@@ -41,28 +35,20 @@ class BiometricService {
     try {
       return await biometric.getAvailableBiometrics();
     } catch (e) {
-      final msg = 'BiometricService: Error getting available biometrics: $e';
-      debugPrint(msg);
-      log.e(msg);
+      log.e('BiometricService: Error getting available biometrics', error: e);
       return [];
     }
   }
 
   Future<bool> authenticate(String reason) async {
-    final msg = 'BiometricService: authenticate called, isAndroid=${Platform.isAndroid}';
-    debugPrint(msg);
-    log.e(msg);
+    log.d('BiometricService: authenticate called, isAndroid=${Platform.isAndroid}');
     if (!Platform.isAndroid) return false;
     try {
       final result = await biometric.authenticate(reason);
-      final msg2 = 'BiometricService: authenticate result=$result';
-      debugPrint(msg2);
-      log.e(msg2);
+      log.d('BiometricService: authenticate result=$result');
       return result;
     } catch (e) {
-      final msg2 = 'BiometricService: Authentication error: $e';
-      debugPrint(msg2);
-      log.e(msg2);
+      log.e('BiometricService: Authentication error', error: e);
       return false;
     }
   }
@@ -101,6 +87,8 @@ class BiometricService {
   }
 
   String _hashPath(String path) {
-    return path.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    final bytes = utf8.encode(path);
+    // Simple hash: use hashCode as hex string for collision-free key mapping
+    return bytes.hashCode.toRadixString(16);
   }
 }

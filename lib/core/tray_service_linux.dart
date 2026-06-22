@@ -25,10 +25,10 @@ class TrayServiceLinux implements TrayServiceBase {
     final debugPath = '$exeDir/../../../data/flutter_assets/assets/icons/app_icon.png';
 
     String iconPath;
-    if (File(releasePath).existsSync()) {
+    if (await File(releasePath).exists()) {
       iconPath = releasePath;
-    } else if (File(debugPath).existsSync()) {
-      iconPath = File(debugPath).resolveSymbolicLinksSync();
+    } else if (await File(debugPath).exists()) {
+      iconPath = await File(debugPath).resolveSymbolicLinks();
     } else {
       iconPath = releasePath;
     }

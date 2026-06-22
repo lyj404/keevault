@@ -29,7 +29,9 @@ class ExplorerScreen extends ConsumerWidget {
     return dbAsync.when(
       data: (db) {
         if (db == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => context.go('/welcome'));
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) context.go('/welcome');
+          });
           return const SizedBox.shrink();
         }
         return const _ExplorerBody();
@@ -121,7 +123,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       ref.read(selectedEntryProvider.notifier).state = entry;
       ref.read(activeEntryProvider.notifier).state = entry;
       final idx = currentGroup?.entries.indexOf(entry) ?? 0;
-      final path = service.getGroupPath(currentGroup!);
+      final path = currentGroup != null ? service.getGroupPath(currentGroup) : '';
       context.push('/entry/detail?index=$idx&groupPath=${Uri.encodeComponent(path)}');
     }
 
@@ -482,7 +484,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
     try {
       final file = result.files.single;
-      final bytes = file.bytes ?? await File(file.path!).readAsBytes();
+      final bytes = file.bytes ?? (file.path != null ? await File(file.path!).readAsBytes() : null);
+      if (bytes == null) {
+        if (context.mounted) showToast(context, l10n.importFailed('No file data'), isError: true);
+        return;
+      }
 
       // Try UTF-8 first, fall back to system encoding (handles GBK/ANSI on Chinese Windows)
       String content = utf8.decode(bytes, allowMalformed: true);
@@ -506,10 +512,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
       final dbService = ref.read(databaseServiceProvider);
       final db = dbService.db;
+      if (db == null) {
+        if (context.mounted) showToast(context, l10n.importFailed('Database not open'), isError: true);
+        return;
+      }
       final groupPath = ref.read(currentGroupPathProvider);
-      final targetGroup = dbService.findGroupByPath(groupPath) ?? db!.root;
+      final targetGroup = dbService.findGroupByPath(groupPath) ?? db.root;
 
-      final count = csvService.createEntries(entries, db!, targetGroup);
+      final count = csvService.createEntries(entries, db, targetGroup);
       dbService.markDirty();
       dbService.rebuildEntryCache();
       refreshExplorerLists(ref);
@@ -581,7 +591,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => _AddEntrySheet(group: group, ref: ref),
+      builder: (_) => _AddEntrySheet(group: group),
     );
   }
 
@@ -589,7 +599,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _AddGroupSheet(group: group, ref: ref),
+      builder: (_) => _AddGroupSheet(group: group),
     );
   }
 }
@@ -1569,16 +1579,15 @@ class _MobileGroupTile extends StatelessWidget {
 
 // ─── Add entry bottom sheet ──────────────────────────────────────────────
 
-class _AddEntrySheet extends StatefulWidget {
+class _AddEntrySheet extends ConsumerStatefulWidget {
   final KdbxGroup group;
-  final WidgetRef ref;
-  const _AddEntrySheet({required this.group, required this.ref});
+  const _AddEntrySheet({required this.group});
 
   @override
-  State<_AddEntrySheet> createState() => _AddEntrySheetState();
+  ConsumerState<_AddEntrySheet> createState() => _AddEntrySheetState();
 }
 
-class _AddEntrySheetState extends State<_AddEntrySheet> {
+class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
   final _titleCtrl = TextEditingController();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -1591,7 +1600,7 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
   @override
   void initState() {
     super.initState();
-    final service = widget.ref.read(databaseServiceProvider);
+    final service = ref.read(databaseServiceProvider);
     _entry = service.createEntry(widget.group);
   }
 
@@ -1599,7 +1608,7 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
   void dispose() {
     if (!_saved && _entry != null) {
       widget.group.entries.remove(_entry);
-      final service = widget.ref.read(databaseServiceProvider);
+      final service = ref.read(databaseServiceProvider);
       service.rebuildEntryCache();
     }
     _titleCtrl.dispose();
@@ -1725,7 +1734,7 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
                     const SizedBox(height: 8),
                     AttachmentsSection(
                       entry: _entry!,
-                      service: widget.ref.read(databaseServiceProvider),
+                      service: ref.read(databaseServiceProvider),
                       onChanged: () => setState(() {}),
                     ),
                   ],
@@ -1746,25 +1755,24 @@ class _AddEntrySheetState extends State<_AddEntrySheet> {
     _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
     _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
     _saved = true;
-    final service = widget.ref.read(databaseServiceProvider);
+    final service = ref.read(databaseServiceProvider);
     service.markDirty();
-    refreshExplorerLists(widget.ref);
+    refreshExplorerLists(ref);
     Navigator.pop(context);
   }
 }
 
 // ─── Add group bottom sheet ──────────────────────────────────────────────
 
-class _AddGroupSheet extends StatefulWidget {
+class _AddGroupSheet extends ConsumerStatefulWidget {
   final KdbxGroup group;
-  final WidgetRef ref;
-  const _AddGroupSheet({required this.group, required this.ref});
+  const _AddGroupSheet({required this.group});
 
   @override
-  State<_AddGroupSheet> createState() => _AddGroupSheetState();
+  ConsumerState<_AddGroupSheet> createState() => _AddGroupSheetState();
 }
 
-class _AddGroupSheetState extends State<_AddGroupSheet> {
+class _AddGroupSheetState extends ConsumerState<_AddGroupSheet> {
   final _nameCtrl = TextEditingController();
 
   @override
@@ -1842,9 +1850,9 @@ class _AddGroupSheetState extends State<_AddGroupSheet> {
 
   void _save() {
     if (_nameCtrl.text.isEmpty) return;
-    final service = widget.ref.read(databaseServiceProvider);
+    final service = ref.read(databaseServiceProvider);
     service.createGroup(widget.group, _nameCtrl.text);
-    refreshExplorerLists(widget.ref);
+    refreshExplorerLists(ref);
     if (mounted) Navigator.pop(context);
   }
 }

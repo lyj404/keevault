@@ -151,13 +151,14 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
                 hintText: 'JBSWY3DPEHPK3PXP',
                 border: const OutlineInputBorder(),
               ),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    initialValue: _period,
+                    value: _period,
                     decoration: InputDecoration(
                       labelText: l10n.totpPeriodLabel,
                       border: const OutlineInputBorder(),
@@ -174,7 +175,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    initialValue: _digits,
+                    value: _digits,
                     decoration: InputDecoration(
                       labelText: l10n.totpDigitsLabel,
                       border: const OutlineInputBorder(),
@@ -191,7 +192,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: _algorithm,
+              value: _algorithm,
               decoration: InputDecoration(
                 labelText: l10n.totpAlgorithmLabel,
                 border: const OutlineInputBorder(),

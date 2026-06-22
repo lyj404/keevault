@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/password_generator.dart';
 import '../utils/clipboard_utils.dart';
@@ -166,7 +165,10 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                       onChanged: (v) {
                         final n = int.tryParse(v);
                         if (n != null && n >= 4 && n <= 128) {
-                          setState(() => _length = n);
+                          setState(() {
+                            _length = n;
+                            _password = _generate();
+                          });
                         }
                       },
                     ),

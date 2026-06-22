@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
@@ -135,7 +136,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         }
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
       } catch (e) {
+        log.e('Sync failed', error: e);
         _ref.read(syncStateProvider.notifier).state = SyncState.error;
+        return false;
       }
     }
     return true;
@@ -171,7 +174,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _service.close();
     state = const AsyncValue.data(null);
     _ref.read(openedFromCloudProvider.notifier).state = false;
-    _ref.read(recentFilesServiceProvider).clearLastOpenedFile();
+    unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
     _ref.read(autoLockProvider.notifier).cancelTimer();
     _ref.invalidate(recentFilesProvider);
   }

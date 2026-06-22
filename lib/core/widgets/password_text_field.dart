@@ -71,6 +71,8 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
     0x00090054: '/', // Numpad Divide
   };
 
+  bool _listenerAttached = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,12 +85,25 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
     _focusNode = FocusNode(onKeyEvent: _handleKeyEvent);
     if (widget.showStrengthIndicator) {
       _controller.addListener(_onTextChanged);
+      _listenerAttached = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(PasswordTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.showStrengthIndicator && !_listenerAttached) {
+      _controller.addListener(_onTextChanged);
+      _listenerAttached = true;
+    } else if (!widget.showStrengthIndicator && _listenerAttached) {
+      _controller.removeListener(_onTextChanged);
+      _listenerAttached = false;
     }
   }
 
   @override
   void dispose() {
-    if (widget.showStrengthIndicator) {
+    if (_listenerAttached) {
       _controller.removeListener(_onTextChanged);
     }
     _focusNode.dispose();

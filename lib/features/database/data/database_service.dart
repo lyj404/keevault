@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/crypto/crypto_service.dart';
@@ -124,15 +123,8 @@ class DatabaseService {
   }
 
   void _localizeRecycleBin() {
-    if (_db == null) return;
-    final rb = _db!.recycleBin;
-    if (rb == null) return;
-    final lang = ui.PlatformDispatcher.instance.locale.languageCode;
-    if (lang == 'zh') {
-      if (rb.name == 'Recycle Bin') rb.name = '回收站';
-    } else {
-      if (rb.name == '回收站') rb.name = 'Recycle Bin';
-    }
+    // Intentionally no-op: localizing the recycle bin name on every open
+    // causes unnecessary dirty state and sync conflicts for bilingual users.
   }
 
   /// Saves the database to disk and returns the serialized bytes.
@@ -142,7 +134,10 @@ class DatabaseService {
     if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
     final db = _db!;
-    final bytes = await Isolate.run(() => db.save());
+    final bytes = await Isolate.run(() {
+      CryptoService.initialize();
+      return db.save();
+    });
     if (await _backupService.isAutoBackupEnabled()) {
       unawaited(_backupService.createBackup(_filePath!).catchError((e) {
         log.e('Auto-backup failed', error: e);
@@ -171,7 +166,10 @@ class DatabaseService {
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
     final db = _db!;
-    final bytes = await Isolate.run(() => db.save());
+    final bytes = await Isolate.run(() {
+      CryptoService.initialize();
+      return db.save();
+    });
     return Uint8List.fromList(bytes);
   }
 

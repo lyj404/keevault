@@ -192,6 +192,11 @@ class EntryHistoryScreen extends ConsumerWidget {
     for (final field in historyEntry.fields.entries) {
       currentEntry.fields[field.key] = field.value;
     }
+    // Restore times
+    currentEntry.times.expires = historyEntry.times.expires;
+    currentEntry.times.expiry = historyEntry.times.expiry;
+    // Restore custom data (e.g. TOTP configuration)
+    currentEntry.customData = historyEntry.customData;
     ref.read(databaseServiceProvider).markDirty();
     refreshExplorerLists(ref);
   }

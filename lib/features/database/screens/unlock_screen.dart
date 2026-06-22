@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,7 +61,13 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       if (next.isLoading) {
         setState(() => _error = null);
       } else if (next.hasValue) {
-        if (next.value != null) context.go('/explorer');
+        if (next.value != null) {
+          // Store password for biometric only after successful unlock
+          if (Platform.isAndroid && ref.read(biometricEnabledProvider)) {
+            BiometricService().storePassword(widget.filePath, _passwordController.text);
+          }
+          context.go('/explorer');
+        }
       } else if (next.hasError) {
         setState(() => _error = _friendlyError(next.error!, l10n));
       }
@@ -239,11 +244,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
 
-    // Store password if biometric is enabled
-    if (Platform.isAndroid && ref.read(biometricEnabledProvider)) {
-      BiometricService().storePassword(widget.filePath, _passwordController.text);
-    }
-
+    // Password will be stored after successful unlock in the ref.listen callback
     ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
   }
 
@@ -265,6 +266,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       return;
     }
 
+    if (!mounted) return;
     setState(() => _error = null);
     ref.read(databaseProvider.notifier).openFile(widget.filePath, storedPassword, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
   }

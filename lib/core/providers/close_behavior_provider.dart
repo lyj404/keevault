@@ -27,9 +27,13 @@ class CloseBehaviorNotifier extends StateNotifier<CloseBehavior> {
 
   Future<void> _load() async {
     final value = await _storage.read(key: _key);
-    if (value == 'exit') state = CloseBehavior.exit;
-    if (value == 'minimizeToTray') state = CloseBehavior.minimizeToTray;
-    if (value == 'ask' || value == null) state = CloseBehavior.ask;
+    if (value == 'exit') {
+      state = CloseBehavior.exit;
+    } else if (value == 'minimizeToTray') {
+      state = CloseBehavior.minimizeToTray;
+    } else {
+      state = CloseBehavior.ask;
+    }
   }
 
   Future<void> setCloseBehavior(CloseBehavior behavior) async {

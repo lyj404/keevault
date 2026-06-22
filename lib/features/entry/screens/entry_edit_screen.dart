@@ -74,7 +74,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   void _loadEntry() {
     final service = ref.read(databaseServiceProvider);
     final group = service.findGroupByPath(widget.groupPath);
-    if (group != null && widget.entryIndex != null && widget.entryIndex! < group.entries.length) {
+    if (group != null && widget.entryIndex != null && widget.entryIndex! >= 0 && widget.entryIndex! < group.entries.length) {
       final entry = group.entries[widget.entryIndex!];
       _titleCtrl.text = entry.fields['Title']?.text ?? '';
       _usernameCtrl.text = entry.fields['UserName']?.text ?? '';
@@ -557,7 +557,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   }
 
   void _save() {
-    if (!_formKey.currentState!.validate()) return;
+    // Custom field validation is done below; no form-level validators to check.
     if (_entry == null) return;
 
     final l10n = AppLocalizations.of(context)!;
@@ -603,11 +603,15 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _entry!.fields.remove(key);
     }
 
+    // Remove old keys first (separate pass to avoid data loss on field rename swaps)
     for (final f in _customFields) {
       final name = f.nameCtrl.text.trim();
       if (f.originalKey.isNotEmpty && f.originalKey != name) {
         _entry!.fields.remove(f.originalKey);
       }
+    }
+    for (final f in _customFields) {
+      final name = f.nameCtrl.text.trim();
       _entry!.fields[name] = KdbxTextField.fromText(
         text: f.valueCtrl.text,
         protected: f.protected,

@@ -13,7 +13,7 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
-  static const String _version = '0.4.6';
+  static const String _version = '0.4.7';
   static const String _buildNumber = '1';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
@@ -74,8 +74,8 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   int _compareVersions(String v1, String v2) {
-    final parts1 = v1.split('.').map(int.parse).toList();
-    final parts2 = v2.split('.').map(int.parse).toList();
+    final parts1 = v1.split('.').map((s) => int.tryParse(s) ?? 0).toList();
+    final parts2 = v2.split('.').map((s) => int.tryParse(s) ?? 0).toList();
 
     for (var i = 0; i < 3; i++) {
       final p1 = i < parts1.length ? parts1[i] : 0;

@@ -25,29 +25,6 @@ class RecentFile {
       );
 }
 
-class LastOpenedFile {
-  final String path;
-  final bool isCloud;
-  final String? remotePath;
-  final String? lastSyncedETag;
-
-  const LastOpenedFile({required this.path, this.isCloud = false, this.remotePath, this.lastSyncedETag});
-
-  Map<String, dynamic> toJson() => {
-        'path': path,
-        'isCloud': isCloud,
-        if (remotePath != null) 'remotePath': remotePath,
-        if (lastSyncedETag != null) 'lastSyncedETag': lastSyncedETag,
-      };
-
-  factory LastOpenedFile.fromJson(Map<String, dynamic> json) => LastOpenedFile(
-        path: json['path'] as String? ?? '',
-        isCloud: json['isCloud'] as bool? ?? false,
-        remotePath: json['remotePath'] as String?,
-        lastSyncedETag: json['lastSyncedETag'] as String?,
-      );
-}
-
 class RecentFilesService {
   static const _key = 'recent_files';
   static const _lastOpenedKey = 'last_opened_file';
@@ -89,11 +66,11 @@ class RecentFilesService {
     );
   }
 
-  Future<LastOpenedFile?> getLastOpenedFile() async {
+  Future<RecentFile?> getLastOpenedFile() async {
     final data = await _storage.read(key: _lastOpenedKey);
     if (data == null) return null;
     try {
-      return LastOpenedFile.fromJson(jsonDecode(data) as Map<String, dynamic>);
+      return RecentFile.fromJson(jsonDecode(data) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
@@ -102,7 +79,7 @@ class RecentFilesService {
   Future<void> setLastOpenedFile(String filePath, {bool isCloud = false, String? remotePath, String? lastSyncedETag}) async {
     await _storage.write(
       key: _lastOpenedKey,
-      value: jsonEncode(LastOpenedFile(path: filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: lastSyncedETag).toJson()),
+      value: jsonEncode(RecentFile(path: filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: lastSyncedETag).toJson()),
     );
   }
 

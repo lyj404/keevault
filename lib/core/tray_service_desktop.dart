@@ -31,8 +31,8 @@ class TrayServiceDesktop implements TrayServiceBase {
 
       if (File(releasePath).existsSync()) {
         iconPath = releasePath;
-      } else if (File(debugPath).existsSync()) {
-        iconPath = File(debugPath).resolveSymbolicLinksSync();
+      } else if (await File(debugPath).exists()) {
+        iconPath = await File(debugPath).resolveSymbolicLinks();
       } else {
         iconPath = releasePath;
       }

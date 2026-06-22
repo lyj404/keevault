@@ -610,10 +610,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     await ref.read(webDavSettingsServiceProvider).saveConfig(config);
     ref.invalidate(webDavConfigProvider);
-    final l10n = AppLocalizations.of(context)!;
     if (mounted) {
+      final l10n = AppLocalizations.of(context)!;
       showToast(context, l10n.saved);
-      Navigator.of(context).pop();
+      context.pop();
     }
   }
 
@@ -626,7 +626,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return;
       }
     } else {
-      await BiometricService().clearAllStoredPasswords();
+      final biometricService = BiometricService();
+      await biometricService.clearAllStoredPasswords();
     }
     await ref.read(unlockMethodProvider.notifier).setMethod(method);
     if (mounted) {

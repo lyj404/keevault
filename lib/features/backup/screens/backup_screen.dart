@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
+import '../data/backup_service.dart';
 import '../providers/backup_provider.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
@@ -322,7 +323,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 }
 
 class _BackupTile extends StatelessWidget {
-  final dynamic backup;
+  final BackupInfo backup;
   final Brightness brightness;
   final VoidCallback onRestore;
   final VoidCallback onDelete;

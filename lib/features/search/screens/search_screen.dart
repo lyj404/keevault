@@ -68,7 +68,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   itemCount: results.length,
                   itemBuilder: (ctx, i) {
                     final entry = results[i];
-                    final groupPath = service.getGroupPath(entry.parent!);
+                    final groupPath = entry.parent != null ? service.getGroupPath(entry.parent!) : '';
                     return RepaintBoundary(
                       child: EntryListTile(
                         key: ValueKey(entry.uuid),

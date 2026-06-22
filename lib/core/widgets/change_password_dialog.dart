@@ -163,8 +163,8 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
         newKeyData: keyData,
       );
       if (mounted) {
-        Navigator.pop(context);
         showToast(context, l10n.passwordChanged);
+        Navigator.pop(context);
       }
     } on InvalidCredentialsError {
       if (mounted) {
@@ -219,7 +219,7 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(l10n.changeKeyFile ?? '更换'),
+            child: Text(l10n.changeKeyFile),
           ),
           const SizedBox(width: 4),
           TextButton(

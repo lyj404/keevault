@@ -19,7 +19,9 @@ class FileLogOutput extends LogOutput {
 
   /// Buffered events written before [init] completes.
   final List<OutputEvent> _buffer = [];
+  static const _maxBufferSize = 100;
   bool _ready = false;
+  bool _initFailed = false;
 
   FileLogOutput({Level minLevel = Level.error}) : _minLevel = minLevel;
 
@@ -40,7 +42,9 @@ class FileLogOutput extends LogOutput {
       _sink?.writeln('${DateTime.now()} [INFO] FileLogOutput initialized, path=${_file?.path}');
       _sink?.flush();
     } catch (_) {
-      // If file init fails, silently skip — console still works.
+      // If file init fails, stop buffering to avoid unbounded memory growth.
+      _initFailed = true;
+      _buffer.clear();
     }
   }
 
@@ -49,7 +53,10 @@ class FileLogOutput extends LogOutput {
     if (event.level.index < _minLevel.index) return;
 
     if (!_ready) {
-      _buffer.add(event);
+      if (_initFailed) return;
+      if (_buffer.length < _maxBufferSize) {
+        _buffer.add(event);
+      }
       return;
     }
     _writeEvent(event);

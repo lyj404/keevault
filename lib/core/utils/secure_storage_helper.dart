@@ -38,4 +38,12 @@ class SecureStorageHelper {
       await _storage.delete(key: key);
     } catch (_) {}
   }
+
+  Future<Map<String, String>> readAll() async {
+    try {
+      return await _storage.readAll();
+    } catch (_) {
+      return {};
+    }
+  }
 }

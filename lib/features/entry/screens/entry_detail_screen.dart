@@ -33,9 +33,11 @@ class EntryDetailScreen extends ConsumerWidget {
     }
 
     final entry = group.entries[entryIndex];
-    // Set active entry for global keyboard shortcuts (Ctrl+B/C)
+    // Set active entry for global keyboard shortcuts (Ctrl+B/Ctrl+Shift+C)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(activeEntryProvider.notifier).state = entry;
+      if (context.mounted) {
+        ref.read(activeEntryProvider.notifier).state = entry;
+      }
     });
     final title = entry.fields['Title']?.text ?? '';
     final colorScheme = Theme.of(context).colorScheme;

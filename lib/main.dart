@@ -65,14 +65,18 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     );
   }
 
-  void _showWindow() async {
-    await windowManager.show();
-    await windowManager.focus();
+  Future<void> _showWindow() async {
+    try {
+      await windowManager.show();
+      await windowManager.focus();
+    } catch (_) {}
   }
 
-  void _exitApp() async {
-    await windowManager.setPreventClose(false);
-    await windowManager.close();
+  Future<void> _exitApp() async {
+    try {
+      await windowManager.setPreventClose(false);
+      await windowManager.close();
+    } catch (_) {}
   }
 
   @override

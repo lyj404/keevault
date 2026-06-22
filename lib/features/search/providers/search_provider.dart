@@ -7,6 +7,6 @@ final searchQueryProvider = StateProvider<String>((ref) => '');
 final searchResultsProvider = Provider<List<KdbxEntry>>((ref) {
   final query = ref.watch(searchQueryProvider);
   if (query.isEmpty) return [];
-  final service = ref.read(databaseServiceProvider);
+  final service = ref.watch(databaseServiceProvider);
   return service.search(query);
 });
