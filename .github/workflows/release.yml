@@ -17,12 +17,31 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/kreepto-rust/target
+          key: windows-cargo-${{ hashFiles('native/kreepto-rust/Cargo.toml') }}
+          restore-keys: windows-cargo-
+
+      - name: Build kreepto native library
+        run: cargo build --release
+        working-directory: native/kreepto-rust
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
 
       - run: flutter pub get
       - run: flutter build windows --release
+
+      - name: Bundle native library
+        run: cp native/kreepto-rust/target/release/kreepto.dll build/windows/x64/runner/Release/
 
       - name: Package
         shell: pwsh
@@ -40,6 +59,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/kreepto-rust/target
+          key: linux-cargo-${{ hashFiles('native/kreepto-rust/Cargo.toml') }}
+          restore-keys: linux-cargo-
+
+      - name: Build kreepto native library
+        run: cargo build --release
+        working-directory: native/kreepto-rust
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -47,6 +82,9 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev clang cmake pkg-config libsecret-1-dev libayatana-appindicator3-dev
       - run: flutter pub get
       - run: flutter build linux --release
+
+      - name: Bundle native library
+        run: cp native/kreepto-rust/target/release/libkreepto.so build/linux/x64/release/bundle/lib/
 
       - name: Package tar.gz
         run: |
@@ -121,6 +159,48 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/kreepto-rust/target
+          key: android-cargo-${{ hashFiles('native/kreepto-rust/Cargo.toml') }}
+          restore-keys: android-cargo-
+
+      - name: Build kreepto for Android
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          set -e
+          TOOLCHAIN=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64
+
+          mkdir -p native/kreepto-rust/.cargo
+          cat > native/kreepto-rust/.cargo/config.toml << EOF
+          [target.aarch64-linux-android]
+          linker = "$TOOLCHAIN/bin/aarch64-linux-android35-clang"
+          ar = "$TOOLCHAIN/bin/llvm-ar"
+
+          [target.armv7-linux-androideabi]
+          linker = "$TOOLCHAIN/bin/armv7a-linux-androideabi35-clang"
+          ar = "$TOOLCHAIN/bin/llvm-ar"
+
+          [target.x86_64-linux-android]
+          linker = "$TOOLCHAIN/bin/x86_64-linux-android35-clang"
+          ar = "$TOOLCHAIN/bin/llvm-ar"
+          EOF
+          sed -i 's/^          //' native/kreepto-rust/.cargo/config.toml
+
+          cd native/kreepto-rust
+          cargo build --release --target aarch64-linux-android
+          cargo build --release --target armv7-linux-androideabi
+          cargo build --release --target x86_64-linux-android
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -144,6 +224,16 @@ jobs:
           } > android/key.properties
 
       - run: flutter pub get
+
+      - name: Bundle native libraries for Android
+        run: |
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            mkdir -p android/app/src/main/jniLibs/$abi
+          done
+          cp native/kreepto-rust/target/aarch64-linux-android/release/libkreepto.so android/app/src/main/jniLibs/arm64-v8a/
+          cp native/kreepto-rust/target/armv7-linux-androideabi/release/libkreepto.so android/app/src/main/jniLibs/armeabi-v7a/
+          cp native/kreepto-rust/target/x86_64-linux-android/release/libkreepto.so android/app/src/main/jniLibs/x86_64/
+
       - run: flutter build apk --release --split-per-abi
 
       - name: Package
