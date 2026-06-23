@@ -45,7 +45,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
         copyToClipboardWithAutoClear(username);
         message = AppLocalizations.of(navCtx)!.copiedUsername;
       }
-    } else if (event.logicalKey == LogicalKeyboardKey.keyC && HardwareKeyboard.instance.isShiftPressed) {
+    } else if (event.logicalKey == LogicalKeyboardKey.keyC) {
       final password = activeEntry.fields['Password']?.text ?? '';
       if (password.isNotEmpty) {
         copyToClipboardWithAutoClear(password);
