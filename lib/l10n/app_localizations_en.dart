@@ -869,7 +869,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totpInvalidUri => 'Invalid otpauth:// URI or Base32 secret';
 
   @override
+  String get copiedUrl => 'Copied URL';
+
+  @override
   String get copiedTotp => 'Copied TOTP';
+
+  @override
+  String get copyUrl => 'Copy URL';
+
+  @override
+  String get copyTotp => 'Copy TOTP';
 
   @override
   String get deleteTotp => 'Delete TOTP';

@@ -855,7 +855,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get totpInvalidUri => '无效的 otpauth:// 链接或 Base32 密钥';
 
   @override
+  String get copiedUrl => '已复制网址';
+
+  @override
   String get copiedTotp => '已复制 TOTP';
+
+  @override
+  String get copyUrl => '复制网址';
+
+  @override
+  String get copyTotp => '复制 TOTP';
 
   @override
   String get deleteTotp => '删除 TOTP';

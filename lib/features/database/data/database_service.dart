@@ -234,10 +234,14 @@ class DatabaseService {
       final username = entry.fields['UserName']?.text ?? '';
       final url = entry.fields['URL']?.text ?? '';
       final notes = entry.fields['Notes']?.text ?? '';
+      final customMatch = entry.fields.entries
+          .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
+          .any((e) => e.value.text.toLowerCase().contains(lowerQuery));
       return title.toLowerCase().contains(lowerQuery) ||
           username.toLowerCase().contains(lowerQuery) ||
           url.toLowerCase().contains(lowerQuery) ||
-          notes.toLowerCase().contains(lowerQuery);
+          notes.toLowerCase().contains(lowerQuery) ||
+          customMatch;
     }).toList();
   }
 

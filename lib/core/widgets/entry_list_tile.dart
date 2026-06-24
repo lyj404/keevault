@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../theme/app_theme.dart';
 import '../utils/clipboard_utils.dart';
+import '../../features/totp/data/totp_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'toast.dart';
 
@@ -20,6 +21,18 @@ class EntryListTile extends StatelessWidget {
   String get _username => entry.fields['UserName']?.text ?? '';
   String get _password => entry.fields['Password']?.text ?? '';
   bool get _isExpired => entry.times.expires && entry.times.expiry.time != null && entry.times.expiry.time!.isBefore(DateTime.now());
+
+  String? _getTotpCode() {
+    final cd = entry.customData;
+    if (cd == null) return null;
+    final secret = cd.map['TimeOtp-Secret']?.value;
+    if (secret == null || secret.isEmpty) return null;
+    final period = int.tryParse(cd.map['TimeOtp-Period']?.value ?? '') ?? 30;
+    final digits = int.tryParse(cd.map['TimeOtp-Size']?.value ?? '') ?? 6;
+    final algorithm = cd.map['TimeOtp-Algorithm']?.value ?? 'HMAC-SHA-1';
+    final config = TotpConfig(secret: secret, period: period, digits: digits, algorithm: algorithm);
+    return TotpService().generateCode(config);
+  }
 
   void _showContextMenu(BuildContext context, Offset globalPos) {
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
@@ -42,6 +55,20 @@ class EntryListTile extends StatelessWidget {
         child: ListTile(leading: const Icon(Icons.person_rounded), title: Text(l10n.copyUsername), dense: true, contentPadding: EdgeInsets.zero),
       ),
     ];
+    final url = entry.fields['URL']?.text ?? '';
+    if (url.isNotEmpty) {
+      items.add(PopupMenuItem(
+        value: 'copy_url',
+        child: ListTile(leading: const Icon(Icons.link_rounded), title: Text(l10n.copyUrl), dense: true, contentPadding: EdgeInsets.zero),
+      ));
+    }
+    final hasTotp = entry.customData?.map['TimeOtp-Secret']?.value != null;
+    if (hasTotp) {
+      items.add(PopupMenuItem(
+        value: 'copy_totp',
+        child: ListTile(leading: const Icon(Icons.timer_rounded), title: Text(l10n.copyTotp), dense: true, contentPadding: EdgeInsets.zero),
+      ));
+    }
     if (onMove != null) {
       items.add(PopupMenuItem(
         value: 'move',
@@ -70,6 +97,15 @@ class EntryListTile extends StatelessWidget {
           if (_username.isNotEmpty) {
             copyToClipboardWithAutoClear(_username);
             showToast(context, l10n.copiedUsername);
+          }
+        case 'copy_url':
+          copyToClipboardWithAutoClear(entry.fields['URL']?.text ?? '');
+          showToast(context, l10n.copiedUrl);
+        case 'copy_totp':
+          final totpCode = _getTotpCode();
+          if (totpCode != null) {
+            copyToClipboardWithAutoClear(totpCode);
+            showToast(context, l10n.copiedTotp);
           }
         case 'move':
           onMove?.call();

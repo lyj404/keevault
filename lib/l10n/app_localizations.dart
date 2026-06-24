@@ -1724,11 +1724,29 @@ abstract class AppLocalizations {
   /// **'无效的 otpauth:// 链接或 Base32 密钥'**
   String get totpInvalidUri;
 
+  /// No description provided for @copiedUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制网址'**
+  String get copiedUrl;
+
   /// No description provided for @copiedTotp.
   ///
   /// In zh, this message translates to:
   /// **'已复制 TOTP'**
   String get copiedTotp;
+
+  /// No description provided for @copyUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制网址'**
+  String get copyUrl;
+
+  /// No description provided for @copyTotp.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制 TOTP'**
+  String get copyTotp;
 
   /// No description provided for @deleteTotp.
   ///

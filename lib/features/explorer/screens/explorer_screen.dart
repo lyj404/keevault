@@ -1885,22 +1885,33 @@ class _ShortcutHintBar extends StatelessWidget {
           top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
         ),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          if (username.isNotEmpty) ...[
-            const _KeyChip(label: 'Ctrl+B'),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            if (username.isNotEmpty) ...[
+              const _KeyChip(label: 'Ctrl+B'),
+              const SizedBox(width: 4),
+              Text(l10n.copyUsername, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+              const SizedBox(width: 16),
+            ],
+            if (password.isNotEmpty) ...[
+              const _KeyChip(label: 'Ctrl+C'),
+              const SizedBox(width: 4),
+              Text(l10n.copyPassword, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+              const SizedBox(width: 16),
+            ],
+            const _KeyChip(label: 'Ctrl+U'),
             const SizedBox(width: 4),
-            Text(l10n.copyUsername, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(l10n.copyUrl, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
             const SizedBox(width: 16),
-          ],
-          if (password.isNotEmpty) ...[
-            const _KeyChip(label: 'Ctrl+C'),
+            const _KeyChip(label: 'Ctrl+T'),
             const SizedBox(width: 4),
-            Text(l10n.copyPassword, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(l10n.copyTotp, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
           ],
-        ],
+        ),
       ),
     );
   }

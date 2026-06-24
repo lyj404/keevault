@@ -9,6 +9,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/utils/clipboard_utils.dart';
 import 'features/explorer/providers/explorer_provider.dart';
+import 'features/totp/data/totp_service.dart';
 import 'l10n/app_localizations.dart';
 
 class KeeVaultApp extends ConsumerStatefulWidget {
@@ -51,6 +52,18 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
         copyToClipboardWithAutoClear(password);
         message = AppLocalizations.of(navCtx)!.copiedPassword;
       }
+    } else if (event.logicalKey == LogicalKeyboardKey.keyU) {
+      final url = activeEntry.fields['URL']?.text ?? '';
+      if (url.isNotEmpty) {
+        copyToClipboardWithAutoClear(url);
+        message = AppLocalizations.of(navCtx)!.copiedUrl;
+      }
+    } else if (event.logicalKey == LogicalKeyboardKey.keyT) {
+      final totpCode = _getTotpCode(activeEntry);
+      if (totpCode != null) {
+        copyToClipboardWithAutoClear(totpCode);
+        message = AppLocalizations.of(navCtx)!.copiedTotp;
+      }
     }
 
     if (message != null) {
@@ -66,6 +79,18 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
+  }
+
+  String? _getTotpCode(dynamic entry) {
+    final cd = entry.customData;
+    if (cd == null) return null;
+    final secret = cd.map['TimeOtp-Secret']?.value;
+    if (secret == null || secret.isEmpty) return null;
+    final period = int.tryParse(cd.map['TimeOtp-Period']?.value ?? '') ?? 30;
+    final digits = int.tryParse(cd.map['TimeOtp-Size']?.value ?? '') ?? 6;
+    final algorithm = cd.map['TimeOtp-Algorithm']?.value ?? 'HMAC-SHA-1';
+    final config = TotpConfig(secret: secret, period: period, digits: digits, algorithm: algorithm);
+    return TotpService().generateCode(config);
   }
 
   @override
