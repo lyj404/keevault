@@ -70,7 +70,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
       ScaffoldMessenger.of(navCtx).showSnackBar(
         SnackBar(
           content: Text(message, style: const TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF388E3C),
+          backgroundColor: const Color(0xFF0D9488),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

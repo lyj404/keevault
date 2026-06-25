@@ -2,45 +2,47 @@ import 'package:flutter/material.dart';
 
 /// Claymorphism design system for KeeVault.
 /// Soft, rounded shapes with inner/outer shadows creating a clay-like 3D feel.
+/// Color scheme: Teal Green (matching logo)
 class ClayColors {
   // Primary palette – teal green
   static const primary = Color(0xFF0D9488);
   static const primaryLight = Color(0xFF2DD4BF);
   static const primaryDark = Color(0xFF0F766E);
-  static const primaryMuted = Color(0xFF5AB8AD);
+  static const primaryMuted = Color(0xFF5EEAD4);
 
   // Secondary – emerald accent
   static const secondary = Color(0xFF10B981);
   static const secondaryLight = Color(0xFF34D399);
-  static const secondaryMuted = Color(0xFF6DC7A8);
+  static const secondaryMuted = Color(0xFF6EE7B7);
 
   // Tertiary – amber warm accent
   static const tertiary = Color(0xFFF59E0B);
   static const tertiaryLight = Color(0xFFFBBF24);
 
-  // Surfaces – warm cream tones
+  // Surfaces – warm cream tones (light)
   static const surfaceLight = Color(0xFFF5F9F8);
   static const surfaceCardLight = Color(0xFFFFFFFF);
   static const surfaceContainerLight = Color(0xFFECF5F3);
 
-  // Dark surfaces
-  static const surfaceDark = Color(0xFF111918);
-  static const surfaceCardDark = Color(0xFF1A2625);
-  static const surfaceContainerDark = Color(0xFF22302E);
+  // Dark surfaces – deep teal-black
+  static const surfaceDark = Color(0xFF0F1A19);
+  static const surfaceCardDark = Color(0xFF1A2B29);
+  static const surfaceContainerDark = Color(0xFF223835);
 
-  // Text
+  // Text (light mode)
   static const onSurfaceLight = Color(0xFF1A2B29);
   static const onSurfaceVariantLight = Color(0xFF5F7370);
   static const outlineLight = Color(0xFF8FA5A2);
 
+  // Text (dark mode)
   static const onSurfaceDark = Color(0xFFE0F0ED);
   static const onSurfaceVariantDark = Color(0xFFA3B8B5);
   static const outlineDark = Color(0xFF6B807D);
 
   // Error
-  static const error = Color(0xFFEF5350);
-  static const errorLight = Color(0xFFFFCDD2);
-  static const errorDark = Color(0xFFD32F2F);
+  static const error = Color(0xFFEF4444);
+  static const errorLight = Color(0xFFFEE2E2);
+  static const errorDark = Color(0xFFDC2626);
 }
 
 /// Pre-built clay box decorations for reuse across the app.
@@ -63,12 +65,12 @@ class ClayDecoration {
     }
     return [
       BoxShadow(
-        color: const Color(0xFF8AB8B3).withValues(alpha: 0.3),
+        color: const Color(0xFF5EEAD4).withValues(alpha: 0.25),
         blurRadius: 16,
         offset: const Offset(0, 6),
       ),
       BoxShadow(
-        color: const Color(0xFF8AB8B3).withValues(alpha: 0.12),
+        color: const Color(0xFF5EEAD4).withValues(alpha: 0.1),
         blurRadius: 4,
         offset: const Offset(0, 2),
       ),
@@ -88,7 +90,7 @@ class ClayDecoration {
     }
     return [
       BoxShadow(
-        color: const Color(0xFFB8D8D3).withValues(alpha: 0.4),
+        color: const Color(0xFF6EE7B7).withValues(alpha: 0.4),
         blurRadius: 8,
         offset: const Offset(0, 2),
       ),
@@ -224,9 +226,9 @@ class AppTheme {
         outlineVariant: ClayColors.outlineLight.withValues(alpha: 0.3),
         surfaceContainerLowest: Colors.white,
         surfaceContainerLow: ClayColors.surfaceContainerLight,
-        surfaceContainer: const Color(0xFFE0EFEC),
-        surfaceContainerHigh: const Color(0xFFD4E8E4),
-        surfaceContainerHighest: const Color(0xFFC8E0DC),
+        surfaceContainer: const Color(0xFFD5E8E4),
+        surfaceContainerHigh: const Color(0xFFC8DFD9),
+        surfaceContainerHighest: const Color(0xFFB8D4CC),
       ),
       scaffoldBackgroundColor: ClayColors.surfaceLight,
       appBarTheme: AppBarTheme(
@@ -394,11 +396,11 @@ class AppTheme {
         onSurfaceVariant: ClayColors.onSurfaceVariantDark,
         outline: ClayColors.outlineDark,
         outlineVariant: ClayColors.outlineDark.withValues(alpha: 0.3),
-        surfaceContainerLowest: const Color(0xFF0D1514),
+        surfaceContainerLowest: const Color(0xFF0A1615),
         surfaceContainerLow: ClayColors.surfaceContainerDark,
-        surfaceContainer: const Color(0xFF2A3B38),
-        surfaceContainerHigh: const Color(0xFF334542),
-        surfaceContainerHighest: const Color(0xFF3C4F4C),
+        surfaceContainer: const Color(0xFF2A3F3C),
+        surfaceContainerHigh: const Color(0xFF34504C),
+        surfaceContainerHighest: const Color(0xFF3E605B),
       ),
       scaffoldBackgroundColor: ClayColors.surfaceDark,
       appBarTheme: AppBarTheme(

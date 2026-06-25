@@ -680,7 +680,7 @@ class _WideLayout extends StatelessWidget {
               color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
               boxShadow: [
                 BoxShadow(
-                  color: (isDark ? Colors.black : const Color(0xFF8AB8B3)).withValues(alpha: isDark ? 0.2 : 0.12),
+                  color: (isDark ? Colors.black : const Color(0xFF5EEAD4)).withValues(alpha: isDark ? 0.2 : 0.12),
                   blurRadius: 16,
                   offset: const Offset(2, 0),
                 ),

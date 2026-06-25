@@ -10,8 +10,8 @@ void showToast(BuildContext context, String message, {bool isError = false, Dura
       .animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
 
   final bgColor = isError
-      ? const Color(0xFFD32F2F)
-      : const Color(0xFF388E3C);
+      ? const Color(0xFFEF4444)
+      : const Color(0xFF0D9488);
 
   entry = OverlayEntry(
     builder: (_) => Align(
