@@ -62,8 +62,10 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         setState(() => _error = null);
       } else if (next.hasValue) {
         if (next.value != null) {
-          // Store password for biometric only after successful unlock
-          if (Platform.isAndroid && ref.read(biometricEnabledProvider)) {
+          // Store password for biometric only after successful manual unlock
+          // (skip when biometric was used — _passwordController.text is empty then,
+          //  overwriting would corrupt the stored password)
+          if (Platform.isAndroid && ref.read(biometricEnabledProvider) && _passwordController.text.isNotEmpty) {
             BiometricService().storePassword(widget.filePath, _passwordController.text);
           }
           context.go('/explorer');
