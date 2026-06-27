@@ -327,6 +327,9 @@
   "toggleFlashlight": "Toggle Flashlight",
   "switchCamera": "Switch Camera",
 
+  "shortcutSearch": "Search",
+  "shortcutSave": "Save",
+
   "biometricUnlock": "Biometric Unlock",
   "biometricUnlockDescription": "Unlock with fingerprint or face recognition",
   "authenticateToEnableBiometric": "Authenticate to enable biometric unlock",

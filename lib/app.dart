@@ -1,13 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'core/providers/auto_lock_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/utils/clipboard_utils.dart';
+import 'features/database/providers/database_provider.dart';
 import 'features/explorer/providers/explorer_provider.dart';
 import 'features/totp/data/totp_service.dart';
 import 'l10n/app_localizations.dart';
@@ -33,36 +36,54 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
     if (!isCtrl) return KeyEventResult.ignored;
 
-    final activeEntry = ref.read(activeEntryProvider);
-    if (activeEntry == null) return KeyEventResult.ignored;
-
     final navCtx = rootNavigatorKey.currentContext;
     if (navCtx == null) return KeyEventResult.ignored;
+
+    final l10n = AppLocalizations.of(navCtx);
+
+    // Ctrl+F and Ctrl+S are desktop-only shortcuts
+    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
+      // Ctrl+F: navigate to search
+      if (event.logicalKey == LogicalKeyboardKey.keyF) {
+        GoRouter.of(navCtx).push('/search');
+        return KeyEventResult.handled;
+      }
+
+      // Ctrl+S: save database
+      if (event.logicalKey == LogicalKeyboardKey.keyS) {
+        _saveDatabase(navCtx, l10n);
+        return KeyEventResult.handled;
+      }
+    }
+
+    // Copy shortcuts require an active entry
+    final activeEntry = ref.read(activeEntryProvider);
+    if (activeEntry == null) return KeyEventResult.ignored;
 
     String? message;
     if (event.logicalKey == LogicalKeyboardKey.keyB) {
       final username = activeEntry.fields['UserName']?.text ?? '';
       if (username.isNotEmpty) {
         copyToClipboardWithAutoClear(username);
-        message = AppLocalizations.of(navCtx)!.copiedUsername;
+        message = l10n!.copiedUsername;
       }
     } else if (event.logicalKey == LogicalKeyboardKey.keyC) {
       final password = activeEntry.fields['Password']?.text ?? '';
       if (password.isNotEmpty) {
         copyToClipboardWithAutoClear(password);
-        message = AppLocalizations.of(navCtx)!.copiedPassword;
+        message = l10n!.copiedPassword;
       }
     } else if (event.logicalKey == LogicalKeyboardKey.keyU) {
       final url = activeEntry.fields['URL']?.text ?? '';
       if (url.isNotEmpty) {
         copyToClipboardWithAutoClear(url);
-        message = AppLocalizations.of(navCtx)!.copiedUrl;
+        message = l10n!.copiedUrl;
       }
     } else if (event.logicalKey == LogicalKeyboardKey.keyT) {
       final totpCode = _getTotpCode(activeEntry);
       if (totpCode != null) {
         copyToClipboardWithAutoClear(totpCode);
-        message = AppLocalizations.of(navCtx)!.copiedTotp;
+        message = l10n!.copiedTotp;
       }
     }
 
@@ -79,6 +100,27 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
+  }
+
+  Future<void> _saveDatabase(BuildContext navCtx, AppLocalizations? l10n) async {
+    final dbState = ref.read(databaseProvider);
+    if (!dbState.hasValue || dbState.value == null) return;
+
+    final success = await ref.read(databaseProvider.notifier).save();
+    if (navCtx.mounted) {
+      ScaffoldMessenger.of(navCtx).showSnackBar(
+        SnackBar(
+          content: Text(
+            success ? (l10n?.saved ?? 'Saved') : (l10n?.syncFailed ?? 'Save failed'),
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: success ? const Color(0xFF0D9488) : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   String? _getTotpCode(dynamic entry) {

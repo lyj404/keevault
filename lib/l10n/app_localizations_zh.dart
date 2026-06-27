@@ -885,6 +885,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchCamera => '切换摄像头';
 
   @override
+  String get shortcutSearch => '搜索';
+
+  @override
+  String get shortcutSave => '保存';
+
+  @override
   String get biometricUnlock => '指纹解锁';
 
   @override

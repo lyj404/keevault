@@ -1891,6 +1891,16 @@ class _ShortcutHintBar extends StatelessWidget {
           children: [
             Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
             const SizedBox(width: 8),
+            if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) ...[
+              const _KeyChip(label: 'Ctrl+F'),
+              const SizedBox(width: 4),
+              Text(l10n.shortcutSearch, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+              const SizedBox(width: 16),
+              const _KeyChip(label: 'Ctrl+S'),
+              const SizedBox(width: 4),
+              Text(l10n.shortcutSave, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+              const SizedBox(width: 16),
+            ],
             if (username.isNotEmpty) ...[
               const _KeyChip(label: 'Ctrl+B'),
               const SizedBox(width: 4),
