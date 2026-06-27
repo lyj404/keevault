@@ -43,13 +43,15 @@ class KeeVaultAppWrapper extends ConsumerStatefulWidget {
 
 class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     with WindowListener {
+  bool _trayInitialized = false;
+
   @override
   void initState() {
     super.initState();
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       windowManager.addListener(this);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initTray();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _initTray();
       });
     }
   }
@@ -63,6 +65,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       onShowWindow: _showWindow,
       onExitApp: _exitApp,
     );
+    _trayInitialized = true;
   }
 
   Future<void> _showWindow() async {
@@ -96,7 +99,12 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       return;
     }
     if (behavior == CloseBehavior.minimizeToTray) {
-      await windowManager.hide();
+      if (_trayInitialized) {
+        await windowManager.hide();
+      } else {
+        await windowManager.setPreventClose(false);
+        await windowManager.close();
+      }
       return;
     }
     await _showCloseDialog();
@@ -177,7 +185,12 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       if (remember) {
         await ref.read(closeBehaviorProvider.notifier).setCloseBehavior(CloseBehavior.minimizeToTray);
       }
-      await windowManager.hide();
+      if (_trayInitialized) {
+        await windowManager.hide();
+      } else {
+        await windowManager.setPreventClose(false);
+        await windowManager.close();
+      }
     }
   }
 
