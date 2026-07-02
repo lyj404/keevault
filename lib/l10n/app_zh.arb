@@ -335,6 +335,12 @@
   "toggleFlashlight": "切换闪光灯",
   "switchCamera": "切换摄像头",
 
+  "tags": "标签",
+  "addTag": "添加标签",
+  "filterByTag": "按标签筛选",
+  "allTags": "全部标签",
+  "noTags": "无标签",
+
   "shortcutSearch": "搜索",
   "shortcutSave": "保存",
 

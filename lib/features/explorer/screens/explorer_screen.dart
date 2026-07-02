@@ -807,6 +807,8 @@ class _WideLayout extends StatelessWidget {
                   ),
                 ),
                 Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                // Tag filter bar
+                _TagFilterBar(),
                 // Entry list
                 Expanded(
                   child: _EntryListBody(
@@ -989,6 +991,7 @@ class _NarrowLayout extends StatelessWidget {
       ),
       body: Column(
         children: [
+          _TagFilterBar(),
           Expanded(
             child: _MobileEntryListBody(
               currentGroup: currentGroup,
@@ -1592,6 +1595,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
   final _passwordCtrl = TextEditingController();
   final _urlCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final List<String> _tags = [];
   bool _obscure = true;
   KdbxEntry? _entry;
   bool _saved = false;
@@ -1736,6 +1740,33 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
                     maxLines: 3,
                     decoration: InputDecoration(labelText: l10n.notes, prefixIcon: const Icon(Icons.note_outlined)),
                   ),
+                  // Tags
+                  if (_tags.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        for (int i = 0; i < _tags.length; i++)
+                          Chip(
+                            label: Text(_tags[i], style: TextStyle(fontSize: 13)),
+                            visualDensity: VisualDensity.compact,
+                            onDeleted: () => setState(() => _tags.removeAt(i)),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => _showAddTagDialog(l10n),
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: Text(l10n.addTag),
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                    ),
+                  ),
                   if (_entry != null) ...[
                     const SizedBox(height: 8),
                     AttachmentsSection(
@@ -1753,6 +1784,76 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
     );
   }
 
+  void _showAddTagDialog(AppLocalizations l10n) {
+    final ctrl = TextEditingController();
+    final db = ref.read(databaseServiceProvider).db;
+    final existingTags = <String>{};
+    if (db != null) {
+      for (final entry in db.root.allEntries) {
+        final entryTags = entry.tags;
+        if (entryTags != null) existingTags.addAll(entryTags);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.addTag),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                decoration: InputDecoration(labelText: l10n.tags),
+                onSubmitted: (_) {
+                  final tag = ctrl.text.trim();
+                  if (tag.isNotEmpty && !_tags.contains(tag)) {
+                    setState(() => _tags.add(tag));
+                  }
+                  Navigator.pop(ctx);
+                },
+              ),
+              if (existingTags.where((t) => !_tags.contains(t)).isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final tag in existingTags.where((t) => !_tags.contains(t)))
+                      ActionChip(
+                        label: Text(tag, style: TextStyle(fontSize: 12)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        onPressed: () {
+                          setState(() => _tags.add(tag));
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            FilledButton(
+              onPressed: () {
+                final tag = ctrl.text.trim();
+                if (tag.isNotEmpty && !_tags.contains(tag)) {
+                  setState(() => _tags.add(tag));
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text(l10n.confirm),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _save() {
     if (_entry == null) return;
     _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
@@ -1760,6 +1861,7 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
     _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
     _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
     _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
+    _entry!.tags = _tags.isEmpty ? null : List.from(_tags);
     _saved = true;
     final service = ref.read(databaseServiceProvider);
     service.markDirty();
@@ -1860,6 +1962,85 @@ class _AddGroupSheetState extends ConsumerState<_AddGroupSheet> {
     service.createGroup(widget.group, _nameCtrl.text);
     refreshExplorerLists(ref);
     if (mounted) Navigator.pop(context);
+  }
+}
+
+// ─── Tag filter bar ────────────────────────────────────────────────────
+
+class _TagFilterBar extends ConsumerWidget {
+  const _TagFilterBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allTags = ref.watch(allTagsProvider);
+    if (allTags.isEmpty) return const SizedBox.shrink();
+
+    final selectedTag = ref.watch(selectedTagProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Icon(Icons.label_outline_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(width: 4),
+          _TagChip(
+            label: l10n.allTags,
+            selected: selectedTag == null,
+            onTap: () => ref.read(selectedTagProvider.notifier).state = null,
+          ),
+          for (final tag in allTags)
+            _TagChip(
+              label: tag,
+              selected: selectedTag == tag,
+              onTap: () => ref.read(selectedTagProvider.notifier).state = selectedTag == tag ? null : tag,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TagChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TagChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
+      child: Material(
+        color: selected ? colorScheme.primaryContainer : colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -2039,8 +2220,7 @@ Future<void> _syncFromCloud(BuildContext context) async {
   try {
     final container = ProviderScope.containerOf(context);
     await container.read(databaseProvider.notifier).reloadFromCloud();
-    final group = container.read(currentGroupProvider);
-    container.read(entriesProvider.notifier).state = [...?group?.entries];
+    container.invalidate(entriesProvider);
     if (context.mounted) {
       Navigator.of(context).pop();
       showToast(context, l10n.syncedFromCloud);

@@ -58,6 +58,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final _urlCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   final List<_CustomFieldData> _customFields = [];
+  final List<String> _tags = [];
   bool _isEdit = false;
   KdbxEntry? _entry;
   bool _expires = false;
@@ -89,6 +90,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         _expiryDate = entry.times.expiry.time;
         _totpConfig = _totpService.loadFromEntry(entry);
         _loadCustomFields(entry);
+        final entryTags = entry.tags;
+        if (entryTags != null) _tags.addAll(entryTags);
         return;
       }
     }
@@ -313,6 +316,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               const SizedBox(height: 12),
               _buildCustomFieldsSection(colorScheme, l10n),
             ],
+            // Tags
+            if (_entry != null) ...[
+              const SizedBox(height: 12),
+              _buildTagsSection(colorScheme, l10n),
+            ],
             // TOTP
             if (_entry != null) ...[
               const SizedBox(height: 12),
@@ -328,6 +336,120 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTagsSection(ColorScheme colorScheme, AppLocalizations l10n) {
+    return _SectionCard(
+      children: [
+        Row(
+          children: [
+            Icon(Icons.label_outline_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.tags,
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+              ),
+            ),
+          ],
+        ),
+        Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (int i = 0; i < _tags.length; i++)
+                Chip(
+                  label: Text(_tags[i], style: TextStyle(fontSize: 13)),
+                  visualDensity: VisualDensity.compact,
+                  onDeleted: () => setState(() => _tags.removeAt(i)),
+                  deleteIconColor: colorScheme.onSurfaceVariant,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ActionChip(
+                label: Text(l10n.addTag, style: TextStyle(fontSize: 13)),
+                avatar: Icon(Icons.add_rounded, size: 16),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                onPressed: () => _showAddTagDialog(colorScheme, l10n),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAddTagDialog(ColorScheme colorScheme, AppLocalizations l10n) {
+    final ctrl = TextEditingController();
+    final db = ref.read(databaseServiceProvider).db;
+    final existingTags = <String>{};
+    if (db != null) {
+      for (final entry in db.root.allEntries) {
+        final entryTags = entry.tags;
+        if (entryTags != null) existingTags.addAll(entryTags);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(l10n.addTag),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                decoration: InputDecoration(labelText: l10n.tags),
+                onSubmitted: (_) {
+                  final tag = ctrl.text.trim();
+                  if (tag.isNotEmpty && !_tags.contains(tag)) {
+                    setState(() => _tags.add(tag));
+                  }
+                  Navigator.pop(ctx);
+                },
+              ),
+              if (existingTags.where((t) => !_tags.contains(t)).isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final tag in existingTags.where((t) => !_tags.contains(t)))
+                      ActionChip(
+                        label: Text(tag, style: TextStyle(fontSize: 12)),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        onPressed: () {
+                          setState(() => _tags.add(tag));
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            FilledButton(
+              onPressed: () {
+                final tag = ctrl.text.trim();
+                if (tag.isNotEmpty && !_tags.contains(tag)) {
+                  setState(() => _tags.add(tag));
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text(l10n.confirm),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -630,6 +752,9 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         protected: f.protected,
       );
     }
+
+    // Save tags
+    _entry!.tags = _tags.isEmpty ? null : List.from(_tags);
 
     // Save TOTP
     if (_totpConfig != null) {

@@ -12,9 +12,32 @@ final currentGroupProvider = Provider<KdbxGroup?>((ref) {
   return service.findGroupByPath(path) ?? db.root;
 });
 
-final entriesProvider = StateProvider<List<KdbxEntry>>((ref) {
+/// Currently selected tag filter (null means show all entries).
+final selectedTagProvider = StateProvider<String?>((ref) => null);
+
+/// All unique tags across the entire database, sorted alphabetically.
+final allTagsProvider = Provider<List<String>>((ref) {
+  final db = ref.watch(databaseProvider).valueOrNull;
+  if (db == null) return [];
+  final tags = <String>{};
+  for (final entry in db.root.allEntries) {
+    final entryTags = entry.tags;
+    if (entryTags != null) tags.addAll(entryTags);
+  }
+  final sorted = tags.toList()..sort();
+  return sorted;
+});
+
+/// Entries for the current group, filtered by the selected tag.
+final entriesProvider = Provider<List<KdbxEntry>>((ref) {
   final group = ref.watch(currentGroupProvider);
-  return [...?group?.entries];
+  final selectedTag = ref.watch(selectedTagProvider);
+  if (group == null) return [];
+  var entries = [...group.entries];
+  if (selectedTag != null) {
+    entries = entries.where((e) => e.tags?.contains(selectedTag) ?? false).toList();
+  }
+  return entries;
 });
 
 /// Currently selected entry in the explorer (for keyboard shortcuts).
@@ -26,8 +49,7 @@ final activeEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
 
 /// Call after any mutation (add/delete/edit) to refresh the entry list.
 void refreshExplorerLists(WidgetRef ref) {
-  final group = ref.read(currentGroupProvider);
-  ref.read(entriesProvider.notifier).state = [...?group?.entries];
+  ref.invalidate(entriesProvider);
   ref.read(selectedEntryProvider.notifier).state = null;
 }
 

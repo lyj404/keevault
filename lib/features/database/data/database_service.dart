@@ -237,11 +237,13 @@ class DatabaseService {
       final customMatch = entry.fields.entries
           .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
           .any((e) => e.value.text.toLowerCase().contains(lowerQuery));
+      final tagMatch = entry.tags?.any((t) => t.toLowerCase().contains(lowerQuery)) ?? false;
       return title.toLowerCase().contains(lowerQuery) ||
           username.toLowerCase().contains(lowerQuery) ||
           url.toLowerCase().contains(lowerQuery) ||
           notes.toLowerCase().contains(lowerQuery) ||
-          customMatch;
+          customMatch ||
+          tagMatch;
     }).toList();
   }
 

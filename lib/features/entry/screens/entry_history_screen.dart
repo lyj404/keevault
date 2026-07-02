@@ -293,7 +293,7 @@ class _DetailField extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           SelectableText(
-            obscure ? '‚Ä? * value.length : value,
+            obscure ? '‚óè' * value.length : value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontFamily: obscure ? 'monospace' : null,
               letterSpacing: obscure ? 2 : null,

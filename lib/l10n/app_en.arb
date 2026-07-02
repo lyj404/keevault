@@ -327,6 +327,12 @@
   "toggleFlashlight": "Toggle Flashlight",
   "switchCamera": "Switch Camera",
 
+  "tags": "Tags",
+  "addTag": "Add Tag",
+  "filterByTag": "Filter by Tag",
+  "allTags": "All Tags",
+  "noTags": "No Tags",
+
   "shortcutSearch": "Search",
   "shortcutSave": "Save",
 

@@ -1784,6 +1784,36 @@ abstract class AppLocalizations {
   /// **'切换摄像头'**
   String get switchCamera;
 
+  /// No description provided for @tags.
+  ///
+  /// In zh, this message translates to:
+  /// **'标签'**
+  String get tags;
+
+  /// No description provided for @addTag.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加标签'**
+  String get addTag;
+
+  /// No description provided for @filterByTag.
+  ///
+  /// In zh, this message translates to:
+  /// **'按标签筛选'**
+  String get filterByTag;
+
+  /// No description provided for @allTags.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部标签'**
+  String get allTags;
+
+  /// No description provided for @noTags.
+  ///
+  /// In zh, this message translates to:
+  /// **'无标签'**
+  String get noTags;
+
   /// No description provided for @shortcutSearch.
   ///
   /// In zh, this message translates to:

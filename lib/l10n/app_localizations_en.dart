@@ -899,6 +899,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchCamera => 'Switch Camera';
 
   @override
+  String get tags => 'Tags';
+
+  @override
+  String get addTag => 'Add Tag';
+
+  @override
+  String get filterByTag => 'Filter by Tag';
+
+  @override
+  String get allTags => 'All Tags';
+
+  @override
+  String get noTags => 'No Tags';
+
+  @override
   String get shortcutSearch => 'Search';
 
   @override

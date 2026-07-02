@@ -109,6 +109,13 @@ class EntryDetailScreen extends ConsumerWidget {
                 _FieldRow(label: l10n.notes, value: entry.fields['Notes']?.text ?? '', multiline: true),
               ],
             ),
+          // Tags
+          if (entry.tags != null && entry.tags!.isNotEmpty)
+            _SectionCard(
+              children: [
+                _TagsRow(tags: entry.tags!),
+              ],
+            ),
           // Expiration
           if (entry.times.expires && entry.times.expiry.time != null)
             _SectionCard(
@@ -405,11 +412,62 @@ class _PasswordFieldState extends State<_PasswordField> {
           ),
           const SizedBox(height: 4),
           SelectableText(
-            _visible ? widget.value : '‚Ä? * widget.value.length,
+            _visible ? widget.value : '‚óè' * widget.value.length,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontFamily: _visible ? null : 'monospace',
               letterSpacing: _visible ? null : 2,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TagsRow extends StatelessWidget {
+  final List<String> tags;
+  const _TagsRow({required this.tags});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.tags,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (final tag in tags)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    tag,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

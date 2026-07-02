@@ -885,6 +885,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchCamera => '切换摄像头';
 
   @override
+  String get tags => '标签';
+
+  @override
+  String get addTag => '添加标签';
+
+  @override
+  String get filterByTag => '按标签筛选';
+
+  @override
+  String get allTags => '全部标签';
+
+  @override
+  String get noTags => '无标签';
+
+  @override
   String get shortcutSearch => '搜索';
 
   @override
