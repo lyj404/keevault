@@ -59,13 +59,18 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
   Future<void> _initTray() async {
     final navContext = rootNavigatorKey.currentContext;
     final l10n = navContext != null ? AppLocalizations.of(navContext) : null;
-    await TrayService().init(
-      showLabel: l10n?.showMainWindow ?? 'Show Main Window',
-      exitLabel: l10n?.exit ?? 'Exit',
-      onShowWindow: _showWindow,
-      onExitApp: _exitApp,
-    );
-    _trayInitialized = true;
+    try {
+      await TrayService().init(
+        showLabel: l10n?.showMainWindow ?? 'Show Main Window',
+        exitLabel: l10n?.exit ?? 'Exit',
+        onShowWindow: _showWindow,
+        onExitApp: _exitApp,
+      );
+      _trayInitialized = true;
+    } catch (e) {
+      debugPrint('Tray init failed, close will exit app: $e');
+      _trayInitialized = false;
+    }
   }
 
   Future<void> _showWindow() async {

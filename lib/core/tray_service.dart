@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
-// Conditional import: use system_tray on Windows/macOS, dart_xdg_status_notifier_item on Linux
-import 'tray_service_desktop.dart'
-    if (dart.library.io) 'tray_service_linux.dart';
+import 'tray_service_desktop.dart';
+import 'tray_service_linux.dart';
 
 abstract class TrayServiceBase {
   Future<void> init({
@@ -14,6 +12,11 @@ abstract class TrayServiceBase {
     required VoidCallback onExitApp,
   });
   Future<void> dispose();
+}
+
+TrayServiceBase createTrayService() {
+  if (Platform.isLinux) return createTrayServiceLinux();
+  return createTrayServiceDesktop();
 }
 
 class TrayService {
@@ -31,17 +34,13 @@ class TrayService {
   }) async {
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return;
 
-    try {
-      _impl = createTrayService();
-      await _impl!.init(
-        showLabel: showLabel,
-        exitLabel: exitLabel,
-        onShowWindow: onShowWindow,
-        onExitApp: onExitApp,
-      );
-    } catch (e) {
-      debugPrint('TrayService: Initialization failed: $e');
-    }
+    _impl = createTrayService();
+    await _impl!.init(
+      showLabel: showLabel,
+      exitLabel: exitLabel,
+      onShowWindow: onShowWindow,
+      onExitApp: onExitApp,
+    );
   }
 
   Future<void> dispose() async {

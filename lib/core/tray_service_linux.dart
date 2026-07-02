@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:dart_xdg_status_notifier_item/dart_xdg_status_notifier_item.dart';
 import 'tray_service.dart';
 
-TrayServiceBase createTrayService() => TrayServiceLinux();
+TrayServiceBase createTrayServiceLinux() => TrayServiceLinux();
 
 class TrayServiceLinux implements TrayServiceBase {
   StatusNotifierItemClient? _client;

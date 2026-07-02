@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:system_tray/system_tray.dart';
 import 'tray_service.dart';
 
-TrayServiceBase createTrayService() => TrayServiceDesktop();
+TrayServiceBase createTrayServiceDesktop() => TrayServiceDesktop();
 
 class TrayServiceDesktop implements TrayServiceBase {
   final SystemTray _tray = SystemTray();
@@ -38,10 +38,15 @@ class TrayServiceDesktop implements TrayServiceBase {
       }
     }
 
-    await _tray.initSystemTray(
-      title: 'KeeVault',
-      iconPath: iconPath,
-    );
+    try {
+      await _tray.initSystemTray(
+        title: 'KeeVault',
+        iconPath: iconPath,
+      );
+    } catch (e) {
+      debugPrint('TrayServiceDesktop: initSystemTray failed for $iconPath: $e');
+      rethrow;
+    }
 
     final Menu menu = Menu();
     await menu.buildFrom([
