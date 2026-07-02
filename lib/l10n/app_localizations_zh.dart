@@ -885,6 +885,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchCamera => '切换摄像头';
 
   @override
+  String get expirationReminder => '过期提醒';
+
+  @override
+  String get expirationReminderDescription => '密码即将过期时通知提醒';
+
+  @override
+  String get daysBeforeExpiry => '天前提醒';
+
+  @override
   String get tags => '标签';
 
   @override

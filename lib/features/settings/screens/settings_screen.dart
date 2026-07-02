@@ -10,6 +10,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
+import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../../core/providers/biometric_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../l10n/app_localizations.dart';
@@ -253,6 +254,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onChanged: (v) {
                             if (v != null) {
                               ref.read(autoLockProvider.notifier).setMinutes(v);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Expiration reminder card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          child: Icon(Icons.notifications_active_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.expirationReminder, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(l10n.expirationReminderDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                        DropdownButton<int>(
+                          value: ref.watch(expirationReminderProvider),
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+                            DropdownMenuItem(value: 1, child: Text('1 ${l10n.daysBeforeExpiry}')),
+                            DropdownMenuItem(value: 3, child: Text('3 ${l10n.daysBeforeExpiry}')),
+                            DropdownMenuItem(value: 7, child: Text('7 ${l10n.daysBeforeExpiry}')),
+                            DropdownMenuItem(value: 14, child: Text('14 ${l10n.daysBeforeExpiry}')),
+                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.daysBeforeExpiry}')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              ref.read(expirationReminderProvider.notifier).setDays(v);
                             }
                           },
                         ),

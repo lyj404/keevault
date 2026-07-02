@@ -1,7 +1,7 @@
 name: keevault
 description: "A KeePass-compatible password manager built with Flutter."
 publish_to: 'none'
-version: 0.5.4+1
+version: 0.5.5+1
 
 environment:
   sdk: ^3.12.0
@@ -42,6 +42,13 @@ dependencies:
 
   # Biometric authentication (Android only)
   local_auth_android: ^1.0.56
+
+  # Local notifications (expiration reminders)
+  flutter_local_notifications: ^18.0.1
+
+  # Windows native notifications
+  win32: ^5.15.0
+  ffi: ^2.1.4
 
   # System tray & window management
   system_tray: ^2.0.3

@@ -899,6 +899,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchCamera => 'Switch Camera';
 
   @override
+  String get expirationReminder => 'Expiration Reminder';
+
+  @override
+  String get expirationReminderDescription =>
+      'Notify when passwords are about to expire';
+
+  @override
+  String get daysBeforeExpiry => 'days before expiry';
+
+  @override
   String get tags => 'Tags';
 
   @override

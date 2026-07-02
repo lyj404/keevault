@@ -9,6 +9,7 @@ import '../data/recent_files_service.dart';
 export '../data/recent_files_service.dart' show RecentFile;
 export '../data/csv_service.dart' show CsvEntry;
 import '../../../core/providers/auto_lock_provider.dart';
+import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/data/sync_service.dart' show RemoteFileInfo;
@@ -72,6 +73,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       ]);
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
+      _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -188,6 +190,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     final db = await _service.reloadFromBytes(result.bytes);
     _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
+    _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
     if (_service.filePath != null) {
       final recentSvc = _ref.read(recentFilesServiceProvider);
       final existing = await recentSvc.getRecentFiles();

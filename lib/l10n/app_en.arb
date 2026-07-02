@@ -327,6 +327,10 @@
   "toggleFlashlight": "Toggle Flashlight",
   "switchCamera": "Switch Camera",
 
+  "expirationReminder": "Expiration Reminder",
+  "expirationReminderDescription": "Notify when passwords are about to expire",
+  "daysBeforeExpiry": "days before expiry",
+
   "tags": "Tags",
   "addTag": "Add Tag",
   "filterByTag": "Filter by Tag",

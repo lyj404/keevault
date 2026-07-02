@@ -5,6 +5,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/providers/auto_lock_provider.dart';
+import 'core/providers/expiration_reminder_provider.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/locale_provider.dart';
@@ -22,13 +24,34 @@ class KeeVaultApp extends ConsumerStatefulWidget {
   ConsumerState<KeeVaultApp> createState() => _KeeVaultAppState();
 }
 
-class _KeeVaultAppState extends ConsumerState<KeeVaultApp> {
+class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingObserver {
   final _focusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Initialize notifications on first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService().init();
+    });
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final db = ref.read(databaseProvider).valueOrNull;
+      if (db != null) {
+        ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
+      }
+    }
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {

@@ -182,34 +182,40 @@ class EntryListTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
                         ),
-                        if (_username.isNotEmpty || _isExpired) ...[
+                        if (_username.isNotEmpty) ...[
                           const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              if (_username.isNotEmpty)
-                                Expanded(
-                                  child: Text(
-                                    _username,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-                                  ),
-                                ),
-                              if (_isExpired) ...[
-                                if (_username.isNotEmpty) const SizedBox(width: 8),
-                                Icon(Icons.warning_rounded, size: 14, color: colorScheme.error),
-                                const SizedBox(width: 2),
-                                Text(
-                                  l10n.expired,
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.error),
-                                ),
-                              ],
-                            ],
+                          Text(
+                            _username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ],
                     ),
                   ),
+                  // Expired badge – aligned with buttons
+                  if (_isExpired) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.warning_rounded, size: 12, color: colorScheme.error),
+                          const SizedBox(width: 3),
+                          Text(
+                            l10n.expired,
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.error),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   // Copy password button – clay style
                   if (_password.isNotEmpty)
                     Container(

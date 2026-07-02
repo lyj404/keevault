@@ -335,6 +335,10 @@
   "toggleFlashlight": "切换闪光灯",
   "switchCamera": "切换摄像头",
 
+  "expirationReminder": "过期提醒",
+  "expirationReminderDescription": "密码即将过期时通知提醒",
+  "daysBeforeExpiry": "天前提醒",
+
   "tags": "标签",
   "addTag": "添加标签",
   "filterByTag": "按标签筛选",

@@ -1784,6 +1784,24 @@ abstract class AppLocalizations {
   /// **'切换摄像头'**
   String get switchCamera;
 
+  /// No description provided for @expirationReminder.
+  ///
+  /// In zh, this message translates to:
+  /// **'过期提醒'**
+  String get expirationReminder;
+
+  /// No description provided for @expirationReminderDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码即将过期时通知提醒'**
+  String get expirationReminderDescription;
+
+  /// No description provided for @daysBeforeExpiry.
+  ///
+  /// In zh, this message translates to:
+  /// **'天前提醒'**
+  String get daysBeforeExpiry;
+
   /// No description provided for @tags.
   ///
   /// In zh, this message translates to:
