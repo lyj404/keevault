@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
@@ -77,7 +78,17 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
     // Look up by UUID if provided
     if (widget.entryUuid != null && widget.entryUuid!.isNotEmpty) {
-      final entry = service.findEntryByUuid(KdbxUuid.fromString(widget.entryUuid!));
+      final uuid = KdbxUuid.fromString(widget.entryUuid!);
+      final group = service.findGroupByPath(widget.groupPath);
+      log.d('[EntryEdit] lookup uuid=${widget.entryUuid} groupPath="${widget.groupPath}" group=${group?.name} groupEntries=${group?.entries.length}');
+      var entry = group?.entries.where((e) => e.uuid == uuid).firstOrNull;
+      if (entry == null) {
+        log.w('[EntryEdit] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}');
+        entry = service.findEntryByUuid(uuid);
+        if (entry == null) {
+          log.e('[EntryEdit] ENTRY NOT FOUND uuid=${widget.entryUuid} groupPath="${widget.groupPath}"');
+        }
+      }
       if (entry != null) {
         _titleCtrl.text = entry.fields['Title']?.text ?? '';
         _usernameCtrl.text = entry.fields['UserName']?.text ?? '';

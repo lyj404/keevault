@@ -100,6 +100,7 @@ class DatabaseService {
 
   void _rebuildEntryCache() {
     _allEntriesCache = _db?.root.allEntries.toList();
+    log.d('[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}');
     _rebuildSearchIndex();
   }
 
@@ -294,6 +295,7 @@ class DatabaseService {
     for (final entry in allEntries) {
       if (entry.uuid == uuid) return entry;
     }
+    log.w('[DatabaseService] findEntryByUuid MISS uuid=${uuid.string} cacheSize=${allEntries.length}');
     return null;
   }
 
@@ -318,7 +320,10 @@ class DatabaseService {
     for (final segment in segments) {
       if (segment.isEmpty) continue;
       current = current?.groups.where((g) => g.name == segment).firstOrNull;
-      if (current == null) return null;
+      if (current == null) {
+        log.w('[DatabaseService] findGroupByPath MISS path="$path" failed at segment="$segment"');
+        return null;
+      }
     }
     return current;
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
@@ -19,14 +20,28 @@ class EntryHistoryScreen extends ConsumerWidget {
     final service = ref.read(databaseServiceProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    final entry = entryUuid.isNotEmpty ? service.findEntryByUuid(KdbxUuid.fromString(entryUuid)) : null;
+    KdbxEntry? entry;
+    if (entryUuid.isNotEmpty) {
+      final uuid = KdbxUuid.fromString(entryUuid);
+      final group = service.findGroupByPath(groupPath);
+      log.d('[EntryHistory] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}');
+      entry = group?.entries.where((e) => e.uuid == uuid).firstOrNull;
+      if (entry == null) {
+        log.w('[EntryHistory] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}');
+        entry = service.findEntryByUuid(uuid);
+        if (entry == null) {
+          log.e('[EntryHistory] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath"');
+        }
+      }
+    }
     if (entry == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.history)),
         body: Center(child: Text(l10n.entryNotFound)),
       );
     }
-    final history = List<KdbxEntry>.from(entry.history)
+    final matchedEntry = entry;
+    final history = List<KdbxEntry>.from(matchedEntry.history)
       ..sort((a, b) => (b.times.modification.timeOrZero).compareTo(a.times.modification.timeOrZero));
 
     return Scaffold(
@@ -49,7 +64,7 @@ class EntryHistoryScreen extends ConsumerWidget {
                 final historyEntry = history[index];
                 return _HistoryTile(
                   historyEntry: historyEntry,
-                  onTap: () => _showHistoryDetail(context, ref, entry, historyEntry),
+                  onTap: () => _showHistoryDetail(context, ref, matchedEntry, historyEntry),
                 );
               },
             ),

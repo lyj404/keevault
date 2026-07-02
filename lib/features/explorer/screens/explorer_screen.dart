@@ -124,7 +124,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       ref.read(selectedEntryProvider.notifier).state = entry;
       ref.read(activeEntryProvider.notifier).state = entry;
       final path = currentGroup != null ? service.getGroupPath(currentGroup) : '';
-      context.push('/entry/detail?uuid=${entry.uuid.string}&groupPath=${Uri.encodeComponent(path)}');
+      final encodedUuid = Uri.encodeComponent(entry.uuid.string);
+      log.d('[Explorer] onEntryOpen uuid=${entry.uuid.string} groupPath="$path" entryParent=${entry.parent?.name}');
+      context.push('/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(path)}');
     }
 
     if (isWide) {

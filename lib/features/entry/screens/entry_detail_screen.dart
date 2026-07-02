@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/clipboard_utils.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
@@ -27,23 +28,41 @@ class EntryDetailScreen extends ConsumerWidget {
     final service = ref.read(databaseServiceProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    final entry = entryUuid.isNotEmpty ? service.findEntryByUuid(KdbxUuid.fromString(entryUuid)) : null;
+    // Look up entry: try the specified group first (faster, matches explorer list),
+    // fall back to full cache scan.
+    KdbxEntry? entry;
+    if (entryUuid.isNotEmpty) {
+      final uuid = KdbxUuid.fromString(entryUuid);
+      final group = service.findGroupByPath(groupPath);
+      log.d('[EntryDetail] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}');
+      entry = group?.entries.where((e) => e.uuid == uuid).firstOrNull;
+      if (entry == null) {
+        log.w('[EntryDetail] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}');
+        entry = service.findEntryByUuid(uuid);
+        if (entry == null) {
+          log.e('[EntryDetail] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath" dbOpen=${service.isOpen}');
+        } else {
+          log.i('[EntryDetail] found via cache, entry parent=${entry.parent?.name}');
+        }
+      }
+    }
     if (entry == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.entry)),
         body: EmptyState(icon: Icons.error_outline_rounded, message: l10n.entryNotFound),
       );
     }
+    final matchedEntry = entry;
 
     // Set active entry for global keyboard shortcuts (Ctrl+B/Ctrl+Shift+C)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
-        ref.read(activeEntryProvider.notifier).state = entry;
+        ref.read(activeEntryProvider.notifier).state = matchedEntry;
       }
     });
-    final title = entry.fields['Title']?.text ?? '';
+    final title = matchedEntry.fields['Title']?.text ?? '';
     final colorScheme = Theme.of(context).colorScheme;
-    final group = entry.parent;
+    final group = matchedEntry.parent;
     final isInRecycleBin = group?.icon == KdbxIcon.trashBin;
 
     return Scaffold(
@@ -54,31 +73,31 @@ class EntryDetailScreen extends ConsumerWidget {
             IconButton(
               icon: Icon(Icons.restore_rounded, size: 20, color: colorScheme.primary),
               tooltip: l10n.restore,
-              onPressed: () => _restoreEntry(context, ref, entry),
+              onPressed: () => _restoreEntry(context, ref, matchedEntry),
             )
           else ...[
             IconButton(
               icon: const Icon(Icons.history_rounded, size: 20),
               tooltip: l10n.history,
-              onPressed: () => context.push('/entry/history?uuid=${entryUuid}&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push('/entry/history?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}'),
             ),
             IconButton(
               icon: const Icon(Icons.edit_rounded, size: 20),
               tooltip: l10n.edit,
-              onPressed: () => context.push('/entry/edit?uuid=${entryUuid}&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push('/entry/edit?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}'),
             ),
             IconButton(
               icon: const Icon(Icons.drive_file_move_rounded, size: 20),
               tooltip: l10n.move,
-              onPressed: group != null ? () => _moveEntry(context, ref, entry, group) : null,
+              onPressed: group != null ? () => _moveEntry(context, ref, matchedEntry, group) : null,
             ),
           ],
           IconButton(
             icon: Icon(Icons.delete_outline_rounded, size: 20, color: colorScheme.error),
             tooltip: isInRecycleBin ? l10n.permanentDelete : l10n.delete,
             onPressed: () => isInRecycleBin
-                ? _permanentDeleteEntry(context, ref, entry)
-                : group != null ? _deleteEntry(context, ref, entry, group) : null,
+                ? _permanentDeleteEntry(context, ref, matchedEntry)
+                : group != null ? _deleteEntry(context, ref, matchedEntry, group) : null,
           ),
         ],
       ),
@@ -95,37 +114,37 @@ class EntryDetailScreen extends ConsumerWidget {
           // Credentials card
           _SectionCard(
             children: [
-              _FieldRow(label: l10n.username, value: entry.fields['UserName']?.text ?? '', showCopy: true),
-              _PasswordField(value: entry.fields['Password']?.text ?? ''),
+              _FieldRow(label: l10n.username, value: matchedEntry.fields['UserName']?.text ?? '', showCopy: true),
+              _PasswordField(value: matchedEntry.fields['Password']?.text ?? ''),
             ],
           ),
           // TOTP
-          TotpDisplayWidget(entry: entry),
+          TotpDisplayWidget(entry: matchedEntry),
           // Details card
-          if ((entry.fields['URL']?.text ?? '').isNotEmpty || (entry.fields['Notes']?.text ?? '').isNotEmpty)
+          if ((matchedEntry.fields['URL']?.text ?? '').isNotEmpty || (matchedEntry.fields['Notes']?.text ?? '').isNotEmpty)
             _SectionCard(
               children: [
-                _FieldRow(label: l10n.url, value: entry.fields['URL']?.text ?? '', showCopy: true),
-                _FieldRow(label: l10n.notes, value: entry.fields['Notes']?.text ?? '', multiline: true),
+                _FieldRow(label: l10n.url, value: matchedEntry.fields['URL']?.text ?? '', showCopy: true),
+                _FieldRow(label: l10n.notes, value: matchedEntry.fields['Notes']?.text ?? '', multiline: true),
               ],
             ),
           // Tags
-          if (entry.tags != null && entry.tags!.isNotEmpty)
+          if (matchedEntry.tags != null && matchedEntry.tags!.isNotEmpty)
             _SectionCard(
               children: [
-                _TagsRow(tags: entry.tags!),
+                _TagsRow(tags: matchedEntry.tags!),
               ],
             ),
           // Expiration
-          if (entry.times.expires && entry.times.expiry.time != null)
+          if (matchedEntry.times.expires && matchedEntry.times.expiry.time != null)
             _SectionCard(
               children: [
-                _ExpirationRow(expiryDate: entry.times.expiry.time!),
+                _ExpirationRow(expiryDate: matchedEntry.times.expiry.time!),
               ],
             ),
           // Custom fields
           ...() {
-            final custom = entry.fields.entries
+            final custom = matchedEntry.fields.entries
                 .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
                 .toList();
             if (custom.isEmpty) return <Widget>[];
@@ -142,9 +161,9 @@ class EntryDetailScreen extends ConsumerWidget {
             ];
           }(),
           // Attachments
-          if (entry.binaries.isNotEmpty) ...[
+          if (matchedEntry.binaries.isNotEmpty) ...[
             AttachmentsSection(
-              entry: entry,
+              entry: matchedEntry,
               service: ref.read(databaseServiceProvider),
               readOnly: true,
             ),

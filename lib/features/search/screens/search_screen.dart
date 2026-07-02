@@ -87,7 +87,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       });
                     } else if (event.logicalKey == LogicalKeyboardKey.enter && _selectedEntry != null) {
                       final groupPath = _selectedEntry!.parent != null ? service.getGroupPath(_selectedEntry!.parent!) : '';
-                      context.push('/entry/detail?uuid=${_selectedEntry!.uuid.string}&groupPath=${Uri.encodeComponent(groupPath)}');
+                      final encodedUuid = Uri.encodeComponent(_selectedEntry!.uuid.string);
+                      context.push('/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(groupPath)}');
                     }
                   },
                   child: ListView.builder(
@@ -106,7 +107,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             ref.read(activeEntryProvider.notifier).state = entry;
                           },
                           onOpen: () {
-                            context.push('/entry/detail?uuid=${entry.uuid.string}&groupPath=${Uri.encodeComponent(groupPath)}');
+                            final encodedUuid = Uri.encodeComponent(entry.uuid.string);
+                            context.push('/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(groupPath)}');
                           },
                         ),
                       );
