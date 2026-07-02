@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
+import '../../sync/data/sync_service.dart' show SyncException, SyncErrorType;
 import '../providers/database_provider.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -349,11 +350,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context).pop();
-        final msg = e.toString().replaceFirst('Exception: ', '');
-        final translated = msg == 'remote_database_not_exist'
-            ? l10n.remoteDatabaseNotExist
-            : l10n.downloadFailed(msg);
-        _showErrorDialog(context, translated);
+        _showErrorDialog(context, _translateDownloadError(e, l10n));
       }
     }
   }
@@ -386,6 +383,28 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         ],
       ),
     );
+  }
+
+  String _translateDownloadError(Object e, AppLocalizations l10n) {
+    if (e is SyncException) {
+      switch (e.type) {
+        case SyncErrorType.network:
+          return l10n.syncErrorNetwork;
+        case SyncErrorType.auth:
+          return l10n.syncErrorAuth;
+        case SyncErrorType.notFound:
+          return l10n.syncErrorNotFound;
+        case SyncErrorType.timeout:
+          return l10n.syncErrorTimeout;
+        case SyncErrorType.serverError:
+          return l10n.syncErrorServer;
+        case SyncErrorType.unknown:
+          break;
+      }
+    }
+    final msg = e.toString().replaceFirst('Exception: ', '');
+    if (msg == 'remote_database_not_exist') return l10n.remoteDatabaseNotExist;
+    return l10n.downloadFailed(msg);
   }
 }
 

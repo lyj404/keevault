@@ -967,4 +967,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noStoredPassword =>
       'No stored password. Please unlock with password first.';
+
+  @override
+  String get syncRetry => 'Retry';
+
+  @override
+  String syncRetrying(Object attempt, Object maxAttempts) {
+    return 'Retrying... ($attempt/$maxAttempts)';
+  }
+
+  @override
+  String get syncErrorNetwork =>
+      'Network connection failed. Please check your internet and server settings.';
+
+  @override
+  String get syncErrorAuth =>
+      'Authentication failed. Please check your username and password in settings.';
+
+  @override
+  String get syncErrorNotFound =>
+      'Remote database not found. Please check the remote path in settings.';
+
+  @override
+  String get syncErrorTimeout =>
+      'Connection timed out. The server may be temporarily unavailable.';
+
+  @override
+  String get syncErrorServer => 'Server error. Please try again later.';
+
+  @override
+  String get databaseCorrupted => 'Database file is corrupted or damaged.';
+
+  @override
+  String get restoreFromBackup => 'Restore from Backup';
+
+  @override
+  String get restoreFromBackupDescription =>
+      'A backup was found. Would you like to restore from the most recent backup?';
+
+  @override
+  String get noBackupAvailable =>
+      'No backup available for recovery. Please restore from an external backup.';
 }

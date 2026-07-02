@@ -8,6 +8,26 @@ import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
 import '../../sync/data/sync_service.dart';
 
+/// Thrown when a KDBX file cannot be parsed due to corruption or bad format.
+class DatabaseCorruptedException implements Exception {
+  final Object original;
+  DatabaseCorruptedException(this.original);
+
+  @override
+  String toString() => 'DatabaseCorruptedException: $original';
+}
+
+/// Returns true if the exception indicates a corrupt/invalid KDBX file.
+bool isCorruptionError(Object e) {
+  final msg = e.toString().toLowerCase();
+  return msg.contains('corrupt') ||
+      msg.contains('bad version') ||
+      msg.contains('invalid header') ||
+      msg.contains('dataerror') ||
+      msg.contains('format') && msg.contains('invalid') ||
+      (e is InvalidCredentialsError == false && msg.contains('invalid') && msg.contains('key'));
+}
+
 class DatabaseService {
   final _backupService = BackupService();
   KdbxDatabase? _db;
@@ -82,7 +102,15 @@ class DatabaseService {
     final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
     _preloadedBytes = null;
     _preloadedFilePath = null;
-    _db = await _loadDatabase(bytes, password, keyData: keyData);
+    try {
+      _db = await _loadDatabase(bytes, password, keyData: keyData);
+    } catch (e) {
+      if (isCorruptionError(e)) {
+        log.e('Database file corrupted: $filePath', error: e);
+        throw DatabaseCorruptedException(e);
+      }
+      rethrow;
+    }
     _filePath = filePath;
     _password = password;
     _keyData = keyData;

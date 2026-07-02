@@ -9,6 +9,8 @@ import '../../../core/widgets/password_text_field.dart';
 import '../../../core/providers/biometric_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../backup/data/backup_service.dart';
+import '../data/database_service.dart';
 import '../providers/database_provider.dart';
 
 class UnlockScreen extends ConsumerStatefulWidget {
@@ -71,7 +73,13 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           context.go('/explorer');
         }
       } else if (next.hasError) {
-        setState(() => _error = _friendlyError(next.error!, l10n));
+        final error = next.error!;
+        if (error is DatabaseCorruptedException) {
+          setState(() => _error = l10n.databaseCorrupted);
+          _offerBackupRestore();
+        } else {
+          setState(() => _error = _friendlyError(error, l10n));
+        }
       }
     });
 
@@ -341,5 +349,66 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       return l10n.fileFormatIncorrect;
     }
     return l10n.openFailed(msg);
+  }
+
+  Future<void> _offerBackupRestore() async {
+    final l10n = AppLocalizations.of(context)!;
+    final backupService = BackupService();
+    final backups = await backupService.listBackups();
+    if (!mounted || backups.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.noBackupAvailable)),
+        );
+      }
+      return;
+    }
+
+    final restore = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.restoreFromBackup),
+        content: Text(l10n.restoreFromBackupDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.restoreFromBackup),
+          ),
+        ],
+      ),
+    );
+
+    if (restore == true && mounted) {
+      try {
+        final backupPath = await backupService.getBackupPath(backups.first.filename);
+        if (backupPath == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.backupNotFound)),
+            );
+          }
+          return;
+        }
+        final backupBytes = await File(backupPath).readAsBytes();
+        await File(widget.filePath).writeAsBytes(backupBytes);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.backupRestored)),
+          );
+          // Re-trigger unlock with the restored file
+          _unlock();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.backupRestoreFailed)),
+          );
+        }
+      }
+    }
   }
 }

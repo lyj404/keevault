@@ -351,5 +351,18 @@
   "unlockByBiometric": "Biometric",
   "unlockWithBiometric": "Unlock with Biometric",
   "authenticateToUnlock": "Authenticate to unlock database",
-  "noStoredPassword": "No stored password. Please unlock with password first."
+  "noStoredPassword": "No stored password. Please unlock with password first.",
+
+  "syncRetry": "Retry",
+  "syncRetrying": "Retrying... ({attempt}/{maxAttempts})",
+  "@syncRetrying": { "placeholders": { "attempt": {}, "maxAttempts": {} } },
+  "syncErrorNetwork": "Network connection failed. Please check your internet and server settings.",
+  "syncErrorAuth": "Authentication failed. Please check your username and password in settings.",
+  "syncErrorNotFound": "Remote database not found. Please check the remote path in settings.",
+  "syncErrorTimeout": "Connection timed out. The server may be temporarily unavailable.",
+  "syncErrorServer": "Server error. Please try again later.",
+  "databaseCorrupted": "Database file is corrupted or damaged.",
+  "restoreFromBackup": "Restore from Backup",
+  "restoreFromBackupDescription": "A backup was found. Would you like to restore from the most recent backup?",
+  "noBackupAvailable": "No backup available for recovery. Please restore from an external backup."
 }

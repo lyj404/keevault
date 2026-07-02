@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
@@ -11,9 +12,88 @@ class RemoteFileInfo {
   const RemoteFileInfo({this.eTag, this.mTime});
 }
 
+/// Classification of sync errors for user-friendly messaging.
+enum SyncErrorType {
+  network,
+  auth,
+  notFound,
+  timeout,
+  serverError,
+  unknown,
+}
+
+class SyncException implements Exception {
+  final SyncErrorType type;
+  final String message;
+  final Object? original;
+  SyncException(this.type, this.message, [this.original]);
+
+  @override
+  String toString() => 'SyncException($type): $message';
+}
+
 class SyncService {
   webdav.Client? _cachedClient;
   WebDavConfig? _cachedConfig;
+  static const _maxRetries = 3;
+  static const _baseDelayMs = 1000;
+
+  /// Classifies an exception into a [SyncErrorType] for user-friendly messaging.
+  SyncErrorType _classifyError(Object e) {
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('401') || msg.contains('403') || msg.contains('unauthorized')) {
+      return SyncErrorType.auth;
+    }
+    if (msg.contains('404') || msg.contains('not found')) {
+      return SyncErrorType.notFound;
+    }
+    if (msg.contains('socketexception') || msg.contains('connection refused') ||
+        msg.contains('network') || msg.contains('host') ||
+        msg.contains('connection reset') || msg.contains('broken pipe')) {
+      return SyncErrorType.network;
+    }
+    if (msg.contains('timeout') || msg.contains('timed out')) {
+      return SyncErrorType.timeout;
+    }
+    if (msg.contains('500') || msg.contains('502') || msg.contains('503') || msg.contains('504')) {
+      return SyncErrorType.serverError;
+    }
+    return SyncErrorType.unknown;
+  }
+
+  /// Whether an error is transient and worth retrying.
+  bool _isRetryable(SyncErrorType type) {
+    return type == SyncErrorType.network ||
+           type == SyncErrorType.timeout ||
+           type == SyncErrorType.serverError;
+  }
+
+  /// Wraps an async operation with exponential backoff retry for transient errors.
+  Future<T> _withRetry<T>(
+    String operation,
+    Future<T> Function() action,
+  ) async {
+    Object? lastError;
+    for (int attempt = 0; attempt < _maxRetries; attempt++) {
+      try {
+        return await action();
+      } catch (e) {
+        lastError = e;
+        final type = _classifyError(e);
+        if (!_isRetryable(type) || attempt == _maxRetries - 1) {
+          log.e('$operation failed (attempt ${attempt + 1}/$_maxRetries)', error: e);
+          if (type != SyncErrorType.unknown) {
+            throw SyncException(type, e.toString(), e);
+          }
+          rethrow;
+        }
+        final delay = _baseDelayMs * pow(2, attempt).toInt();
+        log.w('$operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/$_maxRetries): $e');
+        await Future.delayed(Duration(milliseconds: delay));
+      }
+    }
+    throw lastError!;
+  }
 
   /// Returns a cached WebDAV client, rebuilding it only when config changes.
   webdav.Client _buildClient(WebDavConfig config, {bool debug = false}) {
@@ -89,7 +169,7 @@ class SyncService {
     log.i('Downloading from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      final bytes = await client.read(config.remoteFilePath);
+      final bytes = await _withRetry('Download', () => client.read(config.remoteFilePath));
       log.i('Downloaded ${bytes.length} bytes');
       return Uint8List.fromList(bytes);
     } catch (e) {
@@ -101,7 +181,7 @@ class SyncService {
   Future<RemoteFileInfo?> getRemoteFileInfo(WebDavConfig config) async {
     final client = _buildClient(config);
     try {
-      final file = await client.readProps(config.remoteFilePath);
+      final file = await _withRetry('GetFileInfo', () => client.readProps(config.remoteFilePath));
       return RemoteFileInfo(eTag: file.eTag, mTime: file.mTime);
     } catch (_) {
       return null;
@@ -113,7 +193,7 @@ class SyncService {
     log.i('Downloading with metadata from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      final bytes = await client.read(config.remoteFilePath);
+      final bytes = await _withRetry('Download', () => client.read(config.remoteFilePath));
       // Read props after download to get the eTag of the version we actually received.
       final file = await client.readProps(config.remoteFilePath);
       log.i('Downloaded ${bytes.length} bytes, eTag: ${file.eTag}');
@@ -127,8 +207,13 @@ class SyncService {
   Future<void> uploadDatabase(WebDavConfig config, Uint8List bytes) async {
     log.i('Uploading ${bytes.length} bytes to: ${config.remoteFilePath}');
     final client = _buildClient(config);
-    await client.write(config.remoteFilePath, bytes);
-    log.i('Upload complete');
+    try {
+      await _withRetry('Upload', () => client.write(config.remoteFilePath, bytes));
+      log.i('Upload complete');
+    } catch (e) {
+      log.e('Upload failed', error: e);
+      rethrow;
+    }
   }
 
   Future<bool> remoteFileExists(WebDavConfig config) async {

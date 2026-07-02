@@ -359,5 +359,18 @@
   "unlockByBiometric": "指纹认证",
   "unlockWithBiometric": "使用指纹解锁",
   "authenticateToUnlock": "验证身份以解锁数据库",
-  "noStoredPassword": "没有存储的密码，请先使用密码解锁"
+  "noStoredPassword": "没有存储的密码，请先使用密码解锁",
+
+  "syncRetry": "重试",
+  "syncRetrying": "重试中... ({attempt}/{maxAttempts})",
+  "@syncRetrying": { "placeholders": { "attempt": {}, "maxAttempts": {} } },
+  "syncErrorNetwork": "网络连接失败，请检查网络和服务器设置。",
+  "syncErrorAuth": "认证失败，请在设置中检查用户名和密码。",
+  "syncErrorNotFound": "远程数据库不存在，请在设置中检查远程路径。",
+  "syncErrorTimeout": "连接超时，服务器可能暂时不可用。",
+  "syncErrorServer": "服务器错误，请稍后再试。",
+  "databaseCorrupted": "数据库文件已损坏或格式不正确。",
+  "restoreFromBackup": "从备份恢复",
+  "restoreFromBackupDescription": "找到可用的备份，是否从最新备份恢复？",
+  "noBackupAvailable": "没有可用的备份进行恢复，请从外部备份手动恢复。"
 }

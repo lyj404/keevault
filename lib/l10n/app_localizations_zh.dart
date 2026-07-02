@@ -949,4 +949,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noStoredPassword => '没有存储的密码，请先使用密码解锁';
+
+  @override
+  String get syncRetry => '重试';
+
+  @override
+  String syncRetrying(Object attempt, Object maxAttempts) {
+    return '重试中... ($attempt/$maxAttempts)';
+  }
+
+  @override
+  String get syncErrorNetwork => '网络连接失败，请检查网络和服务器设置。';
+
+  @override
+  String get syncErrorAuth => '认证失败，请在设置中检查用户名和密码。';
+
+  @override
+  String get syncErrorNotFound => '远程数据库不存在，请在设置中检查远程路径。';
+
+  @override
+  String get syncErrorTimeout => '连接超时，服务器可能暂时不可用。';
+
+  @override
+  String get syncErrorServer => '服务器错误，请稍后再试。';
+
+  @override
+  String get databaseCorrupted => '数据库文件已损坏或格式不正确。';
+
+  @override
+  String get restoreFromBackup => '从备份恢复';
+
+  @override
+  String get restoreFromBackupDescription => '找到可用的备份，是否从最新备份恢复？';
+
+  @override
+  String get noBackupAvailable => '没有可用的备份进行恢复，请从外部备份手动恢复。';
 }

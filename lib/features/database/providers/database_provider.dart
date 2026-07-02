@@ -33,6 +33,7 @@ final databaseProvider = StateNotifierProvider<DatabaseNotifier, AsyncValue<Kdbx
 
 class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   final Ref _ref;
+  Object? _lastSyncError;
 
   DatabaseNotifier(this._ref) : super(const AsyncValue.data(null)) {
     _service.onDirtyChanged = (isDirty) {
@@ -43,6 +44,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   }
 
   DatabaseService get _service => _ref.read(databaseServiceProvider);
+
+  /// The last sync error, if any. Used by UI to show user-friendly messages.
+  Object? get lastSyncError => _lastSyncError;
 
   Future<void> preloadFile(String filePath) => _service.preloadFile(filePath);
 
@@ -71,6 +75,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         recentSvc.addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
         recentSvc.setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
       ]);
+      _ref.read(openedFromCloudProvider.notifier).state = isCloud;
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
       _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
@@ -88,6 +93,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         recentSvc.addRecentFile(filePath),
         recentSvc.setLastOpenedFile(filePath),
       ]);
+      _ref.read(openedFromCloudProvider.notifier).state = false;
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
@@ -140,6 +146,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       } catch (e) {
         log.e('Sync failed', error: e);
         _ref.read(syncStateProvider.notifier).state = SyncState.error;
+        _lastSyncError = e;
         return false;
       }
     }
@@ -163,7 +170,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       final newInfo = await syncService.getRemoteFileInfo(config);
       _service.setLastSyncedRemoteInfo(newInfo);
       _ref.read(syncStateProvider.notifier).state = SyncState.success;
+      _lastSyncError = null;
     } catch (e) {
+      _lastSyncError = e;
       _ref.read(syncStateProvider.notifier).state = SyncState.error;
     }
   }

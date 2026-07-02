@@ -17,6 +17,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
+import '../../sync/data/sync_service.dart' show SyncException, SyncErrorType;
 import '../providers/explorer_provider.dart';
 
 class ExplorerScreen extends ConsumerWidget {
@@ -2169,13 +2170,16 @@ Future<void> _syncToCloud(BuildContext context) async {
       if (syncState == SyncState.success) {
         showToast(context, l10n.syncedToCloud);
       } else {
-        showToast(context, l10n.syncFailed, isError: true);
+        final error = container.read(databaseProvider.notifier).lastSyncError;
+        if (context.mounted) {
+          _showSyncErrorDialog(context, _translateSyncError(error ?? Exception('unknown'), l10n));
+        }
       }
     }
   } catch (e) {
     if (context.mounted) {
       Navigator.of(context).pop();
-      showToast(context, l10n.syncFailedWithError(e.toString()), isError: true);
+      _showSyncErrorDialog(context, _translateSyncError(e, l10n));
     }
   }
 }
@@ -2234,6 +2238,22 @@ Future<void> _syncFromCloud(BuildContext context) async {
 }
 
 String _translateSyncError(Object e, AppLocalizations l10n) {
+  if (e is SyncException) {
+    switch (e.type) {
+      case SyncErrorType.network:
+        return l10n.syncErrorNetwork;
+      case SyncErrorType.auth:
+        return l10n.syncErrorAuth;
+      case SyncErrorType.notFound:
+        return l10n.syncErrorNotFound;
+      case SyncErrorType.timeout:
+        return l10n.syncErrorTimeout;
+      case SyncErrorType.serverError:
+        return l10n.syncErrorServer;
+      case SyncErrorType.unknown:
+        break;
+    }
+  }
   final msg = e.toString().replaceFirst('Exception: ', '');
   if (msg == 'please_configure_webdav') return l10n.pleaseConfigureWebDAVFirst;
   if (msg == 'cloud_database_not_exist') return l10n.cloudDatabaseNotExist;

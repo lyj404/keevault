@@ -1915,6 +1915,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'没有存储的密码，请先使用密码解锁'**
   String get noStoredPassword;
+
+  /// No description provided for @syncRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get syncRetry;
+
+  /// No description provided for @syncRetrying.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试中... ({attempt}/{maxAttempts})'**
+  String syncRetrying(Object attempt, Object maxAttempts);
+
+  /// No description provided for @syncErrorNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络连接失败，请检查网络和服务器设置。'**
+  String get syncErrorNetwork;
+
+  /// No description provided for @syncErrorAuth.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证失败，请在设置中检查用户名和密码。'**
+  String get syncErrorAuth;
+
+  /// No description provided for @syncErrorNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程数据库不存在，请在设置中检查远程路径。'**
+  String get syncErrorNotFound;
+
+  /// No description provided for @syncErrorTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接超时，服务器可能暂时不可用。'**
+  String get syncErrorTimeout;
+
+  /// No description provided for @syncErrorServer.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器错误，请稍后再试。'**
+  String get syncErrorServer;
+
+  /// No description provided for @databaseCorrupted.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据库文件已损坏或格式不正确。'**
+  String get databaseCorrupted;
+
+  /// No description provided for @restoreFromBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'从备份恢复'**
+  String get restoreFromBackup;
+
+  /// No description provided for @restoreFromBackupDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'找到可用的备份，是否从最新备份恢复？'**
+  String get restoreFromBackupDescription;
+
+  /// No description provided for @noBackupAvailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有可用的备份进行恢复，请从外部备份手动恢复。'**
+  String get noBackupAvailable;
 }
 
 class _AppLocalizationsDelegate
