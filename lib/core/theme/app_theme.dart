@@ -47,6 +47,10 @@ class ClayColors {
 
 /// Pre-built clay box decorations for reuse across the app.
 class ClayDecoration {
+  // Cached decorations to avoid per-build allocations.
+  static final _cardCache = <(Brightness, double), BoxDecoration>{};
+  static final _iconContainerCache = <(Brightness, double), BoxDecoration>{};
+
   /// Outer shadow for the raised clay effect.
   static List<BoxShadow> outerShadow(Brightness brightness) {
     if (brightness == Brightness.dark) {
@@ -103,9 +107,16 @@ class ClayDecoration {
     Color? color,
     double radius = 20,
   }) {
-    final isDark = brightness == Brightness.dark;
-    return BoxDecoration(
-      color: color ?? (isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight),
+    if (color != null) {
+      return BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: outerShadow(brightness),
+      );
+    }
+    final key = (brightness, radius);
+    return _cardCache[key] ??= BoxDecoration(
+      color: brightness == Brightness.dark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
       borderRadius: BorderRadius.circular(radius),
       boxShadow: outerShadow(brightness),
     );
@@ -136,15 +147,35 @@ class ClayDecoration {
     Color? color,
     double radius = 14,
   }) {
+    if (color != null) {
+      final isDark = brightness == Brightness.dark;
+      return BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: isDark ? 0.15 : 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
+    }
+    final key = (brightness, radius);
+    return _iconContainerCache[key] ??= _buildIconContainer(brightness, radius);
+  }
+
+  static BoxDecoration _buildIconContainer(Brightness brightness, double radius) {
     final isDark = brightness == Brightness.dark;
+    final bgColor = isDark
+        ? ClayColors.primaryMuted.withValues(alpha: 0.2)
+        : ClayColors.primary.withValues(alpha: 0.12);
     return BoxDecoration(
-      color: color ?? (isDark
-          ? ClayColors.primaryMuted.withValues(alpha: 0.2)
-          : ClayColors.primary.withValues(alpha: 0.12)),
+      color: bgColor,
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: (color ?? ClayColors.primary).withValues(alpha: isDark ? 0.15 : 0.1),
+          color: ClayColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
           blurRadius: 6,
           offset: const Offset(0, 2),
         ),

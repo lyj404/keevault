@@ -19,8 +19,9 @@ final selectedTagProvider = StateProvider<String?>((ref) => null);
 final allTagsProvider = Provider<List<String>>((ref) {
   final db = ref.watch(databaseProvider).valueOrNull;
   if (db == null) return [];
+  final service = ref.read(databaseServiceProvider);
   final tags = <String>{};
-  for (final entry in db.root.allEntries) {
+  for (final entry in service.allEntries) {
     final entryTags = entry.tags;
     if (entryTags != null) tags.addAll(entryTags);
   }

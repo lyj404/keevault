@@ -28,6 +28,37 @@ bool isCorruptionError(Object e) {
       (e is InvalidCredentialsError == false && msg.contains('invalid') && msg.contains('key'));
 }
 
+/// Pre-computed lowercase text for an entry, used for fast search.
+class _SearchRecord {
+  final KdbxEntry entry;
+  final String title;
+  final String username;
+  final String url;
+  final String notes;
+  final List<String> customFields;
+  final List<String> tags;
+
+  _SearchRecord(this.entry)
+      : title = (entry.fields['Title']?.text ?? '').toLowerCase(),
+        username = (entry.fields['UserName']?.text ?? '').toLowerCase(),
+        url = (entry.fields['URL']?.text ?? '').toLowerCase(),
+        notes = (entry.fields['Notes']?.text ?? '').toLowerCase(),
+        customFields = entry.fields.entries
+            .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
+            .map((e) => e.value.text.toLowerCase())
+            .toList(),
+        tags = (entry.tags ?? []).map((t) => t.toLowerCase()).toList();
+
+  bool matches(String lowerQuery) {
+    return title.contains(lowerQuery) ||
+        username.contains(lowerQuery) ||
+        url.contains(lowerQuery) ||
+        notes.contains(lowerQuery) ||
+        customFields.any((f) => f.contains(lowerQuery)) ||
+        tags.any((t) => t.contains(lowerQuery));
+  }
+}
+
 class DatabaseService {
   final _backupService = BackupService();
   KdbxDatabase? _db;
@@ -38,6 +69,7 @@ class DatabaseService {
   Uint8List? _preloadedBytes;
   String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
+  List<_SearchRecord>? _searchIndex;
   Uint8List? _lastSavedBytes;
 
   /// Last known remote file metadata, used for conflict detection.
@@ -68,11 +100,22 @@ class DatabaseService {
 
   void _rebuildEntryCache() {
     _allEntriesCache = _db?.root.allEntries.toList();
+    _rebuildSearchIndex();
+  }
+
+  void _rebuildSearchIndex() {
+    final entries = _allEntriesCache;
+    if (entries == null) {
+      _searchIndex = null;
+      return;
+    }
+    _searchIndex = entries.map((e) => _SearchRecord(e)).toList();
   }
 
   void rebuildEntryCache() => _rebuildEntryCache();
 
   /// Preloads file bytes into memory so openFile doesn't block on I/O.
+  /// Runs in a background isolate to avoid blocking the UI.
   Future<void> preloadFile(String filePath) async {
     // Skip if already preloaded the same file
     if (_preloadedBytes != null && _preloadedFilePath == filePath) {
@@ -80,7 +123,7 @@ class DatabaseService {
       return;
     }
     log.i('Preloading file: $filePath');
-    _preloadedBytes = await File(filePath).readAsBytes();
+    _preloadedBytes = await Isolate.run(() => File(filePath).readAsBytes());
     _preloadedFilePath = filePath;
   }
 
@@ -165,7 +208,7 @@ class DatabaseService {
     final bytes = await Isolate.run(() {
       CryptoService.initialize();
       return db.save();
-    });
+    }) as Uint8List;
     if (await _backupService.isAutoBackupEnabled()) {
       unawaited(_backupService.createBackup(_filePath!).catchError((e) {
         log.e('Auto-backup failed', error: e);
@@ -173,10 +216,10 @@ class DatabaseService {
       }));
     }
     await File(_filePath!).writeAsBytes(bytes);
-    _lastSavedBytes = Uint8List.fromList(bytes);
+    _lastSavedBytes = bytes;
     markClean();
     log.i('Database saved (${bytes.length} bytes)');
-    return Uint8List.fromList(bytes);
+    return bytes;
   }
 
   /// Returns true if the given bytes are identical to the last saved bytes.
@@ -197,8 +240,8 @@ class DatabaseService {
     final bytes = await Isolate.run(() {
       CryptoService.initialize();
       return db.save();
-    });
-    return Uint8List.fromList(bytes);
+    }) as Uint8List;
+    return bytes;
   }
 
   Future<void> saveAs(String newPath) async {
@@ -257,22 +300,15 @@ class DatabaseService {
   List<KdbxEntry> search(String query) {
     if (_db == null || query.isEmpty) return [];
     final lowerQuery = query.toLowerCase();
-    return allEntries.where((entry) {
-      final title = entry.fields['Title']?.text ?? '';
-      final username = entry.fields['UserName']?.text ?? '';
-      final url = entry.fields['URL']?.text ?? '';
-      final notes = entry.fields['Notes']?.text ?? '';
-      final customMatch = entry.fields.entries
-          .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
-          .any((e) => e.value.text.toLowerCase().contains(lowerQuery));
-      final tagMatch = entry.tags?.any((t) => t.toLowerCase().contains(lowerQuery)) ?? false;
-      return title.toLowerCase().contains(lowerQuery) ||
-          username.toLowerCase().contains(lowerQuery) ||
-          url.toLowerCase().contains(lowerQuery) ||
-          notes.toLowerCase().contains(lowerQuery) ||
-          customMatch ||
-          tagMatch;
-    }).toList();
+    final index = _searchIndex;
+    if (index == null) return [];
+    final results = <KdbxEntry>[];
+    for (final record in index) {
+      if (record.matches(lowerQuery)) {
+        results.add(record.entry);
+      }
+    }
+    return results;
   }
 
   KdbxGroup? findGroupByPath(String path) {
@@ -328,5 +364,6 @@ class DatabaseService {
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
     _allEntriesCache = null;
+    _searchIndex = null;
   }
 }
