@@ -112,3 +112,6 @@ coverage/
 !**/ios/**/GeneratedPluginRegistrant.*
 !**/macos/**/GeneratedPluginRegistrant.*
 !**/android/**/GeneratedPluginRegistrant.*
+
+# Codex agents skills
+.agents/

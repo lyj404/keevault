@@ -15,6 +15,7 @@ class EntryHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(databaseProvider);
     final service = ref.read(databaseServiceProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -292,7 +293,7 @@ class _DetailField extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           SelectableText(
-            obscure ? 'â€¢' * value.length : value,
+            obscure ? 'â€? * value.length : value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontFamily: obscure ? 'monospace' : null,
               letterSpacing: obscure ? 2 : null,

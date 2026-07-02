@@ -21,6 +21,9 @@ class EntryDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch databaseProvider so this screen rebuilds after cloud sync (reloadFromCloud)
+    // which replaces the entire KdbxDatabase instance.
+    ref.watch(databaseProvider);
     final service = ref.read(databaseServiceProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -402,7 +405,7 @@ class _PasswordFieldState extends State<_PasswordField> {
           ),
           const SizedBox(height: 4),
           SelectableText(
-            _visible ? widget.value : 'â€¢' * widget.value.length,
+            _visible ? widget.value : 'â€? * widget.value.length,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontFamily: _visible ? null : 'monospace',
               letterSpacing: _visible ? null : 2,
