@@ -899,6 +899,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchCamera => 'Switch Camera';
 
   @override
+  String get shortcutSearch => 'Search';
+
+  @override
+  String get shortcutSave => 'Save';
+
+  @override
   String get biometricUnlock => 'Biometric Unlock';
 
   @override

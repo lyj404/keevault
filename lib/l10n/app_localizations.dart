@@ -1784,6 +1784,18 @@ abstract class AppLocalizations {
   /// **'切换摄像头'**
   String get switchCamera;
 
+  /// No description provided for @shortcutSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get shortcutSearch;
+
+  /// No description provided for @shortcutSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get shortcutSave;
+
   /// No description provided for @biometricUnlock.
   ///
   /// In zh, this message translates to:

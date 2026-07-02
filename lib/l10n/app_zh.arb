@@ -335,6 +335,9 @@
   "toggleFlashlight": "切换闪光灯",
   "switchCamera": "切换摄像头",
 
+  "shortcutSearch": "搜索",
+  "shortcutSave": "保存",
+
   "biometricUnlock": "指纹解锁",
   "biometricUnlockDescription": "使用指纹或面部识别解锁数据库",
   "authenticateToEnableBiometric": "验证身份以启用指纹解锁",
