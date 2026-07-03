@@ -184,6 +184,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onBatchDelete: () => _batchDelete(context, ref),
           onBatchMove: () => _batchMove(context, ref),
           onBatchTag: () => _batchTag(context, ref),
+          onEntryDropped: isRecycleBin ? null : (entry, target) {
+            if (entry.parent == target) return;
+            ref.read(databaseServiceProvider).moveItem(entry, target);
+            refreshExplorerLists(ref);
+            if (context.mounted) {
+              showToast(context, AppLocalizations.of(context)!.moved);
+            }
+          },
         );
     }
 

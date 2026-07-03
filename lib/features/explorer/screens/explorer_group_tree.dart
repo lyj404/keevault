@@ -8,8 +8,9 @@ class _GroupTreeView extends ConsumerStatefulWidget {
   final ValueChanged<KdbxGroup> onRenameGroup;
   final ValueChanged<KdbxGroup>? onRestoreGroup;
   final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
+  final void Function(KdbxEntry entry, KdbxGroup target)? onEntryDropped;
 
-  const _GroupTreeView({required this.currentGroup, required this.isRecycleBin, required this.onGroupTap, required this.onDeleteGroup, required this.onRenameGroup, this.onRestoreGroup, this.onPermanentDeleteGroup});
+  const _GroupTreeView({required this.currentGroup, required this.isRecycleBin, required this.onGroupTap, required this.onDeleteGroup, required this.onRenameGroup, this.onRestoreGroup, this.onPermanentDeleteGroup, this.onEntryDropped});
 
   @override
   ConsumerState<_GroupTreeView> createState() => _GroupTreeViewState();
@@ -17,6 +18,7 @@ class _GroupTreeView extends ConsumerStatefulWidget {
 
 class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
   final Set<KdbxGroup> _expanded = {};
+  final Set<KdbxGroup> _dragOverGroups = {};
   KdbxDatabase? _lastDb;
 
   @override
@@ -38,7 +40,43 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
       itemCount: visible.length,
       itemBuilder: (context, index) {
         final item = visible[index];
-        return RepaintBoundary(child: _buildGroupTile(context, item.group, item.depth));
+        final tile = RepaintBoundary(child: _buildGroupTile(context, item.group, item.depth));
+        if (widget.onEntryDropped == null) return tile;
+        return DragTarget<KdbxEntry>(
+          onWillAcceptWithDetails: (details) {
+            final entry = details.data;
+            return entry.parent != item.group;
+          },
+          onAcceptWithDetails: (details) {
+            setState(() => _dragOverGroups.remove(item.group));
+            widget.onEntryDropped!(details.data, item.group);
+          },
+          onLeave: (_) {
+            setState(() => _dragOverGroups.remove(item.group));
+          },
+          onMove: (_) {
+            if (!_dragOverGroups.contains(item.group)) {
+              setState(() => _dragOverGroups.add(item.group));
+            }
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isDragOver = _dragOverGroups.contains(item.group);
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: isDragOver
+                  ? BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                        width: 1.5,
+                      ),
+                    )
+                  : null,
+              child: tile,
+            );
+          },
+        );
       },
     );
   }

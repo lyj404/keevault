@@ -44,6 +44,7 @@ class _EntryListBody extends StatelessWidget {
   final bool isMultiSelect;
   final Set<KdbxEntry> selectedEntries;
   final ValueChanged<KdbxEntry> onToggleEntrySelection;
+  final bool isDraggable;
 
   const _EntryListBody({
     required this.entries,
@@ -56,6 +57,7 @@ class _EntryListBody extends StatelessWidget {
     this.isMultiSelect = false,
     this.selectedEntries = const {},
     required this.onToggleEntrySelection,
+    this.isDraggable = false,
   });
 
   @override
@@ -82,6 +84,7 @@ class _EntryListBody extends StatelessWidget {
             onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
             showCheckbox: isMultiSelect,
             isChecked: selectedEntries.contains(e),
+            draggable: isDraggable,
           ),
         );
       },

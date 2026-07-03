@@ -18,8 +18,9 @@ class EntryListTile extends StatelessWidget {
   final String? query;
   final bool showCheckbox;
   final bool isChecked;
+  final bool draggable;
 
-  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query, this.showCheckbox = false, this.isChecked = false});
+  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query, this.showCheckbox = false, this.isChecked = false, this.draggable = false});
 
   String get _title => entry.fields['Title']?.text ?? '';
   String get _username => entry.fields['UserName']?.text ?? '';
@@ -158,7 +159,7 @@ class EntryListTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final displayTitle = _title.isEmpty ? l10n.untitled : _title;
 
-    return Padding(
+    final tile = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Container(
         decoration: isSelected
@@ -322,6 +323,46 @@ class EntryListTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (!draggable) return tile;
+
+    return LongPressDraggable<KdbxEntry>(
+      data: entry,
+      delay: const Duration(milliseconds: 300),
+      feedback: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 260,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_getIcon(entry.icon), size: 18, color: colorScheme.primary),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  displayTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.3, child: tile),
+      child: tile,
     );
   }
 }

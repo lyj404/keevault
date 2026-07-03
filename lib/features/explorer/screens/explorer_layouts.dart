@@ -38,6 +38,7 @@ class _WideLayout extends StatelessWidget {
   final VoidCallback onBatchDelete;
   final VoidCallback onBatchMove;
   final VoidCallback onBatchTag;
+  final void Function(KdbxEntry entry, KdbxGroup target)? onEntryDropped;
 
   const _WideLayout({
     required this.breadcrumbs,
@@ -77,6 +78,7 @@ class _WideLayout extends StatelessWidget {
     required this.onBatchDelete,
     required this.onBatchMove,
     required this.onBatchTag,
+    this.onEntryDropped,
   });
 
   @override
@@ -150,6 +152,7 @@ class _WideLayout extends StatelessWidget {
                     onRenameGroup: onRenameGroup ?? (_) {},
                     onRestoreGroup: onRestoreGroup,
                     onPermanentDeleteGroup: onPermanentDeleteGroup,
+                    onEntryDropped: isRecycleBin ? null : onEntryDropped,
                   ),
                 ),
               ],
@@ -254,6 +257,7 @@ class _WideLayout extends StatelessWidget {
                     isMultiSelect: isMultiSelect,
                     selectedEntries: selectedEntries,
                     onToggleEntrySelection: onToggleEntrySelection,
+                    isDraggable: !isRecycleBin,
                   ),
                 ),
                 // Shortcut hint bar (hidden on Android where keyboard shortcuts are unavailable)
