@@ -71,17 +71,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     if (event is! KeyDownEvent) return;
                     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
                       setState(() {
-                        final idx = _selectedEntry == null ? -1 : results.indexOf(_selectedEntry!);
+                        final idx = _selectedEntry == null ? -1 : results.indexWhere((r) => r.entry == _selectedEntry);
                         if (idx < results.length - 1) {
-                          _selectedEntry = results[idx + 1];
+                          _selectedEntry = results[idx + 1].entry;
                           ref.read(activeEntryProvider.notifier).state = _selectedEntry;
                         }
                       });
                     } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                       setState(() {
-                        final idx = _selectedEntry == null ? results.length : results.indexOf(_selectedEntry!);
+                        final idx = _selectedEntry == null ? results.length : results.indexWhere((r) => r.entry == _selectedEntry);
                         if (idx > 0) {
-                          _selectedEntry = results[idx - 1];
+                          _selectedEntry = results[idx - 1].entry;
                           ref.read(activeEntryProvider.notifier).state = _selectedEntry;
                         }
                       });
@@ -95,13 +95,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: results.length,
                     itemBuilder: (ctx, i) {
-                      final entry = results[i];
+                      final result = results[i];
+                      final entry = result.entry;
                       final groupPath = entry.parent != null ? service.getGroupPath(entry.parent!) : '';
                       return RepaintBoundary(
                         child: EntryListTile(
                           key: ValueKey(entry.uuid),
                           entry: entry,
                           isSelected: entry == _selectedEntry,
+                          query: _searchCtrl.text,
                           onTap: () {
                             setState(() => _selectedEntry = entry);
                             ref.read(activeEntryProvider.notifier).state = entry;

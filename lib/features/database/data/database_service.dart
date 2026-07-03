@@ -7,6 +7,7 @@ import 'package:kpasslib/kpasslib.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
+import '../../../core/utils/fuzzy_match.dart';
 import '../../sync/data/sync_service.dart';
 
 /// Thrown when a KDBX file cannot be parsed due to corruption or bad format.
@@ -30,6 +31,14 @@ bool isCorruptionError(Object e) {
 }
 
 /// Pre-computed lowercase text for an entry, used for fast search.
+
+/// A search result with relevance score and match positions for highlighting.
+class SearchResult {
+  final KdbxEntry entry;
+  final double score;
+  final List<int> matchPositions;
+  const SearchResult(this.entry, this.score, this.matchPositions);
+}
 class _SearchRecord {
   final KdbxEntry entry;
   final String title;
@@ -50,16 +59,30 @@ class _SearchRecord {
             .toList(),
         tags = (entry.tags ?? []).map((t) => t.toLowerCase()).toList();
 
-  bool matches(String lowerQuery) {
-    return title.contains(lowerQuery) ||
-        username.contains(lowerQuery) ||
-        url.contains(lowerQuery) ||
-        notes.contains(lowerQuery) ||
-        customFields.any((f) => f.contains(lowerQuery)) ||
-        tags.any((t) => t.contains(lowerQuery));
+  /// Returns the best fuzzy match score across all fields, or null if no match.
+  FuzzyMatchResult? matchScore(String query) {
+    final lowerQuery = query.toLowerCase();
+    FuzzyMatchResult? best;
+
+    void consider(String text) {
+      final r = fuzzyMatch(text, lowerQuery);
+      if (r != null && r.isMatch) {
+        if (best == null || r.score > best!.score) best = r;
+      }
+    }
+
+    // Primary fields
+    consider(title);
+    consider(username);
+    consider(url);
+    consider(notes);
+    // Custom fields & tags
+    for (final f in customFields) { consider(f); }
+    for (final t in tags) { consider(t); }
+
+    return best;
   }
 }
-
 class DatabaseService {
   final _backupService = BackupService();
   KdbxDatabase? _db;
@@ -311,17 +334,18 @@ class DatabaseService {
     return null;
   }
 
-  List<KdbxEntry> search(String query) {
+  List<SearchResult> search(String query) {
     if (_db == null || query.isEmpty) return [];
-    final lowerQuery = query.toLowerCase();
     final index = _searchIndex;
     if (index == null) return [];
-    final results = <KdbxEntry>[];
+    final results = <SearchResult>[];
     for (final record in index) {
-      if (record.matches(lowerQuery)) {
-        results.add(record.entry);
+      final match = record.matchScore(query);
+      if (match != null && match.isMatch) {
+        results.add(SearchResult(record.entry, match.score, match.positions));
       }
     }
+    results.sort((a, b) => b.score.compareTo(a.score));
     return results;
   }
 

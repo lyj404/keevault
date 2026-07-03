@@ -5,6 +5,7 @@ import '../utils/clipboard_utils.dart';
 import '../../features/totp/data/totp_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'toast.dart';
+import '../utils/fuzzy_match.dart';
 
 class EntryListTile extends StatelessWidget {
   final KdbxEntry entry;
@@ -14,8 +15,9 @@ class EntryListTile extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
   final VoidCallback? onMove;
+  final String? query;
 
-  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove});
+  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query});
 
   String get _title => entry.fields['Title']?.text ?? '';
   String get _username => entry.fields['UserName']?.text ?? '';
@@ -26,6 +28,42 @@ class EntryListTile extends StatelessWidget {
     final config = TotpService().loadFromEntry(entry);
     if (config == null) return null;
     return TotpService().generateCode(config);
+  }
+
+
+  Widget _highlightedTitle(String text, ColorScheme colorScheme) {
+    if (query == null || query!.isEmpty) {
+      return Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
+      );
+    }
+    final match = fuzzyMatch(text, query!);
+    if (match == null || !match.isMatch) {
+      return Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
+      );
+    }
+    final positions = match.positions.toSet();
+    final normalStyle = TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface);
+    final highlightStyle = TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.primary, backgroundColor: colorScheme.primaryContainer);
+    final spans = <TextSpan>[];
+    for (int i = 0; i < text.length; i++) {
+      spans.add(TextSpan(
+        text: text[i],
+        style: positions.contains(i) ? highlightStyle : normalStyle,
+      ));
+    }
+    return RichText(
+      text: TextSpan(children: spans),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   void _showContextMenu(BuildContext context, Offset globalPos) {
@@ -170,12 +208,7 @@ class EntryListTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          displayTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
-                        ),
+                        _highlightedTitle(displayTitle, colorScheme),
                         if (_username.isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(
