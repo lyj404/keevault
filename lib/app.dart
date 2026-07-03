@@ -151,14 +151,8 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
   }
 
   String? _getTotpCode(dynamic entry) {
-    final cd = entry.customData;
-    if (cd == null) return null;
-    final secret = cd.map['TimeOtp-Secret']?.value;
-    if (secret == null || secret.isEmpty) return null;
-    final period = int.tryParse(cd.map['TimeOtp-Period']?.value ?? '') ?? 30;
-    final digits = int.tryParse(cd.map['TimeOtp-Size']?.value ?? '') ?? 6;
-    final algorithm = cd.map['TimeOtp-Algorithm']?.value ?? 'HMAC-SHA-1';
-    final config = TotpConfig(secret: secret, period: period, digits: digits, algorithm: algorithm);
+    final config = TotpService().loadFromEntry(entry);
+    if (config == null) return null;
     return TotpService().generateCode(config);
   }
 

@@ -91,7 +91,7 @@ class NotificationService {
     }
   }
 
-  /// Windows: 使用 Shell_NotifyIcon 显示原生气泡通知
+  /// Windows: Shell_NotifyIcon
   void _showWindowsBalloon(String title, String body) {
     final hInstance = GetModuleHandle(nullptr);
     const className = 'KeeVaultNotifyWnd';
@@ -102,7 +102,7 @@ class NotificationService {
     int hWnd = 0;
 
     try {
-      wc.ref.lpfnWndProc = Pointer.fromFunction(_defWindowProc, 0);
+      wc.ref.lpfnWndProc = Pointer.fromFunction(NotificationService._defWindowProc, 0);
       wc.ref.hInstance = hInstance;
       wc.ref.lpszClassName = classNamePtr;
       RegisterClass(wc);
@@ -119,11 +119,8 @@ class NotificationService {
         nullptr,
       );
 
-      if (hWnd == 0) {
-        return;
-      }
+      if (hWnd == 0) return;
 
-      // 设置 NOTIFYICONDATA
       nid = calloc<NOTIFYICONDATA>();
       nid.ref.cbSize = sizeOf<NOTIFYICONDATA>();
       nid.ref.hWnd = hWnd;
@@ -146,7 +143,12 @@ class NotificationService {
     }
   }
 
-  /// Linux: 优先使用 notify-send
+  /// Windows API callback - static method to prevent GC issues.
+  static int _defWindowProc(int hWnd, int uMsg, int wParam, int lParam) {
+    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+  }
+
+  /// Linux: notify-send
   Future<void> _showLinuxNotification(String title, String body) async {
     try {
       final result = await Process.run('notify-send', [
@@ -169,8 +171,4 @@ class NotificationService {
       );
     } catch (_) {}
   }
-}
-
-int _defWindowProc(int hWnd, int uMsg, int wParam, int lParam) {
-  return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
