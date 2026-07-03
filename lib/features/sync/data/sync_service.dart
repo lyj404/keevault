@@ -116,6 +116,12 @@ class SyncService {
     return client;
   }
 
+  /// Clears cached WebDAV client and config to remove sensitive data from memory.
+  void clearCache() {
+    _cachedClient = null;
+    _cachedConfig = null;
+  }
+
   /// Tests WebDAV connection. Returns null on success, error key on failure.
   /// Error keys: 'auth_failed', 'path_not_accessible', 'connection_failed', 'network_failed'
   Future<String?> testConnection(WebDavConfig config) async {

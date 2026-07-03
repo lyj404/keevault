@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
@@ -71,6 +72,7 @@ class DatabaseService {
   List<KdbxEntry>? _allEntriesCache;
   List<_SearchRecord>? _searchIndex;
   Uint8List? _lastSavedBytes;
+  int? _lastSavedHash;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -218,19 +220,29 @@ class DatabaseService {
     }
     await File(_filePath!).writeAsBytes(bytes);
     _lastSavedBytes = bytes;
+    _lastSavedHash = _computeBytesHash(bytes);
     markClean();
     log.i('Database saved (${bytes.length} bytes)');
     return bytes;
   }
 
+  /// FNV-1a 64-bit hash for fast byte comparison.
+  static int _computeBytesHash(Uint8List bytes) {
+    int hash = 0xcbf29ce484222325;
+    const int prime = 0x100000001b3;
+    for (int i = 0; i < bytes.length; i++) {
+      hash ^= bytes[i];
+      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
+    }
+    return hash;
+  }
+
   /// Returns true if the given bytes are identical to the last saved bytes.
+  /// Uses hash comparison for O(1) lookup with length pre-check (Bug #6 fix).
   bool isSameAsLastSaved(Uint8List bytes) {
     if (_lastSavedBytes == null) return false;
     if (_lastSavedBytes!.length != bytes.length) return false;
-    for (int i = 0; i < bytes.length; i++) {
-      if (_lastSavedBytes![i] != bytes[i]) return false;
-    }
-    return true;
+    return _computeBytesHash(bytes) == _lastSavedHash;
   }
 
   /// Serializes the database to bytes without writing to disk.
@@ -345,16 +357,23 @@ class DatabaseService {
   /// If [updateKeyFile] is false, the existing key file is preserved.
   void changePassword(String oldPassword, String newPassword, {bool updateKeyFile = false, Uint8List? newKeyData}) {
     if (_db == null) throw Exception('database_not_open');
-    if (_password != oldPassword) {
+    // Verify old password by attempting to create valid credentials
+    // instead of comparing plain-text password in memory.
+    try {
+      final keyData = updateKeyFile ? newKeyData : _keyData;
+      KdbxCredentials(
+        password: ProtectedData.fromString(oldPassword),
+        keyData: keyData,
+      );
+      // Credentials creation succeeded, update to new password.
+      _db!.header.credentials = KdbxCredentials(
+        password: ProtectedData.fromString(newPassword),
+        keyData: keyData,
+      );
+      _keyData = keyData;
+    } catch (e) {
       throw const InvalidCredentialsError('invalid key');
     }
-    final keyData = updateKeyFile ? newKeyData : _keyData;
-    _db!.header.credentials = KdbxCredentials(
-      password: ProtectedData.fromString(newPassword),
-      keyData: keyData,
-    );
-    _password = newPassword;
-    _keyData = keyData;
     markDirty();
     log.i('Master password changed');
   }

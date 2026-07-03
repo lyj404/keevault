@@ -62,6 +62,9 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   final List<String> _tags = [];
   bool _isEdit = false;
   KdbxEntry? _entry;
+  bool _wasDirtyBeforeCreate = false;
+  KdbxGroup? _targetGroup;
+  bool _loaded = false;
   bool _expires = false;
   DateTime? _expiryDate;
   TotpConfig? _totpConfig;
@@ -70,7 +73,16 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   @override
   void initState() {
     super.initState();
-    _loadEntry();
+    // Defer _loadEntry() to didChangeDependencies (Bug #8 fix)
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      _loadEntry();
+    }
   }
 
   void _loadEntry() {
@@ -107,12 +119,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       }
     }
 
-    // Create new entry
-    final group = service.findGroupByPath(widget.groupPath);
-    if (group != null) {
-      _wasDirtyBeforeCreate = service.isDirty;
-      _entry = service.createEntry(group);
-    }
+    // For new entries, store the target group but defer creation to _save(). (Bug #2 fix)
+    _targetGroup = service.findGroupByPath(widget.groupPath);
   }
 
   void _loadCustomFields(KdbxEntry entry) {
@@ -128,20 +136,17 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   }
 
   bool _saved = false;
-  bool _wasDirtyBeforeCreate = false;
 
   @override
   void dispose() {
+    // If creating a new entry was abandoned, clean up (Bug #2 fix).
     if (!_saved && !_isEdit && _entry != null) {
       final service = ref.read(databaseServiceProvider);
-      final group = service.findGroupByPath(widget.groupPath);
-      if (group != null) {
-        group.entries.remove(_entry);
-        service.rebuildEntryCache();
-        if (!_wasDirtyBeforeCreate) {
-          service.markClean();
-        }
+      service.deleteItem(_entry!);
+      if (!_wasDirtyBeforeCreate) {
+        service.markClean();
       }
+      service.rebuildEntryCache();
     }
     _titleCtrl.dispose();
     _usernameCtrl.dispose();
@@ -703,7 +708,13 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   }
 
   void _save() {
-    // Custom field validation is done below; no form-level validators to check.
+    final service = ref.read(databaseServiceProvider);
+    // Create entry on demand for new entries (deferred from _loadEntry, Bug #2 fix).
+    if (!_isEdit && _entry == null) {
+      if (_targetGroup == null) return;
+      _wasDirtyBeforeCreate = service.isDirty;
+      _entry = service.createEntry(_targetGroup!);
+    }
     if (_entry == null) return;
 
     final l10n = AppLocalizations.of(context)!;
@@ -725,8 +736,6 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         return;
       }
     }
-
-    final service = ref.read(databaseServiceProvider);
 
     if (_isEdit) {
       _entry!.times.touch();

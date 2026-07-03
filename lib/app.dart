@@ -55,6 +55,10 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    // Reset auto-lock timer on any key activity (Bug #1 fix)
+    if (event is KeyDownEvent || event is KeyRepeatEvent) {
+      ref.read(autoLockProvider.notifier).resetTimer();
+    }
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
     if (!isCtrl) return KeyEventResult.ignored;

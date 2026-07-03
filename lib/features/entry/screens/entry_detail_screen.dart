@@ -63,7 +63,10 @@ class EntryDetailScreen extends ConsumerWidget {
     final title = matchedEntry.fields['Title']?.text ?? '';
     final colorScheme = Theme.of(context).colorScheme;
     final group = matchedEntry.parent;
-    final isInRecycleBin = group?.icon == KdbxIcon.trashBin;
+    // Check recycle bin using database metadata instead of icon comparison.
+    final db = ref.read(databaseServiceProvider).db;
+    final recycleBinUuid = db?.meta.recycleBinUuid;
+    final isInRecycleBin = recycleBinUuid != null && group?.uuid == recycleBinUuid;
 
     return Scaffold(
       appBar: AppBar(

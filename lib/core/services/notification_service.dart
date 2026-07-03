@@ -96,53 +96,54 @@ class NotificationService {
     final hInstance = GetModuleHandle(nullptr);
     const className = 'KeeVaultNotifyWnd';
     final classNamePtr = className.toNativeUtf16();
-
+    final windowTitlePtr = 'KeeVault Notify'.toNativeUtf16();
     final wc = calloc<WNDCLASS>();
-    wc.ref.lpfnWndProc = Pointer.fromFunction(_defWindowProc, 0);
-    wc.ref.hInstance = hInstance;
-    wc.ref.lpszClassName = classNamePtr;
-    RegisterClass(wc);
+    Pointer<NOTIFYICONDATA>? nid;
+    int hWnd = 0;
 
-    final hWnd = CreateWindowEx(
-      0,
-      classNamePtr,
-      'KeeVault Notify'.toNativeUtf16(),
-      0,
-      0, 0, 0, 0,
-      HWND_MESSAGE,
-      0,
-      hInstance,
-      nullptr,
-    );
+    try {
+      wc.ref.lpfnWndProc = Pointer.fromFunction(_defWindowProc, 0);
+      wc.ref.hInstance = hInstance;
+      wc.ref.lpszClassName = classNamePtr;
+      RegisterClass(wc);
 
-    if (hWnd == 0) {
-      _cleanup(wc, classNamePtr);
-      return;
+      hWnd = CreateWindowEx(
+        0,
+        classNamePtr,
+        windowTitlePtr,
+        0,
+        0, 0, 0, 0,
+        HWND_MESSAGE,
+        0,
+        hInstance,
+        nullptr,
+      );
+
+      if (hWnd == 0) {
+        return;
+      }
+
+      // 设置 NOTIFYICONDATA
+      nid = calloc<NOTIFYICONDATA>();
+      nid.ref.cbSize = sizeOf<NOTIFYICONDATA>();
+      nid.ref.hWnd = hWnd;
+      nid.ref.uID = 1;
+      nid.ref.uFlags = NIF_INFO;
+      nid.ref.dwInfoFlags = NIIF_INFO;
+      nid.ref.Anonymous.uTimeout = 10000;
+      nid.ref.szInfoTitle = title;
+      nid.ref.szInfo = body;
+
+      Shell_NotifyIcon(NIM_ADD, nid);
+      Shell_NotifyIcon(NIM_DELETE, nid);
+    } finally {
+      if (nid != null) calloc.free(nid);
+      if (hWnd != 0) DestroyWindow(hWnd);
+      UnregisterClass(classNamePtr, hInstance);
+      calloc.free(wc);
+      calloc.free(classNamePtr);
+      calloc.free(windowTitlePtr);
     }
-
-    // 设置 NOTIFYICONDATA
-    final nid = calloc<NOTIFYICONDATA>();
-    nid.ref.cbSize = sizeOf<NOTIFYICONDATA>();
-    nid.ref.hWnd = hWnd;
-    nid.ref.uID = 1;
-    nid.ref.uFlags = NIF_INFO;
-    nid.ref.dwInfoFlags = NIIF_INFO;
-    nid.ref.Anonymous.uTimeout = 10000;
-    nid.ref.szInfoTitle = title;
-    nid.ref.szInfo = body;
-
-    Shell_NotifyIcon(NIM_ADD, nid);
-    Shell_NotifyIcon(NIM_DELETE, nid);
-
-    calloc.free(nid);
-    DestroyWindow(hWnd);
-    _cleanup(wc, classNamePtr);
-  }
-
-  void _cleanup(Pointer<WNDCLASS> wc, Pointer<Utf16> classNamePtr) {
-    UnregisterClass(classNamePtr, wc.ref.hInstance);
-    calloc.free(wc);
-    calloc.free(classNamePtr);
   }
 
   /// Linux: 优先使用 notify-send
