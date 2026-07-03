@@ -41,6 +41,9 @@ class _EntryListBody extends StatelessWidget {
   final ValueChanged<KdbxEntry> onDeleteEntry;
   final ValueChanged<KdbxEntry>? onRestoreEntry;
   final ValueChanged<KdbxEntry>? onMoveEntry;
+  final bool isMultiSelect;
+  final Set<KdbxEntry> selectedEntries;
+  final ValueChanged<KdbxEntry> onToggleEntrySelection;
 
   const _EntryListBody({
     required this.entries,
@@ -50,6 +53,9 @@ class _EntryListBody extends StatelessWidget {
     required this.onDeleteEntry,
     this.onRestoreEntry,
     this.onMoveEntry,
+    this.isMultiSelect = false,
+    this.selectedEntries = const {},
+    required this.onToggleEntrySelection,
   });
 
   @override
@@ -69,11 +75,13 @@ class _EntryListBody extends StatelessWidget {
             key: ValueKey(e.uuid),
             entry: e,
             isSelected: e == selectedEntry,
-            onTap: () => onEntrySelect(e),
+            onTap: isMultiSelect ? () => onToggleEntrySelection(e) : () => onEntrySelect(e),
             onOpen: () => onEntryOpen(e),
             onDelete: () => onDeleteEntry(e),
             onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
             onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+            showCheckbox: isMultiSelect,
+            isChecked: selectedEntries.contains(e),
           ),
         );
       },
@@ -97,6 +105,9 @@ class _MobileEntryListBody extends StatelessWidget {
   final ValueChanged<KdbxGroup>? onRenameGroup;
   final ValueChanged<KdbxGroup>? onRestoreGroup;
   final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
+  final bool isMultiSelect;
+  final Set<KdbxEntry> selectedEntries;
+  final ValueChanged<KdbxEntry> onToggleEntrySelection;
 
   const _MobileEntryListBody({
     required this.currentGroup,
@@ -112,6 +123,9 @@ class _MobileEntryListBody extends StatelessWidget {
     this.onRenameGroup,
     this.onRestoreGroup,
     this.onPermanentDeleteGroup,
+    this.isMultiSelect = false,
+    this.selectedEntries = const {},
+    required this.onToggleEntrySelection,
   });
 
   @override
@@ -147,11 +161,13 @@ class _MobileEntryListBody extends StatelessWidget {
             key: ValueKey(e.uuid),
             entry: e,
             isSelected: e == selectedEntry,
-            onTap: () => onEntrySelect(e),
+            onTap: isMultiSelect ? () => onToggleEntrySelection(e) : () => onEntrySelect(e),
             onOpen: () => onEntryOpen(e),
             onDelete: () => onDeleteEntry(e),
             onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
             onMove: onMoveEntry != null ? () => onMoveEntry!(e) : null,
+            showCheckbox: isMultiSelect,
+            isChecked: selectedEntries.contains(e),
           ),
         );
       },

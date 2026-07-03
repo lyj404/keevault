@@ -16,8 +16,10 @@ class EntryListTile extends StatelessWidget {
   final VoidCallback? onRestore;
   final VoidCallback? onMove;
   final String? query;
+  final bool showCheckbox;
+  final bool isChecked;
 
-  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query});
+  const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query, this.showCheckbox = false, this.isChecked = false});
 
   String get _title => entry.fields['Title']?.text ?? '';
   String get _username => entry.fields['UserName']?.text ?? '';
@@ -192,6 +194,15 @@ class EntryListTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
+                  // Checkbox for multi-select mode
+                  if (showCheckbox) ...[
+                    Checkbox(
+                      value: isChecked,
+                      onChanged: onTap != null ? (_) => onTap!() : null,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   // Clay icon
                   Container(
                     width: 40,

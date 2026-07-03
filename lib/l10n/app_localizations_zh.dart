@@ -993,4 +993,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noBackupAvailable => '没有可用的备份进行恢复，请从外部备份手动恢复。';
+
+  @override
+  String get sortBy => '排序方式';
+
+  @override
+  String get sortTitleAsc => '标题 A→Z';
+
+  @override
+  String get sortTitleDesc => '标题 Z→A';
+
+  @override
+  String get sortCreatedNewest => '最新创建';
+
+  @override
+  String get sortCreatedOldest => '最早创建';
+
+  @override
+  String get sortModifiedNewest => '最近修改';
+
+  @override
+  String get sortModifiedOldest => '最早修改';
+
+  @override
+  String get sortExpiredFirst => '过期优先';
+
+  @override
+  String get batchSelect => '批量选择';
+
+  @override
+  String get batchDelete => '批量删除';
+
+  @override
+  String get batchMove => '批量移动';
+
+  @override
+  String get batchTag => '批量标签';
+
+  @override
+  String selectedCount(Object count) {
+    return '已选择 $count 项';
+  }
+
+  @override
+  String get cancelSelection => '取消选择';
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String batchDeleteConfirm(Object count) {
+    return '确定删除选中的 $count 个条目吗？';
+  }
+
+  @override
+  String get batchTagTitle => '编辑标签';
+
+  @override
+  String get batchTagHint => '输入标签名称';
 }

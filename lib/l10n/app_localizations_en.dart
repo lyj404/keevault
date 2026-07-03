@@ -1017,4 +1017,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noBackupAvailable =>
       'No backup available for recovery. Please restore from an external backup.';
+
+  @override
+  String get sortBy => 'Sort by';
+
+  @override
+  String get sortTitleAsc => 'Title A→Z';
+
+  @override
+  String get sortTitleDesc => 'Title Z→A';
+
+  @override
+  String get sortCreatedNewest => 'Newest created';
+
+  @override
+  String get sortCreatedOldest => 'Oldest created';
+
+  @override
+  String get sortModifiedNewest => 'Recently modified';
+
+  @override
+  String get sortModifiedOldest => 'Least recently modified';
+
+  @override
+  String get sortExpiredFirst => 'Expired first';
+
+  @override
+  String get batchSelect => 'Select';
+
+  @override
+  String get batchDelete => 'Delete selected';
+
+  @override
+  String get batchMove => 'Move selected';
+
+  @override
+  String get batchTag => 'Edit tags';
+
+  @override
+  String selectedCount(Object count) {
+    return '$count selected';
+  }
+
+  @override
+  String get cancelSelection => 'Cancel';
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String batchDeleteConfirm(Object count) {
+    return 'Delete $count selected entries?';
+  }
+
+  @override
+  String get batchTagTitle => 'Edit tags';
+
+  @override
+  String get batchTagHint => 'Enter tag name';
 }

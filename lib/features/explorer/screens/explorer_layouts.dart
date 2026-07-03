@@ -27,6 +27,17 @@ class _WideLayout extends StatelessWidget {
   final VoidCallback? onImportCsv;
   final VoidCallback? onExportCsv;
   final VoidCallback? onExportKdbx;
+  final EntrySortOption sortOption;
+  final ValueChanged<EntrySortOption> onSortChanged;
+  final bool isMultiSelect;
+  final Set<KdbxEntry> selectedEntries;
+  final VoidCallback onToggleMultiSelect;
+  final ValueChanged<KdbxEntry> onToggleEntrySelection;
+  final VoidCallback onSelectAll;
+  final VoidCallback onCancelSelection;
+  final VoidCallback onBatchDelete;
+  final VoidCallback onBatchMove;
+  final VoidCallback onBatchTag;
 
   const _WideLayout({
     required this.breadcrumbs,
@@ -55,6 +66,17 @@ class _WideLayout extends StatelessWidget {
     this.onImportCsv,
     this.onExportCsv,
     this.onExportKdbx,
+    required this.sortOption,
+    required this.onSortChanged,
+    required this.isMultiSelect,
+    required this.selectedEntries,
+    required this.onToggleMultiSelect,
+    required this.onToggleEntrySelection,
+    required this.onSelectAll,
+    required this.onCancelSelection,
+    required this.onBatchDelete,
+    required this.onBatchMove,
+    required this.onBatchTag,
   });
 
   @override
@@ -161,8 +183,20 @@ class _WideLayout extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(width: 8),
-                      Expanded(child: _BreadcrumbBar(breadcrumbs: breadcrumbs)),
+                      Expanded(
+                        child: isMultiSelect
+                            ? Text(l10n.selectedCount(selectedEntries.length), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15))
+                            : _BreadcrumbBar(breadcrumbs: breadcrumbs),
+                      ),
                       const Spacer(),
+                      if (isMultiSelect) ...[
+                        _ToolbarButton(icon: Icons.close_rounded, tooltip: l10n.cancel, onPressed: onCancelSelection),
+                        _ToolbarButton(icon: Icons.select_all_rounded, tooltip: l10n.selectAll, onPressed: onSelectAll),
+                        _ToolbarButton(icon: Icons.delete_outline_rounded, tooltip: l10n.batchDelete, onPressed: selectedEntries.isNotEmpty ? onBatchDelete : null),
+                        _ToolbarButton(icon: Icons.drive_file_move_rounded, tooltip: l10n.batchMove, onPressed: selectedEntries.isNotEmpty ? onBatchMove : null),
+                        _ToolbarButton(icon: Icons.label_outline_rounded, tooltip: l10n.batchTag, onPressed: selectedEntries.isNotEmpty ? onBatchTag : null),
+                      ] else ...[
+                        _SortButton(sortOption: sortOption, onSortChanged: onSortChanged),
                       _ToolbarButton(icon: Icons.add_rounded, tooltip: l10n.addEntry, onPressed: currentGroup != null ? onAddEntry : null),
                       _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: l10n.addGroup, onPressed: currentGroup != null ? onAddGroup : null),
                       if (isOpenedFromCloud)
@@ -181,6 +215,7 @@ class _WideLayout extends StatelessWidget {
                             case 'settings': context.push('/settings');
                             case 'about': context.push('/about');
                             case 'close': onClose();
+                              case 'batch_select': onToggleMultiSelect();
                           }
                         },
                         itemBuilder: (_) => [
@@ -195,9 +230,11 @@ class _WideLayout extends StatelessWidget {
                           const PopupMenuDivider(),
                           PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
+                          PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
                           PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
                         ],
                       ),
+                      ],
                     ],
                   ),
                 ),
@@ -214,6 +251,9 @@ class _WideLayout extends StatelessWidget {
                     onDeleteEntry: onDeleteEntry,
                     onRestoreEntry: onRestoreEntry,
                     onMoveEntry: onMoveEntry,
+                    isMultiSelect: isMultiSelect,
+                    selectedEntries: selectedEntries,
+                    onToggleEntrySelection: onToggleEntrySelection,
                   ),
                 ),
                 // Shortcut hint bar (hidden on Android where keyboard shortcuts are unavailable)
@@ -266,6 +306,49 @@ class _ToolbarButton extends StatelessWidget {
   }
 }
 
+class _SortButton extends StatelessWidget {
+  final EntrySortOption sortOption;
+  final ValueChanged<EntrySortOption> onSortChanged;
+  const _SortButton({required this.sortOption, required this.onSortChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    return PopupMenuButton<EntrySortOption>(
+      tooltip: l10n.sortBy,
+      icon: Icon(Icons.sort_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+      onSelected: onSortChanged,
+      itemBuilder: (_) => [
+        _sortItem(l10n.sortTitleAsc, EntrySortOption.titleAsc, Icons.sort_by_alpha_rounded),
+        _sortItem(l10n.sortTitleDesc, EntrySortOption.titleDesc, Icons.sort_by_alpha_rounded),
+        const PopupMenuDivider(),
+        _sortItem(l10n.sortCreatedNewest, EntrySortOption.createdNewest, Icons.access_time_rounded),
+        _sortItem(l10n.sortCreatedOldest, EntrySortOption.createdOldest, Icons.access_time_rounded),
+        const PopupMenuDivider(),
+        _sortItem(l10n.sortModifiedNewest, EntrySortOption.modifiedNewest, Icons.edit_rounded),
+        _sortItem(l10n.sortModifiedOldest, EntrySortOption.modifiedOldest, Icons.edit_rounded),
+        const PopupMenuDivider(),
+        _sortItem(l10n.sortExpiredFirst, EntrySortOption.expiredFirst, Icons.warning_amber_rounded),
+      ],
+    );
+  }
+
+  PopupMenuItem<EntrySortOption> _sortItem(String label, EntrySortOption value, IconData icon) {
+    final isSelected = sortOption == value;
+    return PopupMenuItem(
+      value: value,
+      child: ListTile(
+        leading: Icon(icon, size: 20),
+        title: Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400)),
+        trailing: isSelected ? const Icon(Icons.check_rounded, size: 18) : null,
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
+}
+
 // ─── Narrow layout (phone) ───────────────────────────────────────────────
 
 class _NarrowLayout extends StatelessWidget {
@@ -295,6 +378,17 @@ class _NarrowLayout extends StatelessWidget {
   final VoidCallback? onImportCsv;
   final VoidCallback? onExportCsv;
   final VoidCallback? onExportKdbx;
+  final EntrySortOption sortOption;
+  final ValueChanged<EntrySortOption> onSortChanged;
+  final bool isMultiSelect;
+  final Set<KdbxEntry> selectedEntries;
+  final VoidCallback onToggleMultiSelect;
+  final ValueChanged<KdbxEntry> onToggleEntrySelection;
+  final VoidCallback onSelectAll;
+  final VoidCallback onCancelSelection;
+  final VoidCallback onBatchDelete;
+  final VoidCallback onBatchMove;
+  final VoidCallback onBatchTag;
 
   const _NarrowLayout({
     required this.breadcrumbs,
@@ -323,6 +417,17 @@ class _NarrowLayout extends StatelessWidget {
     this.onImportCsv,
     this.onExportCsv,
     this.onExportKdbx,
+    required this.sortOption,
+    required this.onSortChanged,
+    required this.isMultiSelect,
+    required this.selectedEntries,
+    required this.onToggleMultiSelect,
+    required this.onToggleEntrySelection,
+    required this.onSelectAll,
+    required this.onCancelSelection,
+    required this.onBatchDelete,
+    required this.onBatchMove,
+    required this.onBatchTag,
   });
 
   @override
@@ -332,14 +437,24 @@ class _NarrowLayout extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: _BreadcrumbBar(breadcrumbs: breadcrumbs),
-        leading: onPop != null
-            ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: onPop)
-            : null,
-        actions: [
-          if (isOpenedFromCloud)
-            IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
-          IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: onSearch),
+        title: isMultiSelect
+            ? Text(l10n.selectedCount(selectedEntries.length))
+            : _BreadcrumbBar(breadcrumbs: breadcrumbs),
+        leading: isMultiSelect
+            ? IconButton(icon: const Icon(Icons.close_rounded), onPressed: onCancelSelection)
+            : (onPop != null ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: onPop) : null),
+        actions: isMultiSelect
+            ? [
+                IconButton(icon: const Icon(Icons.select_all_rounded), tooltip: l10n.selectAll, onPressed: onSelectAll),
+                IconButton(icon: const Icon(Icons.delete_outline_rounded), tooltip: l10n.batchDelete, onPressed: selectedEntries.isNotEmpty ? onBatchDelete : null),
+                IconButton(icon: const Icon(Icons.drive_file_move_rounded), tooltip: l10n.batchMove, onPressed: selectedEntries.isNotEmpty ? onBatchMove : null),
+                IconButton(icon: const Icon(Icons.label_outline_rounded), tooltip: l10n.batchTag, onPressed: selectedEntries.isNotEmpty ? onBatchTag : null),
+              ]
+            : [
+              if (isOpenedFromCloud)
+                IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
+              _SortButton(sortOption: sortOption, onSortChanged: onSortChanged),
+              IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: onSearch),
           IconButton(
             icon: isDirty
                 ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined, size: 20))
@@ -361,6 +476,7 @@ class _NarrowLayout extends StatelessWidget {
                 case 'settings': context.push('/settings');
                 case 'about': context.push('/about');
                 case 'close': onClose();
+                case 'batch_select': onToggleMultiSelect();
               }
             },
             itemBuilder: (_) => [
@@ -376,6 +492,7 @@ class _NarrowLayout extends StatelessWidget {
               PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
               const PopupMenuDivider(),
               PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
               PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
@@ -402,6 +519,9 @@ class _NarrowLayout extends StatelessWidget {
               onRenameGroup: onRenameGroup,
               onRestoreGroup: onRestoreGroup,
               onPermanentDeleteGroup: onPermanentDeleteGroup,
+              isMultiSelect: isMultiSelect,
+              selectedEntries: selectedEntries,
+              onToggleEntrySelection: onToggleEntrySelection,
             ),
           ),
           if (selectedEntry != null && !Platform.isAndroid)

@@ -120,6 +120,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
     final isDirty = ref.watch(isDirtyProvider);
     final selectedEntry = ref.watch(selectedEntryProvider);
+    final isMultiSelect = ref.watch(isMultiSelectModeProvider);
+    final selectedEntries = ref.watch(selectedEntriesProvider);
+    final sortOption = ref.watch(entrySortOptionProvider);
 
     void onEntrySelect(KdbxEntry entry) {
       ref.read(selectedEntryProvider.notifier).state = entry;
@@ -170,6 +173,17 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onImportCsv: () => _importCsv(context, ref),
           onExportCsv: () => _exportCsv(context, ref),
           onExportKdbx: () => _exportKdbx(context, ref),
+          sortOption: sortOption,
+          onSortChanged: _onSortChanged,
+          isMultiSelect: isMultiSelect,
+          selectedEntries: selectedEntries,
+          onToggleMultiSelect: _toggleMultiSelect,
+          onToggleEntrySelection: _toggleEntrySelection,
+          onSelectAll: () => _selectAllEntries(entries),
+          onCancelSelection: _cancelSelection,
+          onBatchDelete: () => _batchDelete(context, ref),
+          onBatchMove: () => _batchMove(context, ref),
+          onBatchTag: () => _batchTag(context, ref),
         );
     }
 
@@ -207,6 +221,17 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onImportCsv: () => _importCsv(context, ref),
         onExportCsv: () => _exportCsv(context, ref),
         onExportKdbx: () => _exportKdbx(context, ref),
+        sortOption: sortOption,
+        onSortChanged: _onSortChanged,
+        isMultiSelect: isMultiSelect,
+        selectedEntries: selectedEntries,
+        onToggleMultiSelect: _toggleMultiSelect,
+        onToggleEntrySelection: _toggleEntrySelection,
+        onSelectAll: () => _selectAllEntries(entries),
+        onCancelSelection: _cancelSelection,
+        onBatchDelete: () => _batchDelete(context, ref),
+        onBatchMove: () => _batchMove(context, ref),
+        onBatchTag: () => _batchTag(context, ref),
       );
   }
 
@@ -603,6 +628,120 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     );
   }
 
+  // Sort and batch operations
+  void _onSortChanged(EntrySortOption option) {
+    ref.read(entrySortOptionProvider.notifier).state = option;
+  }
+
+  void _toggleMultiSelect() {
+    final isMulti = ref.read(isMultiSelectModeProvider);
+    ref.read(isMultiSelectModeProvider.notifier).state = !isMulti;
+    if (isMulti) {
+      ref.read(selectedEntriesProvider.notifier).state = {};
+    }
+  }
+
+  void _toggleEntrySelection(KdbxEntry entry) {
+    final selected = ref.read(selectedEntriesProvider);
+    final newSet = {...selected};
+    if (newSet.contains(entry)) {
+      newSet.remove(entry);
+    } else {
+      newSet.add(entry);
+    }
+    ref.read(selectedEntriesProvider.notifier).state = newSet;
+  }
+
+  void _selectAllEntries(List<KdbxEntry> entries) {
+    ref.read(selectedEntriesProvider.notifier).state = {...entries};
+  }
+
+  void _cancelSelection() {
+    ref.read(isMultiSelectModeProvider.notifier).state = false;
+    ref.read(selectedEntriesProvider.notifier).state = {};
+  }
+
+  Future<void> _batchDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = ref.read(selectedEntriesProvider);
+    if (selected.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.batchDelete),
+        content: Text(l10n.batchDeleteConfirm(selected.length)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final service = ref.read(databaseServiceProvider);
+    for (final entry in selected) {
+      service.deleteItem(entry);
+    }
+    _cancelSelection();
+    refreshExplorerLists(ref);
+    if (context.mounted) showToast(context, l10n.movedToRecycleBin);
+  }
+
+  Future<void> _batchMove(BuildContext context, WidgetRef ref) async {
+    final selected = ref.read(selectedEntriesProvider);
+    if (selected.isEmpty) return;
+    final service = ref.read(databaseServiceProvider);
+    final db = ref.read(databaseProvider).valueOrNull;
+    if (db == null) return;
+    final currentGroup = ref.read(currentGroupProvider);
+    final target = await showMoveToGroupDialog(context, db: db, excludeGroup: currentGroup);
+    if (target == null) return;
+    for (final entry in selected) {
+      service.moveItem(entry, target);
+    }
+    _cancelSelection();
+    refreshExplorerLists(ref);
+  }
+
+  Future<void> _batchTag(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = ref.read(selectedEntriesProvider);
+    if (selected.isEmpty) return;
+    final tagController = TextEditingController();
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.batchTagTitle),
+        content: TextField(
+          controller: tagController,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.batchTagHint),
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, tagController.text.trim()), child: Text(l10n.confirm)),
+        ],
+      ),
+    );
+    tagController.dispose();
+    if (tag == null || tag.isEmpty) return;
+    for (final entry in selected) {
+      final tags = entry.tags ?? [];
+      if (!tags.contains(tag)) {
+        entry.tags = [...tags, tag];
+      }
+    }
+    ref.read(databaseServiceProvider).markDirty();
+    _cancelSelection();
+    refreshExplorerLists(ref);
+  }
   void _showAddGroupSheet(BuildContext context, WidgetRef ref, KdbxGroup group) {
     showModalBottomSheet(
       context: context,

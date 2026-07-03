@@ -1999,6 +1999,114 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'没有可用的备份进行恢复，请从外部备份手动恢复。'**
   String get noBackupAvailable;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In zh, this message translates to:
+  /// **'排序方式'**
+  String get sortBy;
+
+  /// No description provided for @sortTitleAsc.
+  ///
+  /// In zh, this message translates to:
+  /// **'标题 A→Z'**
+  String get sortTitleAsc;
+
+  /// No description provided for @sortTitleDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'标题 Z→A'**
+  String get sortTitleDesc;
+
+  /// No description provided for @sortCreatedNewest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新创建'**
+  String get sortCreatedNewest;
+
+  /// No description provided for @sortCreatedOldest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最早创建'**
+  String get sortCreatedOldest;
+
+  /// No description provided for @sortModifiedNewest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近修改'**
+  String get sortModifiedNewest;
+
+  /// No description provided for @sortModifiedOldest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最早修改'**
+  String get sortModifiedOldest;
+
+  /// No description provided for @sortExpiredFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'过期优先'**
+  String get sortExpiredFirst;
+
+  /// No description provided for @batchSelect.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量选择'**
+  String get batchSelect;
+
+  /// No description provided for @batchDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量删除'**
+  String get batchDelete;
+
+  /// No description provided for @batchMove.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量移动'**
+  String get batchMove;
+
+  /// No description provided for @batchTag.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量标签'**
+  String get batchTag;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选择 {count} 项'**
+  String selectedCount(Object count);
+
+  /// No description provided for @cancelSelection.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消选择'**
+  String get cancelSelection;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全选'**
+  String get selectAll;
+
+  /// No description provided for @batchDeleteConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除选中的 {count} 个条目吗？'**
+  String batchDeleteConfirm(Object count);
+
+  /// No description provided for @batchTagTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑标签'**
+  String get batchTagTitle;
+
+  /// No description provided for @batchTagHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入标签名称'**
+  String get batchTagHint;
 }
 
 class _AppLocalizationsDelegate
