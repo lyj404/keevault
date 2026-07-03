@@ -285,11 +285,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           underline: const SizedBox.shrink(),
                           items: [
                             DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
-                            DropdownMenuItem(value: 15, child: Text('15 ')),
-                            DropdownMenuItem(value: 30, child: Text('30 ')),
-                            DropdownMenuItem(value: 60, child: Text('60 ')),
-                            DropdownMenuItem(value: 120, child: Text('120 ')),
-                            DropdownMenuItem(value: 300, child: Text('300 ')),
+                            DropdownMenuItem(value: 15, child: Text('15 ${l10n.seconds}')),
+                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.seconds}')),
+                            DropdownMenuItem(value: 60, child: Text('60 ${l10n.seconds}')),
+                            DropdownMenuItem(value: 120, child: Text('120 ${l10n.seconds}')),
+                            DropdownMenuItem(value: 300, child: Text('300 ${l10n.seconds}')),
                           ],
                           onChanged: (v) {
                             if (v != null) {

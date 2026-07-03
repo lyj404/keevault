@@ -185,6 +185,27 @@ class EntryListTile extends StatelessWidget {
                             style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
                           ),
                         ],
+                        if (entry.tags != null && entry.tags!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              for (final tag in entry.tags!)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    tag,
+                                    style: TextStyle(fontSize: 10, color: colorScheme.onPrimaryContainer),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
