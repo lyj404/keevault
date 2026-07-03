@@ -9,6 +9,7 @@ import '../data/recent_files_service.dart';
 export '../data/recent_files_service.dart' show RecentFile;
 export '../data/csv_service.dart' show CsvEntry;
 import '../../../core/providers/auto_lock_provider.dart';
+import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
@@ -187,6 +188,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _ref.read(openedFromCloudProvider.notifier).state = false;
     unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
     _ref.read(autoLockProvider.notifier).cancelTimer();
+    _ref.read(autoSaveProvider.notifier).cancelTimer();
+    _ref.read(syncServiceProvider).clearCache();
     _ref.invalidate(recentFilesProvider);
   }
 

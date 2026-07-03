@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/providers/auto_lock_provider.dart';
+import 'core/providers/auto_save_provider.dart';
 import 'core/providers/expiration_reminder_provider.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
@@ -160,6 +161,12 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    // Auto-save: schedule save when database becomes dirty.
+    ref.listen(isDirtyProvider, (prev, next) {
+      if (next) {
+        ref.read(autoSaveProvider.notifier).resetTimer();
+      }
+    });
 
     return Focus(
       focusNode: _focusNode,
@@ -167,9 +174,9 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
       onKeyEvent: _handleKeyEvent,
       child: Listener(
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
-        onPointerHover: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
-        onPointerSignal: (_) => ref.read(autoLockProvider.notifier).resetTimer(),
+        onPointerDown: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
+        onPointerHover: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
+        onPointerSignal: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
         child: MaterialApp.router(
         title: 'KeeVault',
         theme: AppTheme.light(),

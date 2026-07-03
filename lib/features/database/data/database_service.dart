@@ -208,10 +208,10 @@ class DatabaseService {
     if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
     final db = _db!;
-    final bytes = await Isolate.run(() {
+    final bytes = Uint8List.fromList(await Isolate.run(() {
       CryptoService.initialize();
       return db.save();
-    }) as Uint8List;
+    }) as List<int>);
     if (await _backupService.isAutoBackupEnabled()) {
       unawaited(_backupService.createBackup(_filePath!).catchError((e) {
         log.e('Auto-backup failed', error: e);
@@ -250,10 +250,10 @@ class DatabaseService {
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
     final db = _db!;
-    final bytes = await Isolate.run(() {
+    final bytes = Uint8List.fromList(await Isolate.run(() {
       CryptoService.initialize();
       return db.save();
-    }) as Uint8List;
+    }) as List<int>);
     return bytes;
   }
 

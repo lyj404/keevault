@@ -539,6 +539,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoLockDescription => '无操作后自动锁定数据库';
 
   @override
+  String get autoSave => '自动保存';
+
+  @override
+  String get autoSaveDescription => '无操作后自动保存数据库';
+
+  @override
+  String get seconds => '秒';
+
+  @override
   String get disabled => '关闭';
 
   @override

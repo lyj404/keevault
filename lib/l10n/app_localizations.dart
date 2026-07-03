@@ -1124,6 +1124,24 @@ abstract class AppLocalizations {
   /// **'无操作后自动锁定数据库'**
   String get autoLockDescription;
 
+  /// No description provided for @autoSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动保存'**
+  String get autoSave;
+
+  /// No description provided for @autoSaveDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'无操作后自动保存数据库'**
+  String get autoSaveDescription;
+
+  /// No description provided for @seconds.
+  ///
+  /// In zh, this message translates to:
+  /// **'秒'**
+  String get seconds;
+
   /// No description provided for @disabled.
   ///
   /// In zh, this message translates to:

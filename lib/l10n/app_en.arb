@@ -197,6 +197,9 @@
 
   "autoLock": "Auto Lock",
   "autoLockDescription": "Lock database after inactivity",
+  "autoSave": "Auto Save",
+  "autoSaveDescription": "Save database after inactivity",
+  "seconds": "sec",
   "disabled": "Disabled",
   "minute": "min",
   "minutes": "min",

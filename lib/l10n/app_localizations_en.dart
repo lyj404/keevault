@@ -547,6 +547,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoLockDescription => 'Lock database after inactivity';
 
   @override
+  String get autoSave => 'Auto Save';
+
+  @override
+  String get autoSaveDescription => 'Save database after inactivity';
+
+  @override
+  String get seconds => 'sec';
+
+  @override
   String get disabled => 'Disabled';
 
   @override

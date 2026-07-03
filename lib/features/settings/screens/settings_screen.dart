@@ -9,6 +9,7 @@ import '../../../core/widgets/change_password_dialog.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auto_lock_provider.dart';
+import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../../core/providers/biometric_provider.dart';
@@ -254,6 +255,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onChanged: (v) {
                             if (v != null) {
                               ref.read(autoLockProvider.notifier).setMinutes(v);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Auto-save card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Row(
+                      children: [
+                        Icon(Icons.save_outlined, size: 20, color: colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.autoSave, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(l10n.autoSaveDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                            ],
+                          ),
+                        ),
+                        DropdownButton<int>(
+                          value: ref.watch(autoSaveProvider),
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+                            DropdownMenuItem(value: 15, child: Text('15 ')),
+                            DropdownMenuItem(value: 30, child: Text('30 ')),
+                            DropdownMenuItem(value: 60, child: Text('60 ')),
+                            DropdownMenuItem(value: 120, child: Text('120 ')),
+                            DropdownMenuItem(value: 300, child: Text('300 ')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              ref.read(autoSaveProvider.notifier).setSeconds(v);
                             }
                           },
                         ),
