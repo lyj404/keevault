@@ -44,16 +44,28 @@ jobs:
       - name: Bundle native library
         run: cp native/kreepto-rust/target/release/kreepto.dll build/windows/x64/runner/Release/
 
-      - name: Package
+      - name: Package ZIP
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}" -replace '/', '-'
           Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "KeeVault-$tag-windows-x64.zip"
 
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $sourceDir = "${{ github.workspace }}\build\windows\x64\runner\Release"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAPP_VERSION=$version" "/DSOURCE_DIR=$sourceDir" windows/inno_setup/keevault.iss
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: KeeVault-*.zip
+          path: |
+            KeeVault-*.zip
+            build/windows/installer/KeeVault-*-setup.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -270,6 +282,7 @@ jobs:
           files: |
             KeeVault-*
             keevault_*
+            build/windows/installer/KeeVault-*
 
   publish-aur:
     needs: [release]
