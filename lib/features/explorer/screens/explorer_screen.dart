@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -18,6 +20,9 @@ import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 import '../../sync/data/sync_service.dart' show SyncException, SyncErrorType;
+import '../../totp/data/totp_service.dart';
+import '../../totp/widgets/totp_edit_sheet.dart';
+import '../../search/providers/search_provider.dart';
 import '../providers/explorer_provider.dart';
 part 'explorer_layouts.dart';
 part 'explorer_group_tree.dart';
@@ -139,7 +144,18 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     }
 
     if (isWide) {
-      return _WideLayout(
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          final pop = _popPath(ref);
+          if (pop != null) {
+            pop();
+          } else {
+            context.go('/welcome');
+          }
+        },
+        child: _WideLayout(
           breadcrumbs: breadcrumbs,
           currentGroup: currentGroup,
           entries: entries,
@@ -192,10 +208,22 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
               showToast(context, AppLocalizations.of(context)!.moved);
             }
           },
-        );
+        ),
+      );
     }
 
-    return _NarrowLayout(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        final pop = _popPath(ref);
+        if (pop != null) {
+          pop();
+        } else {
+          context.go('/welcome');
+        }
+      },
+      child: _NarrowLayout(
         breadcrumbs: breadcrumbs,
         currentGroup: currentGroup,
         entries: entries,
@@ -240,7 +268,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onBatchDelete: () => _batchDelete(context, ref),
         onBatchMove: () => _batchMove(context, ref),
         onBatchTag: () => _batchTag(context, ref),
-      );
+      ),
+    );
   }
 
   void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {

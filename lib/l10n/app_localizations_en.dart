@@ -1075,4 +1075,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batchTagHint => 'Enter tag name';
+
+  @override
+  String get groupsTab => 'Groups';
+
+  @override
+  String get entriesTab => 'Entries';
+
+  @override
+  String get totpTab => 'TOTP';
+
+  @override
+  String get searchTab => 'Search';
+
+  @override
+  String get toolsTab => 'Tools';
+
+  @override
+  String get noTotpEntries => 'No entries with TOTP configured';
+
+  @override
+  String get unsavedChanges => 'Unsaved changes';
+
+  @override
+  String get allSaved => 'All changes saved';
 }

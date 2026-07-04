@@ -108,3 +108,6 @@ final isMultiSelectModeProvider = StateProvider<bool>((ref) => false);
 
 /// Set of currently selected entries in multi-select mode.
 final selectedEntriesProvider = StateProvider<Set<KdbxEntry>>((ref) => {});
+
+/// Current mobile bottom tab index (0=Entries, 1=Totp, 2=Search, 3=Tools).
+final mobileTabIndexProvider = StateProvider<int>((ref) => 0);

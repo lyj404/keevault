@@ -2107,6 +2107,54 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'输入标签名称'**
   String get batchTagHint;
+
+  /// No description provided for @groupsTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'分组'**
+  String get groupsTab;
+
+  /// No description provided for @entriesTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'条目'**
+  String get entriesTab;
+
+  /// No description provided for @totpTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'TOTP'**
+  String get totpTab;
+
+  /// No description provided for @searchTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get searchTab;
+
+  /// No description provided for @toolsTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'工具'**
+  String get toolsTab;
+
+  /// No description provided for @noTotpEntries.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无配置 TOTP 的条目'**
+  String get noTotpEntries;
+
+  /// No description provided for @unsavedChanges.
+  ///
+  /// In zh, this message translates to:
+  /// **'有未保存的更改'**
+  String get unsavedChanges;
+
+  /// No description provided for @allSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有更改已保存'**
+  String get allSaved;
 }
 
 class _AppLocalizationsDelegate

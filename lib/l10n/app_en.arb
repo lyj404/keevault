@@ -385,4 +385,14 @@
   "selectAll": "Select all",
   "batchDeleteConfirm": "Delete {count} selected entries?",
   "batchTagTitle": "Edit tags",
-  "batchTagHint": "Enter tag name"}
+  "batchTagHint": "Enter tag name",
+
+  "groupsTab": "Groups",
+  "entriesTab": "Entries",
+  "totpTab": "TOTP",
+  "searchTab": "Search",
+  "toolsTab": "Tools",
+  "noTotpEntries": "No entries with TOTP configured",
+  "unsavedChanges": "Unsaved changes",
+  "allSaved": "All changes saved"
+}

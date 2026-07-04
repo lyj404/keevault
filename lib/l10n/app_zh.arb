@@ -393,4 +393,14 @@
   "selectAll": "全选",
   "batchDeleteConfirm": "确定删除选中的 {count} 个条目吗？",
   "batchTagTitle": "编辑标签",
-  "batchTagHint": "输入标签名称"}
+  "batchTagHint": "输入标签名称",
+
+  "groupsTab": "分组",
+  "entriesTab": "条目",
+  "totpTab": "TOTP",
+  "searchTab": "搜索",
+  "toolsTab": "工具",
+  "noTotpEntries": "暂无配置 TOTP 的条目",
+  "unsavedChanges": "有未保存的更改",
+  "allSaved": "所有更改已保存"
+}

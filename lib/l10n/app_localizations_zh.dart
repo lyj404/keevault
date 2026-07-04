@@ -1051,4 +1051,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get batchTagHint => '输入标签名称';
+
+  @override
+  String get groupsTab => '分组';
+
+  @override
+  String get entriesTab => '条目';
+
+  @override
+  String get totpTab => 'TOTP';
+
+  @override
+  String get searchTab => '搜索';
+
+  @override
+  String get toolsTab => '工具';
+
+  @override
+  String get noTotpEntries => '暂无配置 TOTP 的条目';
+
+  @override
+  String get unsavedChanges => '有未保存的更改';
+
+  @override
+  String get allSaved => '所有更改已保存';
 }

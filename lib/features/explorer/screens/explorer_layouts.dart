@@ -355,7 +355,7 @@ class _SortButton extends StatelessWidget {
 
 // ─── Narrow layout (phone) ───────────────────────────────────────────────
 
-class _NarrowLayout extends StatelessWidget {
+class _NarrowLayout extends ConsumerStatefulWidget {
   final List<String> breadcrumbs;
   final KdbxGroup? currentGroup;
   final List<KdbxEntry> entries;
@@ -435,110 +435,377 @@ class _NarrowLayout extends StatelessWidget {
   });
 
   @override
+  ConsumerState<_NarrowLayout> createState() => _NarrowLayoutState();
+}
+
+class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
+  final _searchController = TextEditingController();
+  final _totpService = TotpService();
+  final _totpTabKey = GlobalKey();
+  bool _fabExpanded = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFab() {
+    setState(() => _fabExpanded = !_fabExpanded);
+  }
+
+  void _closeFab() {
+    if (_fabExpanded) setState(() => _fabExpanded = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+    final tabIndex = ref.watch(mobileTabIndexProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: isMultiSelect
-            ? Text(l10n.selectedCount(selectedEntries.length))
-            : _BreadcrumbBar(breadcrumbs: breadcrumbs),
-        leading: isMultiSelect
-            ? IconButton(icon: const Icon(Icons.close_rounded), onPressed: onCancelSelection)
-            : (onPop != null ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: onPop) : null),
-        actions: isMultiSelect
-            ? [
-                IconButton(icon: const Icon(Icons.select_all_rounded), tooltip: l10n.selectAll, onPressed: onSelectAll),
-                IconButton(icon: const Icon(Icons.delete_outline_rounded), tooltip: l10n.batchDelete, onPressed: selectedEntries.isNotEmpty ? onBatchDelete : null),
-                IconButton(icon: const Icon(Icons.drive_file_move_rounded), tooltip: l10n.batchMove, onPressed: selectedEntries.isNotEmpty ? onBatchMove : null),
-                IconButton(icon: const Icon(Icons.label_outline_rounded), tooltip: l10n.batchTag, onPressed: selectedEntries.isNotEmpty ? onBatchTag : null),
-              ]
-            : [
-              if (isOpenedFromCloud)
-                IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
-              _SortButton(sortOption: sortOption, onSortChanged: onSortChanged),
-              IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: onSearch),
-          IconButton(
-            icon: isDirty
-                ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined, size: 20))
-                : const Icon(Icons.save_outlined, size: 20),
-            tooltip: l10n.save,
-            onPressed: onSave,
+      appBar: _buildAppBar(context, l10n, colorScheme, tabIndex),
+      body: GestureDetector(
+        onTap: _closeFab,
+        behavior: HitTestBehavior.translucent,
+        child: _buildBody(context, l10n, colorScheme, isDark, tabIndex),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: tabIndex,
+        onDestinationSelected: (i) {
+          ref.read(mobileTabIndexProvider.notifier).state = i;
+          _closeFab();
+          if (i == 2) {
+            ref.read(searchQueryProvider.notifier).state = '';
+          }
+        },
+        height: 68,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.list_alt_rounded, size: 22),
+            selectedIcon: Icon(Icons.list_alt_rounded, size: 22, color: colorScheme.primary),
+            label: l10n.entriesTab,
           ),
-          PopupMenuButton<String>(
-            tooltip: l10n.more,
-            onSelected: (v) {
-              switch (v) {
-                case 'add_entry': onAddEntry?.call();
-                case 'add_group': onAddGroup?.call();
-                case 'sync_up': _syncToCloud(context);
-                case 'sync_down': _syncFromCloud(context);
-                case 'import_csv': onImportCsv?.call();
-                case 'export_csv': onExportCsv?.call();
-                case 'export_kdbx': onExportKdbx?.call();
-                case 'settings': context.push('/settings');
-                case 'about': context.push('/about');
-                case 'close': onClose();
-                case 'batch_select': onToggleMultiSelect();
-              }
+          NavigationDestination(
+            icon: const Icon(Icons.timer_outlined, size: 22),
+            selectedIcon: Icon(Icons.timer_rounded, size: 22, color: colorScheme.primary),
+            label: l10n.totpTab,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.search_rounded, size: 22),
+            selectedIcon: Icon(Icons.search_rounded, size: 22, color: colorScheme.primary),
+            label: l10n.searchTab,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.build_outlined, size: 22),
+            selectedIcon: Icon(Icons.build_rounded, size: 22, color: colorScheme.primary),
+            label: l10n.toolsTab,
+          ),
+        ],
+      ),
+      floatingActionButton: _buildFab(context, l10n, colorScheme, tabIndex),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, int tabIndex) {
+    switch (tabIndex) {
+      case 0:
+        return _buildEntriesAppBar(context, l10n, colorScheme);
+      case 1:
+        return AppBar(
+          title: Text(l10n.totpTab),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search_rounded),
+              tooltip: l10n.search,
+              onPressed: () {
+                final state = _totpTabKey.currentState;
+                if (state != null) {
+                  (state as dynamic).toggleSearch();
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
+              tooltip: l10n.addEntry,
+              onPressed: () {
+                final state = _totpTabKey.currentState;
+                if (state != null) {
+                  (state as dynamic).addTotpEntry(context);
+                }
+              },
+            ),
+          ],
+        );
+      case 2:
+        return _buildSearchAppBar(context, l10n, colorScheme);
+      case 3:
+        return AppBar(title: Text(l10n.toolsTab));
+      default:
+        return AppBar(title: Text(l10n.entriesTab));
+    }
+  }
+
+  PreferredSizeWidget _buildEntriesAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    if (widget.isMultiSelect) {
+      return AppBar(
+        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: widget.onCancelSelection),
+        title: Text(l10n.selectedCount(widget.selectedEntries.length)),
+        actions: [
+          IconButton(icon: const Icon(Icons.select_all_rounded), tooltip: l10n.selectAll, onPressed: widget.onSelectAll),
+          IconButton(icon: const Icon(Icons.delete_outline_rounded), tooltip: l10n.batchDelete, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchDelete : null),
+          IconButton(icon: const Icon(Icons.drive_file_move_rounded), tooltip: l10n.batchMove, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchMove : null),
+          IconButton(icon: const Icon(Icons.label_outline_rounded), tooltip: l10n.batchTag, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchTag : null),
+        ],
+      );
+    }
+    return AppBar(
+      leading: widget.onPop != null
+          ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: widget.onPop)
+          : null,
+      title: Text(
+        widget.breadcrumbs.last,
+        overflow: TextOverflow.ellipsis,
+      ),
+      actions: [
+        if (widget.isOpenedFromCloud)
+          IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
+        _SortButton(sortOption: widget.sortOption, onSortChanged: widget.onSortChanged),
+        IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: () => ref.read(mobileTabIndexProvider.notifier).state = 2),
+        IconButton(
+          icon: widget.isDirty
+              ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined, size: 20))
+              : const Icon(Icons.save_outlined, size: 20),
+          tooltip: l10n.save,
+          onPressed: widget.onSave,
+        ),
+        PopupMenuButton<String>(
+          tooltip: l10n.more,
+          onSelected: (v) {
+            switch (v) {
+              case 'sync_up': _syncToCloud(context);
+              case 'sync_down': _syncFromCloud(context);
+              case 'import_csv': widget.onImportCsv?.call();
+              case 'export_csv': widget.onExportCsv?.call();
+              case 'export_kdbx': widget.onExportKdbx?.call();
+              case 'batch_select': widget.onToggleMultiSelect();
+            }
+          },
+          itemBuilder: (_) => [
+            if (widget.isOpenedFromCloud) ...[
+              PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+            ],
+            const PopupMenuDivider(),
+            PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
+            PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
+            PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
+            PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  PreferredSizeWidget _buildSearchAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+    return AppBar(
+      title: TextField(
+        controller: _searchController,
+        autofocus: true,
+        style: TextStyle(fontSize: 15, color: colorScheme.onSurface),
+        decoration: InputDecoration(
+          hintText: l10n.searchEntries,
+          hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
+          border: InputBorder.none,
+          prefixIcon: Icon(Icons.search_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        ),
+        onChanged: (v) {
+          ref.read(searchQueryProvider.notifier).state = v;
+        },
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, bool isDark, int tabIndex) {
+    switch (tabIndex) {
+      case 0:
+        return _buildEntriesTab(context, l10n, colorScheme, isDark);
+      case 1:
+        return _MobileTotpTab(
+          key: _totpTabKey,
+          onEntryOpen: widget.onEntryOpen,
+          totpService: _totpService,
+        );
+      case 2:
+        return _MobileSearchTab(
+          onEntryOpen: widget.onEntryOpen,
+        );
+      case 3:
+        return _MobileToolsPanel(
+          isOpenedFromCloud: widget.isOpenedFromCloud,
+          onClose: widget.onClose,
+          onImportCsv: widget.onImportCsv,
+          onExportCsv: widget.onExportCsv,
+          onExportKdbx: widget.onExportKdbx,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildEntriesTab(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, bool isDark) {
+    return Column(
+      children: [
+        _TagFilterBar(),
+        Expanded(
+          child: _MobileEntryListBody(
+            currentGroup: widget.currentGroup,
+            entries: widget.entries,
+            selectedEntry: widget.selectedEntry,
+            onGroupTap: widget.onGroupTap,
+            onEntrySelect: widget.onEntrySelect,
+            onEntryOpen: widget.onEntryOpen,
+            onDeleteEntry: widget.onDeleteEntry,
+            onRestoreEntry: widget.onRestoreEntry,
+            onMoveEntry: widget.onMoveEntry,
+            onDeleteGroup: widget.onDeleteGroup,
+            onRenameGroup: widget.onRenameGroup,
+            onRestoreGroup: widget.onRestoreGroup,
+            onPermanentDeleteGroup: widget.onPermanentDeleteGroup,
+            isMultiSelect: widget.isMultiSelect,
+            selectedEntries: widget.selectedEntries,
+            onToggleEntrySelection: widget.onToggleEntrySelection,
+          ),
+        ),
+        if (widget.selectedEntry != null && !Platform.isAndroid)
+          _ShortcutHintBar(entry: widget.selectedEntry!),
+      ],
+    );
+  }
+
+  Widget? _buildFab(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, int tabIndex) {
+    if (tabIndex != 0) return null;
+    if (widget.currentGroup == null) return null;
+    if (widget.onAddEntry == null && widget.onAddGroup == null) return null;
+
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (_fabExpanded) ...[
+          _FabOption(
+            icon: Icons.create_new_folder_rounded,
+            label: l10n.addGroup,
+            colorScheme: colorScheme,
+            isDark: isDark,
+            onTap: () {
+              _closeFab();
+              widget.onAddGroup?.call();
             },
-            itemBuilder: (_) => [
-              if (onAddEntry != null)
-                PopupMenuItem(value: 'add_entry', child: ListTile(leading: const Icon(Icons.add_rounded), title: Text(l10n.addEntry), dense: true, contentPadding: EdgeInsets.zero)),
-              if (onAddGroup != null)
-                PopupMenuItem(value: 'add_group', child: ListTile(leading: const Icon(Icons.create_new_folder_rounded), title: Text(l10n.addGroup), dense: true, contentPadding: EdgeInsets.zero)),
-              if (isOpenedFromCloud) ...[
-                PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
-              ],
-              const PopupMenuDivider(),
-              PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
-              const PopupMenuDivider(),
-              PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
+          ),
+          const SizedBox(height: 10),
+          _FabOption(
+            icon: Icons.add_rounded,
+            label: l10n.addEntry,
+            colorScheme: colorScheme,
+            isDark: isDark,
+            onTap: () {
+              _closeFab();
+              widget.onAddEntry?.call();
+            },
+          ),
+          const SizedBox(height: 14),
+        ],
+        FloatingActionButton(
+          onPressed: widget.onAddEntry != null && widget.onAddGroup != null ? _toggleFab : (widget.onAddEntry ?? _toggleFab),
+          tooltip: l10n.addEntry,
+          backgroundColor: isDark ? ClayColors.primaryDark : null,
+          foregroundColor: isDark ? ClayColors.onSurfaceDark : null,
+          elevation: isDark ? 4 : null,
+          child: AnimatedRotation(
+            turns: _fabExpanded ? 0.125 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: const Icon(Icons.add_rounded),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FabOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final ColorScheme colorScheme;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _FabOption({
+    required this.icon,
+    required this.label,
+    required this.colorScheme,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? ClayColors.surfaceContainerDark : ClayColors.surfaceContainerLight,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: isDark ? 0.4 : 0.25),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: isDark ? 0.12 : 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
             ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _TagFilterBar(),
-          Expanded(
-            child: _MobileEntryListBody(
-              currentGroup: currentGroup,
-              entries: entries,
-              selectedEntry: selectedEntry,
-              onGroupTap: onGroupTap,
-              onEntrySelect: onEntrySelect,
-              onEntryOpen: onEntryOpen,
-              onDeleteEntry: onDeleteEntry,
-              onRestoreEntry: onRestoreEntry,
-              onMoveEntry: onMoveEntry,
-              onDeleteGroup: onDeleteGroup,
-              onRenameGroup: onRenameGroup,
-              onRestoreGroup: onRestoreGroup,
-              onPermanentDeleteGroup: onPermanentDeleteGroup,
-              isMultiSelect: isMultiSelect,
-              selectedEntries: selectedEntries,
-              onToggleEntrySelection: onToggleEntrySelection,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: colorScheme.primary),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? ClayColors.onSurfaceDark : ClayColors.onSurfaceLight,
+                ),
+              ),
+            ],
           ),
-          if (selectedEntry != null && !Platform.isAndroid)
-            _ShortcutHintBar(entry: selectedEntry!),
-        ],
+        ),
       ),
-      floatingActionButton: currentGroup != null && onAddEntry != null
-          ? FloatingActionButton(
-              onPressed: onAddEntry,
-              tooltip: l10n.addEntry,
-              child: const Icon(Icons.add_rounded),
-            )
-          : null,
     );
   }
 }

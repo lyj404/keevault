@@ -27,7 +27,7 @@ class ClayColors {
   // Dark surfaces – deep teal-black
   static const surfaceDark = Color(0xFF0F1A19);
   static const surfaceCardDark = Color(0xFF1A2B29);
-  static const surfaceContainerDark = Color(0xFF223835);
+  static const surfaceContainerDark = Color(0xFF192624);
 
   // Text (light mode)
   static const onSurfaceLight = Color(0xFF1A2B29);
@@ -429,9 +429,9 @@ class AppTheme {
         outlineVariant: ClayColors.outlineDark.withValues(alpha: 0.3),
         surfaceContainerLowest: const Color(0xFF0A1615),
         surfaceContainerLow: ClayColors.surfaceContainerDark,
-        surfaceContainer: const Color(0xFF2A3F3C),
-        surfaceContainerHigh: const Color(0xFF34504C),
-        surfaceContainerHighest: const Color(0xFF3E605B),
+        surfaceContainer: const Color(0xFF1E2D2A),
+        surfaceContainerHigh: const Color(0xFF233633),
+        surfaceContainerHighest: const Color(0xFF283F3C),
       ),
       scaffoldBackgroundColor: ClayColors.surfaceDark,
       appBarTheme: AppBarTheme(
@@ -489,7 +489,7 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: ClayColors.primaryMuted,
+          backgroundColor: ClayColors.primaryDark,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
