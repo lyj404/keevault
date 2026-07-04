@@ -5,9 +5,13 @@
 A cross-platform KeePass-compatible password manager built with Flutter.
 
 <p align="center">
-  <img src="assets/images/screenshot_en.png" width="33%" alt="Desktop">
-  <img src="assets/images/phone1.png" width="33%" alt="Mobile - Entries">
-  <img src="assets/images/phone2-TOTP-en.png" width="33%" alt="Mobile - TOTP">
+  <img src="assets/images/screenshot_en.png" width="600" alt="Desktop">
+</p>
+<p align="center">
+  <img src="assets/images/phone1.png" width="240" alt="Mobile - Entries">
+</p>
+<p align="center">
+  <img src="assets/images/phone2-TOTP-en.png" width="240" alt="Mobile - TOTP">
 </p>
 
 ## Features

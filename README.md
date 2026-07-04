@@ -5,9 +5,13 @@
 基于 Flutter 构建的跨平台 KeePass 兼容密码管理器。
 
 <p align="center">
-  <img src="assets/images/screenshot.png" width="33%" alt="桌面端">
-  <img src="assets/images/phone1.png" width="33%" alt="移动端-条目列表">
-  <img src="assets/images/phone2-TOTP.png" width="33%" alt="移动端-TOTP">
+  <img src="assets/images/screenshot.png" width="600" alt="桌面端">
+</p>
+<p align="center">
+  <img src="assets/images/phone1.png" width="240" alt="移动端-条目列表">
+</p>
+<p align="center">
+  <img src="assets/images/phone2-TOTP.png" width="240" alt="移动端-TOTP">
 </p>
 
 ## 功能特性
