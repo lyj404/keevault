@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -11,6 +12,7 @@ class QrScanScreen extends StatefulWidget {
 
 class _QrScanScreenState extends State<QrScanScreen> {
   final _scannerCtrl = MobileScannerController();
+  final _picker = ImagePicker();
   bool _detected = false;
 
   @override
@@ -28,6 +30,34 @@ class _QrScanScreenState extends State<QrScanScreen> {
         _detected = true;
         Navigator.pop(context, value);
         return;
+      }
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    try {
+      final result = await _scannerCtrl.analyzeImage(picked.path);
+      for (final barcode in result?.barcodes ?? []) {
+        final value = barcode.rawValue;
+        if (value != null && value.startsWith('otpauth://')) {
+          if (mounted) Navigator.pop(context, value);
+          return;
+        }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.totpInvalidUri)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.totpInvalidUri)),
+        );
       }
     }
   }
@@ -80,6 +110,15 @@ class _QrScanScreenState extends State<QrScanScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            bottom: 48,
+            right: 16,
+            child: FloatingActionButton.small(
+              backgroundColor: Colors.black54,
+              onPressed: _pickFromGallery,
+              child: const Icon(Icons.photo_library_rounded, color: Colors.white),
             ),
           ),
         ],
