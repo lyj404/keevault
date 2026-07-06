@@ -16,6 +16,7 @@ import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../database/data/database_service.dart' show SyncAuditChange;
 import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
@@ -29,7 +30,6 @@ part 'explorer_group_tree.dart';
 part 'explorer_lists.dart';
 part 'explorer_sheets.dart';
 part 'explorer_bottom_bars.dart';
-
 
 class ExplorerScreen extends ConsumerWidget {
   const ExplorerScreen({super.key});
@@ -48,8 +48,14 @@ class ExplorerScreen extends ConsumerWidget {
         }
         return const _ExplorerBody();
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator(strokeWidth: 2.5))),
-      error: (e, _) => Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.error(e.toString())))),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+      ),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Text(AppLocalizations.of(context)!.error(e.toString())),
+        ),
+      ),
     );
   }
 }
@@ -61,7 +67,10 @@ class _ExplorerBody extends ConsumerStatefulWidget {
   ConsumerState<_ExplorerBody> createState() => _ExplorerBodyState();
 }
 
-class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindingObserver {
+class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
+    with WidgetsBindingObserver {
+  bool _offlineDialogShown = false;
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +93,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
   Future<void> _checkRemoteChangesOnResume() async {
     final isOpenedFromCloud = ref.read(openedFromCloudProvider);
     if (!isOpenedFromCloud) return;
-    final hasChanges = await ref.read(databaseProvider.notifier).checkRemoteChanges();
+    final hasChanges = await ref
+        .read(databaseProvider.notifier)
+        .checkRemoteChanges();
     if (hasChanges && mounted) {
       _showAutoSyncDialog();
     }
@@ -102,6 +113,13 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
             onPressed: () => Navigator.pop(ctx),
             child: Text(l10n.ignore),
           ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showSyncAuditDialog(context, ref);
+            },
+            child: Text(l10n.more),
+          ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -116,6 +134,19 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
   @override
   Widget build(BuildContext context) {
+    final isCloudOfflineMode = ref.watch(cloudOfflineModeProvider);
+    final cloudOfflineReason = ref.watch(cloudOfflineReasonProvider);
+    if (isCloudOfflineMode && !_offlineDialogShown) {
+      _offlineDialogShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showOfflineModeDialog(cloudOfflineReason);
+      });
+    }
+    if (!isCloudOfflineMode) {
+      _offlineDialogShown = false;
+    }
+
     final currentGroup = ref.watch(currentGroupProvider);
     final entries = ref.watch(entriesProvider);
     final breadcrumbs = ref.watch(breadcrumbProvider);
@@ -137,10 +168,16 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     void onEntryOpen(KdbxEntry entry) {
       ref.read(selectedEntryProvider.notifier).state = entry;
       ref.read(activeEntryProvider.notifier).state = entry;
-      final path = currentGroup != null ? service.getGroupPath(currentGroup) : '';
+      final path = currentGroup != null
+          ? service.getGroupPath(currentGroup)
+          : '';
       final encodedUuid = Uri.encodeComponent(entry.uuid.string);
-      log.d('[Explorer] onEntryOpen uuid=${entry.uuid.string} groupPath="$path" entryParent=${entry.parent?.name}');
-      context.push('/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(path)}');
+      log.d(
+        '[Explorer] onEntryOpen uuid=${entry.uuid.string} groupPath="$path" entryParent=${entry.parent?.name}',
+      );
+      context.push(
+        '/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(path)}',
+      );
     }
 
     if (isWide) {
@@ -162,6 +199,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           selectedEntry: selectedEntry,
           isRecycleBin: isRecycleBin,
           isOpenedFromCloud: isOpenedFromCloud,
+          isCloudOfflineMode: isCloudOfflineMode,
+          cloudOfflineReason: cloudOfflineReason,
           isDirty: isDirty,
           onGroupTap: (group) {
             ref.read(selectedEntryProvider.notifier).state = null;
@@ -174,14 +213,30 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onDeleteEntry: isRecycleBin
               ? (entry) => _permanentDeleteEntry(context, ref, entry)
               : (entry) => _deleteEntry(context, ref, entry),
-          onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
-          onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
-          onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
-          onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
-          onRestoreGroup: isRecycleBin ? (group) => _restoreGroup(context, ref, group) : null,
-          onPermanentDeleteGroup: isRecycleBin ? (group) => _permanentDeleteGroup(context, ref, group) : null,
-          onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
-          onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
+          onRestoreEntry: isRecycleBin
+              ? (entry) => _restoreEntry(context, ref, entry)
+              : null,
+          onMoveEntry: isRecycleBin
+              ? null
+              : (entry) => _moveEntry(context, ref, entry, currentGroup!),
+          onDeleteGroup: isRecycleBin
+              ? null
+              : (group) => _deleteGroup(context, ref, group),
+          onRenameGroup: isRecycleBin
+              ? null
+              : (group) => _renameGroup(context, ref, group),
+          onRestoreGroup: isRecycleBin
+              ? (group) => _restoreGroup(context, ref, group)
+              : null,
+          onPermanentDeleteGroup: isRecycleBin
+              ? (group) => _permanentDeleteGroup(context, ref, group)
+              : null,
+          onAddEntry: isRecycleBin
+              ? null
+              : () => _showAddEntrySheet(context, ref, currentGroup!),
+          onAddGroup: isRecycleBin
+              ? null
+              : () => _showAddGroupSheet(context, ref, currentGroup!),
           onSave: () => _save(context, ref),
           onClose: () => _close(context, ref),
           onSearch: () => context.push('/search'),
@@ -200,14 +255,16 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onBatchDelete: () => _batchDelete(context, ref),
           onBatchMove: () => _batchMove(context, ref),
           onBatchTag: () => _batchTag(context, ref),
-          onEntryDropped: isRecycleBin ? null : (entry, target) {
-            if (entry.parent == target) return;
-            ref.read(databaseServiceProvider).moveItem(entry, target);
-            refreshExplorerLists(ref);
-            if (context.mounted) {
-              showToast(context, AppLocalizations.of(context)!.moved);
-            }
-          },
+          onEntryDropped: isRecycleBin
+              ? null
+              : (entry, target) {
+                  if (entry.parent == target) return;
+                  ref.read(databaseServiceProvider).moveItem(entry, target);
+                  refreshExplorerLists(ref);
+                  if (context.mounted) {
+                    showToast(context, AppLocalizations.of(context)!.moved);
+                  }
+                },
         ),
       );
     }
@@ -230,6 +287,8 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         selectedEntry: selectedEntry,
         isRecycleBin: isRecycleBin,
         isOpenedFromCloud: isOpenedFromCloud,
+        isCloudOfflineMode: isCloudOfflineMode,
+        cloudOfflineReason: cloudOfflineReason,
         isDirty: isDirty,
         onGroupTap: (group) {
           ref.read(selectedEntryProvider.notifier).state = null;
@@ -242,14 +301,30 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         onDeleteEntry: isRecycleBin
             ? (entry) => _permanentDeleteEntry(context, ref, entry)
             : (entry) => _deleteEntry(context, ref, entry),
-        onRestoreEntry: isRecycleBin ? (entry) => _restoreEntry(context, ref, entry) : null,
-        onMoveEntry: isRecycleBin ? null : (entry) => _moveEntry(context, ref, entry, currentGroup!),
-        onDeleteGroup: isRecycleBin ? null : (group) => _deleteGroup(context, ref, group),
-        onRenameGroup: isRecycleBin ? null : (group) => _renameGroup(context, ref, group),
-        onRestoreGroup: isRecycleBin ? (group) => _restoreGroup(context, ref, group) : null,
-        onPermanentDeleteGroup: isRecycleBin ? (group) => _permanentDeleteGroup(context, ref, group) : null,
-        onAddEntry: isRecycleBin ? null : () => _showAddEntrySheet(context, ref, currentGroup!),
-        onAddGroup: isRecycleBin ? null : () => _showAddGroupSheet(context, ref, currentGroup!),
+        onRestoreEntry: isRecycleBin
+            ? (entry) => _restoreEntry(context, ref, entry)
+            : null,
+        onMoveEntry: isRecycleBin
+            ? null
+            : (entry) => _moveEntry(context, ref, entry, currentGroup!),
+        onDeleteGroup: isRecycleBin
+            ? null
+            : (group) => _deleteGroup(context, ref, group),
+        onRenameGroup: isRecycleBin
+            ? null
+            : (group) => _renameGroup(context, ref, group),
+        onRestoreGroup: isRecycleBin
+            ? (group) => _restoreGroup(context, ref, group)
+            : null,
+        onPermanentDeleteGroup: isRecycleBin
+            ? (group) => _permanentDeleteGroup(context, ref, group)
+            : null,
+        onAddEntry: isRecycleBin
+            ? null
+            : () => _showAddEntrySheet(context, ref, currentGroup!),
+        onAddGroup: isRecycleBin
+            ? null
+            : () => _showAddGroupSheet(context, ref, currentGroup!),
         onSave: () => _save(context, ref),
         onClose: () => _close(context, ref),
         onSearch: () => context.push('/search'),
@@ -272,6 +347,30 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     );
   }
 
+  void _showOfflineModeDialog(String? reason) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cloudDatabase),
+        content: Text(reason ?? l10n.downloadingFromCloud),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _syncFromCloud(context);
+            },
+            child: Text(l10n.syncFromCloud),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
@@ -280,7 +379,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         title: Text(l10n.deleteEntry),
         content: Text(l10n.moveToRecycleBin),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -300,7 +402,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     );
   }
 
-  void _permanentDeleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+  void _permanentDeleteEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -308,7 +414,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         title: Text(l10n.permanentDelete),
         content: Text(l10n.permanentDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -356,7 +465,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     }
   }
 
-  void _permanentDeleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+  void _permanentDeleteGroup(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxGroup group,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -364,7 +477,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         title: Text(l10n.permanentDelete),
         content: Text(l10n.permanentDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -388,10 +504,19 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     );
   }
 
-  Future<void> _moveEntry(BuildContext context, WidgetRef ref, KdbxEntry entry, KdbxGroup currentGroup) async {
+  Future<void> _moveEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+    KdbxGroup currentGroup,
+  ) async {
     final db = ref.read(databaseServiceProvider).db;
     if (db == null) return;
-    final target = await showMoveToGroupDialog(context, db: db, excludeGroup: currentGroup);
+    final target = await showMoveToGroupDialog(
+      context,
+      db: db,
+      excludeGroup: currentGroup,
+    );
     if (target == null) return;
     ref.read(databaseServiceProvider).moveItem(entry, target);
     refreshExplorerLists(ref);
@@ -412,7 +537,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         title: Text(l10n.deleteGroup),
         content: Text(l10n.deleteGroupConfirm(group.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -445,7 +573,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           decoration: InputDecoration(labelText: l10n.groupName),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () {
               final newName = ctrl.text.trim();
@@ -508,6 +639,13 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           OutlinedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              _showSyncAuditDialog(context, ref);
+            },
+            child: Text(l10n.more),
+          ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
               _syncFromCloud(context);
             },
             child: Text(l10n.downloadCloudVersion),
@@ -538,6 +676,290 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     });
   }
 
+  Future<void> _showSyncAuditDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final report = await ref.read(databaseProvider.notifier).inspectCloudDiff();
+    if (!context.mounted) return;
+    if (report == null || !report.hasChanges) {
+      showToast(context, l10n.syncFailed, isError: true);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.syncConflict),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAuditSection(ctx, 'Local Only', report.localOnly),
+                const SizedBox(height: 12),
+                _buildAuditSection(ctx, 'Cloud Only', report.remoteOnly),
+                const SizedBox(height: 12),
+                _buildAuditSection(ctx, 'Modified Both', report.modifiedBoth),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _syncFromCloud(context);
+            },
+            child: Text(l10n.downloadCloudVersion),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _forceUpload(context, ref);
+            },
+            child: Text(l10n.overwriteCloud),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuditSection(
+    BuildContext context,
+    String title,
+    List<SyncAuditChange> changes,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$title (${changes.length})',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (changes.isEmpty)
+          Text('-', style: TextStyle(color: colorScheme.onSurfaceVariant))
+        else
+          ...changes.take(8).map((change) {
+            final groupPath = change.groupPath ?? '';
+            final details = change.details;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _showAuditChangeDetail(context, title, change),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        change.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      if (groupPath.isNotEmpty)
+                        Text(
+                          groupPath,
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
+                        ),
+                      if (details.isNotEmpty)
+                        Text(
+                          details
+                              .map((detail) => _humanizeAuditKey(l10n, detail))
+                              .join(', '),
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  void _showAuditChangeDetail(
+    BuildContext context,
+    String sectionTitle,
+    SyncAuditChange change,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final localKeys = change.localValues.keys.toSet();
+    final remoteKeys = change.remoteValues.keys.toSet();
+    final keys = <String>{...localKeys, ...remoteKeys}.toList()..sort();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(change.title),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  sectionTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                if ((change.groupPath ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    change.groupPath!,
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (keys.isEmpty)
+                  Text(
+                    l10n.syncAuditNoDiffDetails,
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
+                  )
+                else
+                  ...keys.map(
+                    (key) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _humanizeAuditKey(l10n, key),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ..._buildAuditValueLines(
+                            l10n,
+                            key,
+                            change.localValues[key],
+                            change.remoteValues[key],
+                            colorScheme,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(AppLocalizations.of(ctx)!.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildAuditValueLines(
+    AppLocalizations l10n,
+    String key,
+    String? localValue,
+    String? remoteValue,
+    ColorScheme colorScheme,
+  ) {
+    if (key == 'Tags' || key == 'Attachments') {
+      final localSet = _splitAuditSet(localValue);
+      final remoteSet = _splitAuditSet(remoteValue);
+      final onlyLocal = localSet.difference(remoteSet).toList()..sort();
+      final onlyCloud = remoteSet.difference(localSet).toList()..sort();
+
+      return [
+        Text(
+          '${l10n.syncAuditLocalValue}: ${localValue?.isNotEmpty == true ? localValue : '-'}',
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+        Text(
+          '${l10n.syncAuditCloudValue}: ${remoteValue?.isNotEmpty == true ? remoteValue : '-'}',
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+        if (onlyLocal.isNotEmpty)
+          Text(
+            '${l10n.syncAuditAddedOnlyLocal}: ${onlyLocal.join(', ')}',
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
+        if (onlyCloud.isNotEmpty)
+          Text(
+            '${l10n.syncAuditAddedOnlyCloud}: ${onlyCloud.join(', ')}',
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ),
+      ];
+    }
+
+    return [
+      Text(
+        '${l10n.syncAuditLocalValue}: ${localValue?.isNotEmpty == true ? localValue : '-'}',
+        style: TextStyle(color: colorScheme.onSurfaceVariant),
+      ),
+      Text(
+        '${l10n.syncAuditCloudValue}: ${remoteValue?.isNotEmpty == true ? remoteValue : '-'}',
+        style: TextStyle(color: colorScheme.onSurfaceVariant),
+      ),
+    ];
+  }
+
+  Set<String> _splitAuditSet(String? value) {
+    if (value == null || value.trim().isEmpty) return <String>{};
+    return value
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toSet();
+  }
+
+  String _humanizeAuditKey(AppLocalizations l10n, String key) {
+    if (key.startsWith('Field:')) {
+      final field = key.substring('Field:'.length);
+      switch (field) {
+        case 'Title':
+          return l10n.title;
+        case 'UserName':
+          return l10n.username;
+        case 'Password':
+          return l10n.password;
+        case 'URL':
+          return l10n.url;
+        case 'Notes':
+          return l10n.notes;
+        default:
+          return '${l10n.customFields}: $field';
+      }
+    }
+    switch (key) {
+      case 'Tags':
+        return l10n.tags;
+      case 'Attachments':
+        return l10n.attachments;
+      case 'History':
+        return l10n.history;
+      case 'ModifiedTime':
+        return l10n.syncAuditModifiedTime;
+      default:
+        return key;
+    }
+  }
+
   void _close(BuildContext context, WidgetRef ref) {
     ref.read(databaseProvider.notifier).close();
     if (context.mounted) context.go('/welcome');
@@ -554,9 +976,13 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
 
     try {
       final file = result.files.single;
-      final bytes = file.bytes ?? (file.path != null ? await File(file.path!).readAsBytes() : null);
+      final bytes =
+          file.bytes ??
+          (file.path != null ? await File(file.path!).readAsBytes() : null);
       if (bytes == null) {
-        if (context.mounted) showToast(context, l10n.importFailed('No file data'), isError: true);
+        if (context.mounted) {
+          showToast(context, l10n.importFailed('No file data'), isError: true);
+        }
         return;
       }
 
@@ -566,24 +992,36 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
       if (!content.contains('\n') && bytes.length > 10) {
         final alt = systemEncoding.decode(bytes);
         if (alt.contains('\n')) {
-          log.i('CSV import: UTF-8 produced no line breaks, using system encoding');
+          log.i(
+            'CSV import: UTF-8 produced no line breaks, using system encoding',
+          );
           content = alt;
         }
       }
 
       log.i('CSV import: file = ${file.name}, bytes = ${bytes.length}');
-      log.i('CSV import: content length = ${content.length}, line count = ${content.split('\n').length}');
+      log.i(
+        'CSV import: content length = ${content.length}, line count = ${content.split('\n').length}',
+      );
       final csvService = ref.read(csvServiceProvider);
       final entries = csvService.importFromCsv(content);
       if (entries.isEmpty) {
-        if (context.mounted) showToast(context, l10n.noEntriesInCsv, isError: true);
+        if (context.mounted) {
+          showToast(context, l10n.noEntriesInCsv, isError: true);
+        }
         return;
       }
 
       final dbService = ref.read(databaseServiceProvider);
       final db = dbService.db;
       if (db == null) {
-        if (context.mounted) showToast(context, l10n.importFailed('Database not open'), isError: true);
+        if (context.mounted) {
+          showToast(
+            context,
+            l10n.importFailed('Database not open'),
+            isError: true,
+          );
+        }
         return;
       }
       final groupPath = ref.read(currentGroupPathProvider);
@@ -609,7 +1047,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final dbService = ref.read(databaseServiceProvider);
     final entries = dbService.allEntries;
     if (entries.isEmpty) {
-      if (context.mounted) showToast(context, l10n.noEntriesToExport, isError: true);
+      if (context.mounted) {
+        showToast(context, l10n.noEntriesToExport, isError: true);
+      }
       return;
     }
 
@@ -656,7 +1096,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     }
   }
 
-  void _showAddEntrySheet(BuildContext context, WidgetRef ref, KdbxGroup group) {
+  void _showAddEntrySheet(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxGroup group,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -708,7 +1152,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
         title: Text(l10n.batchDelete),
         content: Text(l10n.batchDeleteConfirm(selected.length)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -737,7 +1184,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     final db = ref.read(databaseProvider).valueOrNull;
     if (db == null) return;
     final currentGroup = ref.read(currentGroupProvider);
-    final target = await showMoveToGroupDialog(context, db: db, excludeGroup: currentGroup);
+    final target = await showMoveToGroupDialog(
+      context,
+      db: db,
+      excludeGroup: currentGroup,
+    );
     if (target == null) return;
     for (final entry in selected) {
       service.moveItem(entry, target);
@@ -762,8 +1213,14 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
           onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, tagController.text.trim()), child: Text(l10n.confirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, tagController.text.trim()),
+            child: Text(l10n.confirm),
+          ),
         ],
       ),
     );
@@ -779,7 +1236,12 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     _cancelSelection();
     refreshExplorerLists(ref);
   }
-  void _showAddGroupSheet(BuildContext context, WidgetRef ref, KdbxGroup group) {
+
+  void _showAddGroupSheet(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxGroup group,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -787,4 +1249,3 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody> with WidgetsBindin
     );
   }
 }
-

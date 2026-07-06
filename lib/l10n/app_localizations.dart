@@ -476,6 +476,60 @@ abstract class AppLocalizations {
   /// **'云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。'**
   String get syncConflictMessage;
 
+  /// No description provided for @syncAuditLocalOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅本地存在'**
+  String get syncAuditLocalOnly;
+
+  /// No description provided for @syncAuditCloudOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅云端存在'**
+  String get syncAuditCloudOnly;
+
+  /// No description provided for @syncAuditModifiedBoth.
+  ///
+  /// In zh, this message translates to:
+  /// **'双方都已修改'**
+  String get syncAuditModifiedBoth;
+
+  /// No description provided for @syncAuditLocalValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地'**
+  String get syncAuditLocalValue;
+
+  /// No description provided for @syncAuditCloudValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端'**
+  String get syncAuditCloudValue;
+
+  /// No description provided for @syncAuditModifiedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改时间'**
+  String get syncAuditModifiedTime;
+
+  /// No description provided for @syncAuditNoDiffDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有更详细的差异信息'**
+  String get syncAuditNoDiffDetails;
+
+  /// No description provided for @syncAuditAddedOnlyLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅在本地存在'**
+  String get syncAuditAddedOnlyLocal;
+
+  /// No description provided for @syncAuditAddedOnlyCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅在云端存在'**
+  String get syncAuditAddedOnlyCloud;
+
   /// No description provided for @downloadCloudVersion.
   ///
   /// In zh, this message translates to:
@@ -764,6 +818,48 @@ abstract class AppLocalizations {
   /// **'WebDAV 同步'**
   String get webdavSync;
 
+  /// No description provided for @webdavProfiles.
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 配置档案'**
+  String get webdavProfiles;
+
+  /// No description provided for @webdavProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 档案'**
+  String get webdavProfile;
+
+  /// No description provided for @profileName.
+  ///
+  /// In zh, this message translates to:
+  /// **'档案名称'**
+  String get profileName;
+
+  /// No description provided for @newProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建档案'**
+  String get newProfile;
+
+  /// No description provided for @selectWebDavProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择 WebDAV 档案'**
+  String get selectWebDavProfile;
+
+  /// No description provided for @deleteProfileConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除档案「{name}」？'**
+  String deleteProfileConfirm(Object name);
+
+  /// No description provided for @cannotDeleteLastProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'至少保留一个 WebDAV 档案'**
+  String get cannotDeleteLastProfile;
+
   /// No description provided for @autoSyncOnSave.
   ///
   /// In zh, this message translates to:
@@ -847,6 +943,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'连接失败'**
   String get connectionFailed;
+
+  /// No description provided for @defaultProfileName.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认档案'**
+  String get defaultProfileName;
+
+  /// No description provided for @profile.
+  ///
+  /// In zh, this message translates to:
+  /// **'档案'**
+  String get profile;
+
+  /// No description provided for @pleaseCreateWebDavProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先创建一个 WebDAV 档案'**
+  String get pleaseCreateWebDavProfile;
+
+  /// No description provided for @profileRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择 WebDAV 档案'**
+  String get profileRequired;
 
   /// No description provided for @moveToGroup.
   ///

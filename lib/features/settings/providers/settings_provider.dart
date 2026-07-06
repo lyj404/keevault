@@ -9,3 +9,9 @@ final webDavSettingsServiceProvider = Provider<WebDavSettingsService>((ref) {
 final webDavConfigProvider = FutureProvider<WebDavConfig?>((ref) async {
   return ref.read(webDavSettingsServiceProvider).getConfig();
 });
+
+final webDavProfilesStateProvider = FutureProvider<WebDavProfilesState>((
+  ref,
+) async {
+  return ref.read(webDavSettingsServiceProvider).getProfilesState();
+});

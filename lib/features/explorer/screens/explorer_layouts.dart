@@ -7,6 +7,8 @@ class _WideLayout extends StatelessWidget {
   final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
+  final bool isCloudOfflineMode;
+  final String? cloudOfflineReason;
   final bool isDirty;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
@@ -47,6 +49,8 @@ class _WideLayout extends StatelessWidget {
     this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
+    required this.isCloudOfflineMode,
+    required this.cloudOfflineReason,
     required this.isDirty,
     required this.onGroupTap,
     required this.onEntrySelect,
@@ -89,17 +93,22 @@ class _WideLayout extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? ClayColors.surfaceDark : ClayColors.surfaceLight,
+      backgroundColor: isDark
+          ? ClayColors.surfaceDark
+          : ClayColors.surfaceLight,
       body: Row(
         children: [
           // Sidebar with clay feel
           Container(
             width: 272,
             decoration: BoxDecoration(
-              color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
+              color: isDark
+                  ? ClayColors.surfaceCardDark
+                  : ClayColors.surfaceCardLight,
               boxShadow: [
                 BoxShadow(
-                  color: (isDark ? Colors.black : const Color(0xFF5EEAD4)).withValues(alpha: isDark ? 0.2 : 0.12),
+                  color: (isDark ? Colors.black : const Color(0xFF5EEAD4))
+                      .withValues(alpha: isDark ? 0.2 : 0.12),
                   blurRadius: 16,
                   offset: const Offset(2, 0),
                 ),
@@ -129,7 +138,11 @@ class _WideLayout extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: IconButton(
-                          icon: Icon(Icons.search_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                          icon: Icon(
+                            Icons.search_rounded,
+                            size: 18,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                           tooltip: l10n.search,
                           onPressed: onSearch,
                           style: IconButton.styleFrom(
@@ -141,7 +154,10 @@ class _WideLayout extends StatelessWidget {
                     ],
                   ),
                 ),
-                Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                Divider(
+                  height: 1,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+                ),
                 // Group tree
                 Expanded(
                   child: _GroupTreeView(
@@ -177,7 +193,10 @@ class _WideLayout extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20,
+                            ),
                             tooltip: l10n.back,
                             onPressed: onPop,
                             style: IconButton.styleFrom(
@@ -188,60 +207,208 @@ class _WideLayout extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: isMultiSelect
-                            ? Text(l10n.selectedCount(selectedEntries.length), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15))
+                            ? Text(
+                                l10n.selectedCount(selectedEntries.length),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              )
                             : _BreadcrumbBar(breadcrumbs: breadcrumbs),
                       ),
                       const Spacer(),
                       if (isMultiSelect) ...[
-                        _ToolbarButton(icon: Icons.close_rounded, tooltip: l10n.cancel, onPressed: onCancelSelection),
-                        _ToolbarButton(icon: Icons.select_all_rounded, tooltip: l10n.selectAll, onPressed: onSelectAll),
-                        _ToolbarButton(icon: Icons.delete_outline_rounded, tooltip: l10n.batchDelete, onPressed: selectedEntries.isNotEmpty ? onBatchDelete : null),
-                        _ToolbarButton(icon: Icons.drive_file_move_rounded, tooltip: l10n.batchMove, onPressed: selectedEntries.isNotEmpty ? onBatchMove : null),
-                        _ToolbarButton(icon: Icons.label_outline_rounded, tooltip: l10n.batchTag, onPressed: selectedEntries.isNotEmpty ? onBatchTag : null),
+                        _ToolbarButton(
+                          icon: Icons.close_rounded,
+                          tooltip: l10n.cancel,
+                          onPressed: onCancelSelection,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.select_all_rounded,
+                          tooltip: l10n.selectAll,
+                          onPressed: onSelectAll,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.delete_outline_rounded,
+                          tooltip: l10n.batchDelete,
+                          onPressed: selectedEntries.isNotEmpty
+                              ? onBatchDelete
+                              : null,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.drive_file_move_rounded,
+                          tooltip: l10n.batchMove,
+                          onPressed: selectedEntries.isNotEmpty
+                              ? onBatchMove
+                              : null,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.label_outline_rounded,
+                          tooltip: l10n.batchTag,
+                          onPressed: selectedEntries.isNotEmpty
+                              ? onBatchTag
+                              : null,
+                        ),
                       ] else ...[
-                        _SortButton(sortOption: sortOption, onSortChanged: onSortChanged),
-                      _ToolbarButton(icon: Icons.add_rounded, tooltip: l10n.addEntry, onPressed: currentGroup != null ? onAddEntry : null),
-                      _ToolbarButton(icon: Icons.create_new_folder_rounded, tooltip: l10n.addGroup, onPressed: currentGroup != null ? onAddGroup : null),
-                      if (isOpenedFromCloud)
-                        _ToolbarButton(icon: Icons.sync_rounded, tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
-                      _ToolbarButton(icon: Icons.save_outlined, tooltip: l10n.save, onPressed: onSave, showDot: isDirty),
-                      PopupMenuButton<String>(
-                        tooltip: l10n.more,
-                        icon: Icon(Icons.more_vert, size: 20, color: colorScheme.onSurfaceVariant),
-                        onSelected: (v) {
-                          switch (v) {
-                            case 'sync_up': _syncToCloud(context);
-                            case 'sync_down': _syncFromCloud(context);
-                            case 'import_csv': onImportCsv?.call();
-                            case 'export_csv': onExportCsv?.call();
-                            case 'export_kdbx': onExportKdbx?.call();
-                            case 'settings': context.push('/settings');
-                            case 'about': context.push('/about');
-                            case 'close': onClose();
-                              case 'batch_select': onToggleMultiSelect();
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          if (isOpenedFromCloud) ...[
-                            PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
-                            PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+                        _SortButton(
+                          sortOption: sortOption,
+                          onSortChanged: onSortChanged,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.add_rounded,
+                          tooltip: l10n.addEntry,
+                          onPressed: currentGroup != null ? onAddEntry : null,
+                        ),
+                        _ToolbarButton(
+                          icon: Icons.create_new_folder_rounded,
+                          tooltip: l10n.addGroup,
+                          onPressed: currentGroup != null ? onAddGroup : null,
+                        ),
+                        if (isOpenedFromCloud)
+                          _ToolbarButton(
+                            icon: Icons.sync_rounded,
+                            tooltip: l10n.syncFromCloud,
+                            onPressed: () => _syncFromCloud(context),
+                          ),
+                        _ToolbarButton(
+                          icon: Icons.save_outlined,
+                          tooltip: l10n.save,
+                          onPressed: onSave,
+                          showDot: isDirty,
+                        ),
+                        PopupMenuButton<String>(
+                          tooltip: l10n.more,
+                          icon: Icon(
+                            Icons.more_vert,
+                            size: 20,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          onSelected: (v) {
+                            switch (v) {
+                              case 'sync_up':
+                                _syncToCloud(context);
+                              case 'sync_down':
+                                _syncFromCloud(context);
+                              case 'import_csv':
+                                onImportCsv?.call();
+                              case 'export_csv':
+                                onExportCsv?.call();
+                              case 'export_kdbx':
+                                onExportKdbx?.call();
+                              case 'settings':
+                                context.push('/settings');
+                              case 'about':
+                                context.push('/about');
+                              case 'close':
+                                onClose();
+                              case 'batch_select':
+                                onToggleMultiSelect();
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            if (isOpenedFromCloud) ...[
+                              PopupMenuItem(
+                                value: 'sync_up',
+                                child: ListTile(
+                                  leading: const Icon(
+                                    Icons.cloud_upload_rounded,
+                                  ),
+                                  title: Text(l10n.syncToCloud),
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'sync_down',
+                                child: ListTile(
+                                  leading: const Icon(
+                                    Icons.cloud_download_rounded,
+                                  ),
+                                  title: Text(l10n.syncFromCloud),
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ],
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'import_csv',
+                              child: ListTile(
+                                leading: const Icon(Icons.file_upload_rounded),
+                                title: Text(l10n.importCsv),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'export_csv',
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.file_download_rounded,
+                                ),
+                                title: Text(l10n.exportCsv),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'export_kdbx',
+                              child: ListTile(
+                                leading: const Icon(Icons.save_as_rounded),
+                                title: Text(l10n.exportKdbx),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'settings',
+                              child: ListTile(
+                                leading: const Icon(Icons.settings_rounded),
+                                title: Text(l10n.settings),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'about',
+                              child: ListTile(
+                                leading: const Icon(Icons.info_outline_rounded),
+                                title: Text(l10n.about),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'batch_select',
+                              child: ListTile(
+                                leading: const Icon(Icons.checklist_rounded),
+                                title: Text(l10n.batchSelect),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'close',
+                              child: ListTile(
+                                leading: const Icon(Icons.close_rounded),
+                                title: Text(l10n.closeDatabase),
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
                           ],
-                          const PopupMenuDivider(),
-                          PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
-                          PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
-                          PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
-                          const PopupMenuDivider(),
-                          PopupMenuItem(value: 'settings', child: ListTile(leading: const Icon(Icons.settings_rounded), title: Text(l10n.settings), dense: true, contentPadding: EdgeInsets.zero)),
-                          PopupMenuItem(value: 'about', child: ListTile(leading: const Icon(Icons.info_outline_rounded), title: Text(l10n.about), dense: true, contentPadding: EdgeInsets.zero)),
-                          PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
-                          PopupMenuItem(value: 'close', child: ListTile(leading: const Icon(Icons.close_rounded), title: Text(l10n.closeDatabase), dense: true, contentPadding: EdgeInsets.zero)),
-                        ],
-                      ),
+                        ),
                       ],
                     ],
                   ),
                 ),
-                Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                Divider(
+                  height: 1,
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+                ),
+                if (isOpenedFromCloud && isCloudOfflineMode)
+                  _CloudOfflineBanner(reason: cloudOfflineReason),
                 // Tag filter bar
                 _TagFilterBar(),
                 // Entry list
@@ -278,7 +445,12 @@ class _ToolbarButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool showDot;
 
-  const _ToolbarButton({required this.icon, required this.tooltip, this.onPressed, this.showDot = false});
+  const _ToolbarButton({
+    required this.icon,
+    required this.tooltip,
+    this.onPressed,
+    this.showDot = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +468,11 @@ class _ToolbarButton extends StatelessWidget {
             ? Badge(
                 smallSize: 6,
                 backgroundColor: colorScheme.primary,
-                child: Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               )
             : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         tooltip: tooltip,
@@ -305,6 +481,60 @@ class _ToolbarButton extends StatelessWidget {
           minimumSize: const Size(34, 34),
           padding: EdgeInsets.zero,
         ),
+      ),
+    );
+  }
+}
+
+class _CloudOfflineBanner extends StatelessWidget {
+  final String? reason;
+
+  const _CloudOfflineBanner({this.reason});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.6),
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 18, color: colorScheme.tertiary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.cloudDatabase,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onTertiaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  reason ?? l10n.downloadingFromCloud,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onTertiaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -321,30 +551,71 @@ class _SortButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return PopupMenuButton<EntrySortOption>(
       tooltip: l10n.sortBy,
-      icon: Icon(Icons.sort_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+      icon: Icon(
+        Icons.sort_rounded,
+        size: 20,
+        color: colorScheme.onSurfaceVariant,
+      ),
       onSelected: onSortChanged,
       itemBuilder: (_) => [
-        _sortItem(l10n.sortTitleAsc, EntrySortOption.titleAsc, Icons.sort_by_alpha_rounded),
-        _sortItem(l10n.sortTitleDesc, EntrySortOption.titleDesc, Icons.sort_by_alpha_rounded),
+        _sortItem(
+          l10n.sortTitleAsc,
+          EntrySortOption.titleAsc,
+          Icons.sort_by_alpha_rounded,
+        ),
+        _sortItem(
+          l10n.sortTitleDesc,
+          EntrySortOption.titleDesc,
+          Icons.sort_by_alpha_rounded,
+        ),
         const PopupMenuDivider(),
-        _sortItem(l10n.sortCreatedNewest, EntrySortOption.createdNewest, Icons.access_time_rounded),
-        _sortItem(l10n.sortCreatedOldest, EntrySortOption.createdOldest, Icons.access_time_rounded),
+        _sortItem(
+          l10n.sortCreatedNewest,
+          EntrySortOption.createdNewest,
+          Icons.access_time_rounded,
+        ),
+        _sortItem(
+          l10n.sortCreatedOldest,
+          EntrySortOption.createdOldest,
+          Icons.access_time_rounded,
+        ),
         const PopupMenuDivider(),
-        _sortItem(l10n.sortModifiedNewest, EntrySortOption.modifiedNewest, Icons.edit_rounded),
-        _sortItem(l10n.sortModifiedOldest, EntrySortOption.modifiedOldest, Icons.edit_rounded),
+        _sortItem(
+          l10n.sortModifiedNewest,
+          EntrySortOption.modifiedNewest,
+          Icons.edit_rounded,
+        ),
+        _sortItem(
+          l10n.sortModifiedOldest,
+          EntrySortOption.modifiedOldest,
+          Icons.edit_rounded,
+        ),
         const PopupMenuDivider(),
-        _sortItem(l10n.sortExpiredFirst, EntrySortOption.expiredFirst, Icons.warning_amber_rounded),
+        _sortItem(
+          l10n.sortExpiredFirst,
+          EntrySortOption.expiredFirst,
+          Icons.warning_amber_rounded,
+        ),
       ],
     );
   }
 
-  PopupMenuItem<EntrySortOption> _sortItem(String label, EntrySortOption value, IconData icon) {
+  PopupMenuItem<EntrySortOption> _sortItem(
+    String label,
+    EntrySortOption value,
+    IconData icon,
+  ) {
     final isSelected = sortOption == value;
     return PopupMenuItem(
       value: value,
       child: ListTile(
         leading: Icon(icon, size: 20),
-        title: Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400)),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+          ),
+        ),
         trailing: isSelected ? const Icon(Icons.check_rounded, size: 18) : null,
         dense: true,
         contentPadding: EdgeInsets.zero,
@@ -362,6 +633,8 @@ class _NarrowLayout extends ConsumerStatefulWidget {
   final KdbxEntry? selectedEntry;
   final bool isRecycleBin;
   final bool isOpenedFromCloud;
+  final bool isCloudOfflineMode;
+  final String? cloudOfflineReason;
   final bool isDirty;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
@@ -401,6 +674,8 @@ class _NarrowLayout extends ConsumerStatefulWidget {
     this.selectedEntry,
     required this.isRecycleBin,
     required this.isOpenedFromCloud,
+    required this.isCloudOfflineMode,
+    required this.cloudOfflineReason,
     required this.isDirty,
     required this.onGroupTap,
     required this.onEntrySelect,
@@ -487,22 +762,38 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.list_alt_rounded, size: 22),
-            selectedIcon: Icon(Icons.list_alt_rounded, size: 22, color: colorScheme.primary),
+            selectedIcon: Icon(
+              Icons.list_alt_rounded,
+              size: 22,
+              color: colorScheme.primary,
+            ),
             label: l10n.entriesTab,
           ),
           NavigationDestination(
             icon: const Icon(Icons.timer_outlined, size: 22),
-            selectedIcon: Icon(Icons.timer_rounded, size: 22, color: colorScheme.primary),
+            selectedIcon: Icon(
+              Icons.timer_rounded,
+              size: 22,
+              color: colorScheme.primary,
+            ),
             label: l10n.totpTab,
           ),
           NavigationDestination(
             icon: const Icon(Icons.search_rounded, size: 22),
-            selectedIcon: Icon(Icons.search_rounded, size: 22, color: colorScheme.primary),
+            selectedIcon: Icon(
+              Icons.search_rounded,
+              size: 22,
+              color: colorScheme.primary,
+            ),
             label: l10n.searchTab,
           ),
           NavigationDestination(
             icon: const Icon(Icons.build_outlined, size: 22),
-            selectedIcon: Icon(Icons.build_rounded, size: 22, color: colorScheme.primary),
+            selectedIcon: Icon(
+              Icons.build_rounded,
+              size: 22,
+              color: colorScheme.primary,
+            ),
             label: l10n.toolsTab,
           ),
         ],
@@ -511,7 +802,12 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, int tabIndex) {
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    int tabIndex,
+  ) {
     switch (tabIndex) {
       case 0:
         return _buildEntriesAppBar(context, l10n, colorScheme);
@@ -550,35 +846,79 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
     }
   }
 
-  PreferredSizeWidget _buildEntriesAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+  PreferredSizeWidget _buildEntriesAppBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     if (widget.isMultiSelect) {
       return AppBar(
-        leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: widget.onCancelSelection),
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: widget.onCancelSelection,
+        ),
         title: Text(l10n.selectedCount(widget.selectedEntries.length)),
         actions: [
-          IconButton(icon: const Icon(Icons.select_all_rounded), tooltip: l10n.selectAll, onPressed: widget.onSelectAll),
-          IconButton(icon: const Icon(Icons.delete_outline_rounded), tooltip: l10n.batchDelete, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchDelete : null),
-          IconButton(icon: const Icon(Icons.drive_file_move_rounded), tooltip: l10n.batchMove, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchMove : null),
-          IconButton(icon: const Icon(Icons.label_outline_rounded), tooltip: l10n.batchTag, onPressed: widget.selectedEntries.isNotEmpty ? widget.onBatchTag : null),
+          IconButton(
+            icon: const Icon(Icons.select_all_rounded),
+            tooltip: l10n.selectAll,
+            onPressed: widget.onSelectAll,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded),
+            tooltip: l10n.batchDelete,
+            onPressed: widget.selectedEntries.isNotEmpty
+                ? widget.onBatchDelete
+                : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.drive_file_move_rounded),
+            tooltip: l10n.batchMove,
+            onPressed: widget.selectedEntries.isNotEmpty
+                ? widget.onBatchMove
+                : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.label_outline_rounded),
+            tooltip: l10n.batchTag,
+            onPressed: widget.selectedEntries.isNotEmpty
+                ? widget.onBatchTag
+                : null,
+          ),
         ],
       );
     }
     return AppBar(
       leading: widget.onPop != null
-          ? IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: widget.onPop)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: widget.onPop,
+            )
           : null,
-      title: Text(
-        widget.breadcrumbs.last,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(widget.breadcrumbs.last, overflow: TextOverflow.ellipsis),
       actions: [
         if (widget.isOpenedFromCloud)
-          IconButton(icon: const Icon(Icons.sync_rounded, size: 20), tooltip: l10n.syncFromCloud, onPressed: () => _syncFromCloud(context)),
-        _SortButton(sortOption: widget.sortOption, onSortChanged: widget.onSortChanged),
-        IconButton(icon: const Icon(Icons.search_rounded, size: 20), tooltip: l10n.search, onPressed: () => ref.read(mobileTabIndexProvider.notifier).state = 2),
+          IconButton(
+            icon: const Icon(Icons.sync_rounded, size: 20),
+            tooltip: l10n.syncFromCloud,
+            onPressed: () => _syncFromCloud(context),
+          ),
+        _SortButton(
+          sortOption: widget.sortOption,
+          onSortChanged: widget.onSortChanged,
+        ),
+        IconButton(
+          icon: const Icon(Icons.search_rounded, size: 20),
+          tooltip: l10n.search,
+          onPressed: () => ref.read(mobileTabIndexProvider.notifier).state = 2,
+        ),
         IconButton(
           icon: widget.isDirty
-              ? Badge(smallSize: 6, backgroundColor: colorScheme.primary, child: const Icon(Icons.save_outlined, size: 20))
+              ? Badge(
+                  smallSize: 6,
+                  backgroundColor: colorScheme.primary,
+                  child: const Icon(Icons.save_outlined, size: 20),
+                )
               : const Icon(Icons.save_outlined, size: 20),
           tooltip: l10n.save,
           onPressed: widget.onSave,
@@ -587,31 +927,89 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
           tooltip: l10n.more,
           onSelected: (v) {
             switch (v) {
-              case 'sync_up': _syncToCloud(context);
-              case 'sync_down': _syncFromCloud(context);
-              case 'import_csv': widget.onImportCsv?.call();
-              case 'export_csv': widget.onExportCsv?.call();
-              case 'export_kdbx': widget.onExportKdbx?.call();
-              case 'batch_select': widget.onToggleMultiSelect();
+              case 'sync_up':
+                _syncToCloud(context);
+              case 'sync_down':
+                _syncFromCloud(context);
+              case 'import_csv':
+                widget.onImportCsv?.call();
+              case 'export_csv':
+                widget.onExportCsv?.call();
+              case 'export_kdbx':
+                widget.onExportKdbx?.call();
+              case 'batch_select':
+                widget.onToggleMultiSelect();
             }
           },
           itemBuilder: (_) => [
             if (widget.isOpenedFromCloud) ...[
-              PopupMenuItem(value: 'sync_up', child: ListTile(leading: const Icon(Icons.cloud_upload_rounded), title: Text(l10n.syncToCloud), dense: true, contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'sync_down', child: ListTile(leading: const Icon(Icons.cloud_download_rounded), title: Text(l10n.syncFromCloud), dense: true, contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(
+                value: 'sync_up',
+                child: ListTile(
+                  leading: const Icon(Icons.cloud_upload_rounded),
+                  title: Text(l10n.syncToCloud),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'sync_down',
+                child: ListTile(
+                  leading: const Icon(Icons.cloud_download_rounded),
+                  title: Text(l10n.syncFromCloud),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
             ],
             const PopupMenuDivider(),
-            PopupMenuItem(value: 'import_csv', child: ListTile(leading: const Icon(Icons.file_upload_rounded), title: Text(l10n.importCsv), dense: true, contentPadding: EdgeInsets.zero)),
-            PopupMenuItem(value: 'export_csv', child: ListTile(leading: const Icon(Icons.file_download_rounded), title: Text(l10n.exportCsv), dense: true, contentPadding: EdgeInsets.zero)),
-            PopupMenuItem(value: 'export_kdbx', child: ListTile(leading: const Icon(Icons.save_as_rounded), title: Text(l10n.exportKdbx), dense: true, contentPadding: EdgeInsets.zero)),
-            PopupMenuItem(value: 'batch_select', child: ListTile(leading: const Icon(Icons.checklist_rounded), title: Text(l10n.batchSelect), dense: true, contentPadding: EdgeInsets.zero)),
+            PopupMenuItem(
+              value: 'import_csv',
+              child: ListTile(
+                leading: const Icon(Icons.file_upload_rounded),
+                title: Text(l10n.importCsv),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'export_csv',
+              child: ListTile(
+                leading: const Icon(Icons.file_download_rounded),
+                title: Text(l10n.exportCsv),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'export_kdbx',
+              child: ListTile(
+                leading: const Icon(Icons.save_as_rounded),
+                title: Text(l10n.exportKdbx),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            PopupMenuItem(
+              value: 'batch_select',
+              child: ListTile(
+                leading: const Icon(Icons.checklist_rounded),
+                title: Text(l10n.batchSelect),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  PreferredSizeWidget _buildSearchAppBar(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme) {
+  PreferredSizeWidget _buildSearchAppBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
     return AppBar(
       title: TextField(
         controller: _searchController,
@@ -619,9 +1017,16 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
         style: TextStyle(fontSize: 15, color: colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: l10n.searchEntries,
-          hintStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
+          hintStyle: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 15,
+          ),
           border: InputBorder.none,
-          prefixIcon: Icon(Icons.search_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: colorScheme.onSurfaceVariant,
+          ),
           filled: false,
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
         ),
@@ -632,7 +1037,13 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, bool isDark, int tabIndex) {
+  Widget _buildBody(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    bool isDark,
+    int tabIndex,
+  ) {
     switch (tabIndex) {
       case 0:
         return _buildEntriesTab(context, l10n, colorScheme, isDark);
@@ -643,12 +1054,12 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
           totpService: _totpService,
         );
       case 2:
-        return _MobileSearchTab(
-          onEntryOpen: widget.onEntryOpen,
-        );
+        return _MobileSearchTab(onEntryOpen: widget.onEntryOpen);
       case 3:
         return _MobileToolsPanel(
           isOpenedFromCloud: widget.isOpenedFromCloud,
+          isCloudOfflineMode: widget.isCloudOfflineMode,
+          cloudOfflineReason: widget.cloudOfflineReason,
           onClose: widget.onClose,
           onImportCsv: widget.onImportCsv,
           onExportCsv: widget.onExportCsv,
@@ -659,9 +1070,16 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
     }
   }
 
-  Widget _buildEntriesTab(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, bool isDark) {
+  Widget _buildEntriesTab(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    bool isDark,
+  ) {
     return Column(
       children: [
+        if (widget.isOpenedFromCloud && widget.isCloudOfflineMode)
+          _CloudOfflineBanner(reason: widget.cloudOfflineReason),
         _TagFilterBar(),
         Expanded(
           child: _MobileEntryListBody(
@@ -689,7 +1107,12 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
     );
   }
 
-  Widget? _buildFab(BuildContext context, AppLocalizations l10n, ColorScheme colorScheme, int tabIndex) {
+  Widget? _buildFab(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    int tabIndex,
+  ) {
     if (tabIndex != 0) return null;
     if (widget.currentGroup == null) return null;
     if (widget.onAddEntry == null && widget.onAddGroup == null) return null;
@@ -726,7 +1149,9 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
           const SizedBox(height: 14),
         ],
         FloatingActionButton(
-          onPressed: widget.onAddEntry != null && widget.onAddGroup != null ? _toggleFab : (widget.onAddEntry ?? _toggleFab),
+          onPressed: widget.onAddEntry != null && widget.onAddGroup != null
+              ? _toggleFab
+              : (widget.onAddEntry ?? _toggleFab),
           tooltip: l10n.addEntry,
           backgroundColor: isDark ? ClayColors.primaryDark : null,
           foregroundColor: isDark ? ClayColors.onSurfaceDark : null,
@@ -767,7 +1192,9 @@ class _FabOption extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: isDark ? ClayColors.surfaceContainerDark : ClayColors.surfaceContainerLight,
+            color: isDark
+                ? ClayColors.surfaceContainerDark
+                : ClayColors.surfaceContainerLight,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: colorScheme.primary.withValues(alpha: isDark ? 0.4 : 0.25),
@@ -775,7 +1202,9 @@ class _FabOption extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.primary.withValues(alpha: isDark ? 0.12 : 0.08),
+                color: colorScheme.primary.withValues(
+                  alpha: isDark ? 0.12 : 0.08,
+                ),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -799,7 +1228,9 @@ class _FabOption extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? ClayColors.onSurfaceDark : ClayColors.onSurfaceLight,
+                  color: isDark
+                      ? ClayColors.onSurfaceDark
+                      : ClayColors.onSurfaceLight,
                 ),
               ),
             ],
@@ -811,4 +1242,3 @@ class _FabOption extends StatelessWidget {
 }
 
 // ─── Group tree (sidebar) ────────────────────────────────────────────────
-

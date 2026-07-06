@@ -8,7 +8,9 @@ class _BreadcrumbBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final displayNames = [for (final b in breadcrumbs) b == 'Root' ? l10n.rootDirectory : b];
+    final displayNames = [
+      for (final b in breadcrumbs) b == 'Root' ? l10n.rootDirectory : b,
+    ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -18,14 +20,22 @@ class _BreadcrumbBar extends StatelessWidget {
             if (i > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(Icons.chevron_right, size: 16, color: colorScheme.outline),
+                child: Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: colorScheme.outline,
+                ),
               ),
             Text(
               displayNames[i],
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: i == displayNames.length - 1 ? FontWeight.w700 : FontWeight.w500,
-                color: i == displayNames.length - 1 ? null : colorScheme.onSurfaceVariant,
+                fontWeight: i == displayNames.length - 1
+                    ? FontWeight.w700
+                    : FontWeight.w500,
+                color: i == displayNames.length - 1
+                    ? null
+                    : colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -67,7 +77,10 @@ class _EntryListBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
-      return EmptyState(icon: Icons.folder_open_rounded, message: AppLocalizations.of(context)!.thisGroupIsEmpty);
+      return EmptyState(
+        icon: Icons.folder_open_rounded,
+        message: AppLocalizations.of(context)!.thisGroupIsEmpty,
+      );
     }
 
     return ListView.builder(
@@ -81,7 +94,9 @@ class _EntryListBody extends StatelessWidget {
             key: ValueKey(e.uuid),
             entry: e,
             isSelected: e == selectedEntry,
-            onTap: isMultiSelect ? () => onToggleEntrySelection(e) : () => onEntrySelect(e),
+            onTap: isMultiSelect
+                ? () => onToggleEntrySelection(e)
+                : () => onEntrySelect(e),
             onOpen: () => onEntryOpen(e),
             onDelete: () => onDeleteEntry(e),
             onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
@@ -141,7 +156,10 @@ class _MobileEntryListBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     if (subGroups.isEmpty && entries.isEmpty) {
-      return EmptyState(icon: Icons.folder_open_rounded, message: l10n.thisGroupIsEmpty);
+      return EmptyState(
+        icon: Icons.folder_open_rounded,
+        message: l10n.thisGroupIsEmpty,
+      );
     }
 
     return ListView.builder(
@@ -168,7 +186,9 @@ class _MobileEntryListBody extends StatelessWidget {
             key: ValueKey(e.uuid),
             entry: e,
             isSelected: e == selectedEntry,
-            onTap: isMultiSelect ? () => onToggleEntrySelection(e) : () => onEntrySelect(e),
+            onTap: isMultiSelect
+                ? () => onToggleEntrySelection(e)
+                : () => onEntrySelect(e),
             onOpen: () => onEntryOpen(e),
             onDelete: () => onDeleteEntry(e),
             onRestore: onRestoreEntry != null ? () => onRestoreEntry!(e) : null,
@@ -190,18 +210,31 @@ class _MobileGroupTile extends StatelessWidget {
   final ValueChanged<KdbxGroup>? onRestoreGroup;
   final ValueChanged<KdbxGroup>? onPermanentDeleteGroup;
 
-  const _MobileGroupTile({required this.group, required this.onTap, this.onDeleteGroup, this.onRenameGroup, this.onRestoreGroup, this.onPermanentDeleteGroup});
+  const _MobileGroupTile({
+    required this.group,
+    required this.onTap,
+    this.onDeleteGroup,
+    this.onRenameGroup,
+    this.onRestoreGroup,
+    this.onPermanentDeleteGroup,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasMenu = onDeleteGroup != null || onRenameGroup != null || onRestoreGroup != null || onPermanentDeleteGroup != null;
+    final hasMenu =
+        onDeleteGroup != null ||
+        onRenameGroup != null ||
+        onRestoreGroup != null ||
+        onPermanentDeleteGroup != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       child: Material(
-        color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
+        color: isDark
+            ? ClayColors.surfaceCardDark
+            : ClayColors.surfaceCardLight,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -210,7 +243,10 @@ class _MobileGroupTile extends StatelessWidget {
                   final box = context.findRenderObject() as RenderBox?;
                   final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
                   final size = box?.size ?? Size.zero;
-                  _showContextMenu(context, Offset(pos.dx + size.width / 2, pos.dy + size.height / 2));
+                  _showContextMenu(
+                    context,
+                    Offset(pos.dx + size.width / 2, pos.dy + size.height / 2),
+                  );
                 }
               : null,
           borderRadius: BorderRadius.circular(12),
@@ -267,7 +303,11 @@ class _MobileGroupTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ],
             ),
           ),
@@ -279,14 +319,19 @@ class _MobileGroupTile extends StatelessWidget {
   String _groupSubtitle(BuildContext context, KdbxGroup group) {
     final l10n = AppLocalizations.of(context)!;
     final parts = <String>[];
-    if (group.groups.isNotEmpty) parts.add('${group.groups.length} ${l10n.groups}');
-    if (group.entries.isNotEmpty) parts.add('${group.entries.length} ${l10n.entries}');
+    if (group.groups.isNotEmpty) {
+      parts.add('${group.groups.length} ${l10n.groups}');
+    }
+    if (group.entries.isNotEmpty) {
+      parts.add('${group.entries.length} ${l10n.entries}');
+    }
     return parts.join(' · ');
   }
 
   void _showContextMenu(BuildContext context, Offset globalPos) {
     final l10n = AppLocalizations.of(context)!;
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
     final screenSize = overlay.size;
     final position = RelativeRect.fromLTRB(
@@ -302,22 +347,42 @@ class _MobileGroupTile extends StatelessWidget {
         if (onRenameGroup != null)
           PopupMenuItem(
             value: 'rename',
-            child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.rename), dense: true, contentPadding: EdgeInsets.zero),
+            child: ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.rename),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         if (onDeleteGroup != null)
           PopupMenuItem(
             value: 'delete',
-            child: ListTile(leading: const Icon(Icons.delete_outline_rounded), title: Text(l10n.deleteGroup), dense: true, contentPadding: EdgeInsets.zero),
+            child: ListTile(
+              leading: const Icon(Icons.delete_outline_rounded),
+              title: Text(l10n.deleteGroup),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         if (onRestoreGroup != null)
           PopupMenuItem(
             value: 'restore',
-            child: ListTile(leading: const Icon(Icons.restore_rounded), title: Text(l10n.restore), dense: true, contentPadding: EdgeInsets.zero),
+            child: ListTile(
+              leading: const Icon(Icons.restore_rounded),
+              title: Text(l10n.restore),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
         if (onPermanentDeleteGroup != null)
           PopupMenuItem(
             value: 'permanent_delete',
-            child: ListTile(leading: const Icon(Icons.delete_forever_rounded), title: Text(l10n.permanentDelete), dense: true, contentPadding: EdgeInsets.zero),
+            child: ListTile(
+              leading: const Icon(Icons.delete_forever_rounded),
+              title: Text(l10n.permanentDelete),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
       ],
     ).then((value) {
@@ -336,7 +401,11 @@ class _MobileTotpTab extends ConsumerStatefulWidget {
   final ValueChanged<KdbxEntry> onEntryOpen;
   final TotpService totpService;
 
-  const _MobileTotpTab({super.key, required this.onEntryOpen, required this.totpService});
+  const _MobileTotpTab({
+    super.key,
+    required this.onEntryOpen,
+    required this.totpService,
+  });
 
   @override
   ConsumerState<_MobileTotpTab> createState() => _MobileTotpTabState();
@@ -379,7 +448,9 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
     refreshExplorerLists(ref);
 
     if (context.mounted) {
-      context.push('/entry/edit?uuid=${entry.uuid}&groupPath=${Uri.encodeComponent(groupPath)}');
+      context.push(
+        '/entry/edit?uuid=${entry.uuid}&groupPath=${Uri.encodeComponent(groupPath)}',
+      );
     }
   }
 
@@ -397,7 +468,10 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
         final title = entry.fields['Title']?.text ?? '';
         final username = entry.fields['UserName']?.text ?? '';
         final q = _query.toLowerCase();
-        if (!title.toLowerCase().contains(q) && !username.toLowerCase().contains(q)) continue;
+        if (!title.toLowerCase().contains(q) &&
+            !username.toLowerCase().contains(q)) {
+          continue;
+        }
       }
       totpEntries.add(_TotpEntryInfo(entry: entry, config: config));
     }
@@ -425,8 +499,13 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
                   },
                 ),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -516,12 +595,16 @@ class _TotpListTileState extends State<_TotpListTile> {
     final title = widget.entry.fields['Title']?.text ?? l10n.untitled;
     final isLow = _remaining <= 5;
     final progress = _remaining / widget.config.period;
-    final codeDisplay = _code.length == 6 ? '${_code.substring(0, 3)} ${_code.substring(3)}' : _code;
+    final codeDisplay = _code.length == 6
+        ? '${_code.substring(0, 3)} ${_code.substring(3)}'
+        : _code;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       child: Material(
-        color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
+        color: isDark
+            ? ClayColors.surfaceCardDark
+            : ClayColors.surfaceCardLight,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -535,8 +618,15 @@ class _TotpListTileState extends State<_TotpListTile> {
                     Container(
                       width: 36,
                       height: 36,
-                      decoration: ClayDecoration.iconContainer(brightness: brightness, radius: 11),
-                      child: Icon(Icons.timer_rounded, size: 18, color: isLow ? colorScheme.error : colorScheme.primary),
+                      decoration: ClayDecoration.iconContainer(
+                        brightness: brightness,
+                        radius: 11,
+                      ),
+                      child: Icon(
+                        Icons.timer_rounded,
+                        size: 18,
+                        color: isLow ? colorScheme.error : colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -544,7 +634,11 @@ class _TotpListTileState extends State<_TotpListTile> {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                     ),
                   ],
@@ -560,7 +654,9 @@ class _TotpListTileState extends State<_TotpListTile> {
                         fontWeight: FontWeight.w700,
                         fontFamily: 'monospace',
                         fontFeatures: const [FontFeature.tabularFigures()],
-                        color: isLow ? colorScheme.error : colorScheme.onSurface,
+                        color: isLow
+                            ? colorScheme.error
+                            : colorScheme.onSurface,
                         letterSpacing: 2,
                       ),
                     ),
@@ -574,7 +670,8 @@ class _TotpListTileState extends State<_TotpListTile> {
                           CircularProgressIndicator(
                             value: progress,
                             strokeWidth: 2.5,
-                            backgroundColor: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                            backgroundColor: colorScheme.outlineVariant
+                                .withValues(alpha: 0.2),
                             valueColor: AlwaysStoppedAnimation<Color>(
                               isLow ? colorScheme.error : colorScheme.primary,
                             ),
@@ -584,8 +681,12 @@ class _TotpListTileState extends State<_TotpListTile> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              fontFeatures: const [FontFeature.tabularFigures()],
-                              color: isLow ? colorScheme.error : colorScheme.onSurfaceVariant,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              color: isLow
+                                  ? colorScheme.error
+                                  : colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -608,7 +709,11 @@ class _TotpListTileState extends State<_TotpListTile> {
                             copyToClipboardWithAutoClear(_code);
                             showToast(context, l10n.copiedTotp);
                           },
-                          child: Icon(Icons.copy_rounded, size: 14, color: colorScheme.onSurfaceVariant),
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),
@@ -649,7 +754,9 @@ class _MobileSearchTab extends ConsumerWidget {
       itemBuilder: (ctx, i) {
         final result = results[i];
         final entry = result.entry;
-        final groupPath = entry.parent != null ? service.getGroupPath(entry.parent!) : '';
+        final groupPath = entry.parent != null
+            ? service.getGroupPath(entry.parent!)
+            : '';
         return RepaintBoundary(
           child: EntryListTile(
             key: ValueKey(entry.uuid),
@@ -657,7 +764,9 @@ class _MobileSearchTab extends ConsumerWidget {
             onTap: () {},
             onOpen: () {
               final encodedUuid = Uri.encodeComponent(entry.uuid.string);
-              context.push('/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(groupPath)}');
+              context.push(
+                '/entry/detail?uuid=$encodedUuid&groupPath=${Uri.encodeComponent(groupPath)}',
+              );
             },
           ),
         );
@@ -670,6 +779,8 @@ class _MobileSearchTab extends ConsumerWidget {
 
 class _MobileToolsPanel extends StatelessWidget {
   final bool isOpenedFromCloud;
+  final bool isCloudOfflineMode;
+  final String? cloudOfflineReason;
   final VoidCallback onClose;
   final VoidCallback? onImportCsv;
   final VoidCallback? onExportCsv;
@@ -677,6 +788,8 @@ class _MobileToolsPanel extends StatelessWidget {
 
   const _MobileToolsPanel({
     required this.isOpenedFromCloud,
+    required this.isCloudOfflineMode,
+    this.cloudOfflineReason,
     required this.onClose,
     this.onImportCsv,
     this.onExportCsv,
@@ -694,6 +807,21 @@ class _MobileToolsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (isOpenedFromCloud && isCloudOfflineMode) ...[
+            _ToolsSection(
+              brightness: brightness,
+              title: l10n.cloudDatabase,
+              children: [
+                _ToolTile(
+                  icon: Icons.cloud_off_rounded,
+                  iconBg: colorScheme.tertiaryContainer,
+                  iconColor: colorScheme.tertiary,
+                  title: cloudOfflineReason ?? l10n.downloadingFromCloud,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
           if (isOpenedFromCloud) ...[
             const SizedBox(height: 16),
             _ToolsSection(
@@ -794,7 +922,11 @@ class _ToolsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _ToolsSection({required this.brightness, required this.title, required this.children});
+  const _ToolsSection({
+    required this.brightness,
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -806,7 +938,11 @@ class _ToolsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             title,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -815,7 +951,11 @@ class _ToolsSection extends StatelessWidget {
           child: Column(
             children: [
               for (int i = 0; i < children.length; i++) ...[
-                if (i > 0) Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+                if (i > 0)
+                  Divider(
+                    height: 1,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+                  ),
                 children[i],
               ],
             ],
@@ -868,11 +1008,22 @@ class _ToolTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface)),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

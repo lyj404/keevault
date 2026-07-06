@@ -16,11 +16,13 @@ import '../providers/database_provider.dart';
 class UnlockScreen extends ConsumerStatefulWidget {
   final String filePath;
   final bool isCloud;
+  final String? webDavProfileId;
   final String? syncedETag;
   const UnlockScreen({
     super.key,
     required this.filePath,
     this.isCloud = false,
+    this.webDavProfileId,
     this.syncedETag,
   });
 
@@ -316,6 +318,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           widget.filePath,
           _passwordController.text,
           isCloud: widget.isCloud,
+          webDavProfileId: widget.webDavProfileId,
           syncedETag: widget.syncedETag,
           keyData: _keyData,
         );
@@ -356,6 +359,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           widget.filePath,
           storedCredentials.password,
           isCloud: widget.isCloud,
+          webDavProfileId: widget.webDavProfileId,
           syncedETag: widget.syncedETag,
           keyData: storedCredentials.keyData,
         );

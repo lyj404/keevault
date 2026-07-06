@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 class WebDavConfig {
+  final String id;
+  final String name;
   final String serverUrl;
   final String username;
   final String password;
@@ -9,6 +11,8 @@ class WebDavConfig {
   final bool enabled;
 
   const WebDavConfig({
+    required this.id,
+    required this.name,
     required this.serverUrl,
     required this.username,
     required this.password,
@@ -27,22 +31,26 @@ class WebDavConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'serverUrl': serverUrl,
-        'username': username,
-        'password': password,
-        'remotePath': remotePath,
-        'remoteFilename': remoteFilename,
-        'enabled': enabled,
-      };
+    'id': id,
+    'name': name,
+    'serverUrl': serverUrl,
+    'username': username,
+    'password': password,
+    'remotePath': remotePath,
+    'remoteFilename': remoteFilename,
+    'enabled': enabled,
+  };
 
   factory WebDavConfig.fromJson(Map<String, dynamic> json) => WebDavConfig(
-        serverUrl: json['serverUrl'] as String? ?? '',
-        username: json['username'] as String? ?? '',
-        password: json['password'] as String? ?? '',
-        remotePath: json['remotePath'] as String? ?? '',
-        remoteFilename: json['remoteFilename'] as String? ?? 'database.kdbx',
-        enabled: json['enabled'] as bool? ?? false,
-      );
+    id: json['id'] as String? ?? _generateId(),
+    name: json['name'] as String? ?? 'Profile',
+    serverUrl: json['serverUrl'] as String? ?? '',
+    username: json['username'] as String? ?? '',
+    password: json['password'] as String? ?? '',
+    remotePath: json['remotePath'] as String? ?? '',
+    remoteFilename: json['remoteFilename'] as String? ?? 'database.kdbx',
+    enabled: json['enabled'] as bool? ?? false,
+  );
 
   String encode() => jsonEncode(toJson());
 
@@ -50,26 +58,31 @@ class WebDavConfig {
       WebDavConfig.fromJson(jsonDecode(source) as Map<String, dynamic>);
 
   WebDavConfig copyWith({
+    String? id,
+    String? name,
     String? serverUrl,
     String? username,
     String? password,
     String? remotePath,
     String? remoteFilename,
     bool? enabled,
-  }) =>
-      WebDavConfig(
-        serverUrl: serverUrl ?? this.serverUrl,
-        username: username ?? this.username,
-        password: password ?? this.password,
-        remotePath: remotePath ?? this.remotePath,
-        remoteFilename: remoteFilename ?? this.remoteFilename,
-        enabled: enabled ?? this.enabled,
-      );
+  }) => WebDavConfig(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    serverUrl: serverUrl ?? this.serverUrl,
+    username: username ?? this.username,
+    password: password ?? this.password,
+    remotePath: remotePath ?? this.remotePath,
+    remoteFilename: remoteFilename ?? this.remoteFilename,
+    enabled: enabled ?? this.enabled,
+  );
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is WebDavConfig &&
+          id == other.id &&
+          name == other.name &&
           serverUrl == other.serverUrl &&
           username == other.username &&
           password == other.password &&
@@ -78,5 +91,62 @@ class WebDavConfig {
           enabled == other.enabled;
 
   @override
-  int get hashCode => Object.hash(serverUrl, username, password, remotePath, remoteFilename, enabled);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    serverUrl,
+    username,
+    password,
+    remotePath,
+    remoteFilename,
+    enabled,
+  );
+
+  static String _generateId() {
+    final micros = DateTime.now().microsecondsSinceEpoch;
+    return 'webdav_$micros';
+  }
+}
+
+class WebDavProfilesState {
+  final List<WebDavConfig> profiles;
+  final String? activeProfileId;
+
+  const WebDavProfilesState({
+    required this.profiles,
+    required this.activeProfileId,
+  });
+
+  WebDavConfig? get activeProfile {
+    if (activeProfileId == null) return null;
+    for (final profile in profiles) {
+      if (profile.id == activeProfileId) return profile;
+    }
+    return profiles.isEmpty ? null : profiles.first;
+  }
+
+  Map<String, dynamic> toJson() => {
+    'activeProfileId': activeProfileId,
+    'profiles': profiles.map((profile) => profile.toJson()).toList(),
+  };
+
+  factory WebDavProfilesState.fromJson(Map<String, dynamic> json) {
+    final rawProfiles = json['profiles'];
+    final profiles = rawProfiles is List
+        ? rawProfiles
+              .whereType<Map<String, dynamic>>()
+              .map(WebDavConfig.fromJson)
+              .toList()
+        : <WebDavConfig>[];
+    final activeProfileId = json['activeProfileId'] as String?;
+    return WebDavProfilesState(
+      profiles: profiles,
+      activeProfileId: activeProfileId,
+    );
+  }
+
+  String encode() => jsonEncode(toJson());
+
+  factory WebDavProfilesState.decode(String source) =>
+      WebDavProfilesState.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }

@@ -6,6 +6,7 @@ class RecentFile {
   final String path;
   final bool isCloud;
   final String? remotePath;
+  final String? webDavProfileId;
   final String? lastSyncedETag;
   final DateTime? lastSyncedMTime;
 
@@ -13,6 +14,7 @@ class RecentFile {
     required this.path,
     this.isCloud = false,
     this.remotePath,
+    this.webDavProfileId,
     this.lastSyncedETag,
     this.lastSyncedMTime,
   });
@@ -21,6 +23,7 @@ class RecentFile {
     'path': path,
     'isCloud': isCloud,
     if (remotePath != null) 'remotePath': remotePath,
+    if (webDavProfileId != null) 'webDavProfileId': webDavProfileId,
     if (lastSyncedETag != null) 'lastSyncedETag': lastSyncedETag,
     if (lastSyncedMTime != null)
       'lastSyncedMTime': lastSyncedMTime!.toIso8601String(),
@@ -30,6 +33,7 @@ class RecentFile {
     path: json['path'] as String? ?? '',
     isCloud: json['isCloud'] as bool? ?? false,
     remotePath: json['remotePath'] as String?,
+    webDavProfileId: json['webDavProfileId'] as String?,
     lastSyncedETag: json['lastSyncedETag'] as String?,
     lastSyncedMTime: json['lastSyncedMTime'] is String
         ? DateTime.tryParse(json['lastSyncedMTime'] as String)
@@ -60,6 +64,7 @@ class RecentFilesService {
     String filePath, {
     bool isCloud = false,
     String? remotePath,
+    String? webDavProfileId,
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
   }) async {
@@ -71,6 +76,7 @@ class RecentFilesService {
         path: filePath,
         isCloud: isCloud,
         remotePath: remotePath,
+        webDavProfileId: webDavProfileId,
         lastSyncedETag: lastSyncedETag,
         lastSyncedMTime: lastSyncedMTime,
       ),
@@ -107,6 +113,7 @@ class RecentFilesService {
     String filePath, {
     bool isCloud = false,
     String? remotePath,
+    String? webDavProfileId,
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
   }) async {
@@ -117,6 +124,7 @@ class RecentFilesService {
           path: filePath,
           isCloud: isCloud,
           remotePath: remotePath,
+          webDavProfileId: webDavProfileId,
           lastSyncedETag: lastSyncedETag,
           lastSyncedMTime: lastSyncedMTime,
         ).toJson(),

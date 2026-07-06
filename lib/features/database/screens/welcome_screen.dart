@@ -48,7 +48,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       return;
     }
 
-    final config = await ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(file.webDavProfileId);
     if (config == null || !config.enabled) {
       if (exists) {
         // Local file exists but WebDAV not configured — open as local file.
@@ -74,8 +76,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (!mounted) return;
     if (remoteInfo != null) {
       if (_isCachedCopyCurrent(file, remoteInfo) && exists) {
+        _setCloudOnlineMode();
         ref.read(openedFromCloudProvider.notifier).state = true;
-        final query = _buildCloudUnlockQuery(file.path, remoteInfo);
+        final query = _buildCloudUnlockQuery(
+          file.path,
+          remoteInfo,
+          file.webDavProfileId,
+        );
         context.push('/unlock$query');
         return;
       }
@@ -86,12 +93,33 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         builder: (_) => _SyncLoadingDialog(message: l10n.syncingCloudDatabase),
       );
       try {
+        if (exists) {
+          final action = await _resolveCloudOpenAction(
+            context,
+            l10n,
+            hasLocalCache: true,
+            remoteChanged: !_isCachedCopyCurrent(file, remoteInfo),
+          );
+          if (!mounted) return;
+          if (action == _CloudOpenAction.useCache) {
+            _setCloudOfflineMode(l10n.downloadingFromCloud);
+            ref.read(openedFromCloudProvider.notifier).state = true;
+            context.push(
+              _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+            );
+            return;
+          }
+          if (action != _CloudOpenAction.downloadLatest) {
+            return;
+          }
+        }
         final localPath = await syncService.downloadToLocal(config);
         final recentService = ref.read(recentFilesServiceProvider);
         await recentService.addRecentFile(
           localPath,
           isCloud: true,
           remotePath: config.remoteFilePath,
+          webDavProfileId: config.id,
           lastSyncedETag: remoteInfo.eTag,
           lastSyncedMTime: remoteInfo.mTime,
         );
@@ -99,21 +127,26 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           localPath,
           isCloud: true,
           remotePath: config.remoteFilePath,
+          webDavProfileId: config.id,
           lastSyncedETag: remoteInfo.eTag,
           lastSyncedMTime: remoteInfo.mTime,
         );
+        _setCloudOnlineMode();
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push(_buildCloudUnlockQuery(localPath, remoteInfo));
+          context.push(
+            _buildCloudUnlockQuery(localPath, remoteInfo, config.id),
+          );
         }
       } catch (e) {
         _autoOpened = false;
         if (mounted) Navigator.of(context).pop();
         if (mounted && exists) {
+          _setCloudOfflineMode(_translateDownloadError(e, l10n));
           ref.read(openedFromCloudProvider.notifier).state = true;
           context.push(
-            '/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true',
+            _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
           );
         } else if (mounted) {
           _showErrorDialog(context, _translateDownloadError(e, l10n));
@@ -121,9 +154,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       }
     } else {
       if (exists) {
+        _setCloudOfflineMode(
+          AppLocalizations.of(context)!.cloudDatabaseNotExist,
+        );
         ref.read(openedFromCloudProvider.notifier).state = true;
         context.push(
-          '/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true',
+          _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
         );
       } else {
         _showErrorDialog(
@@ -351,7 +387,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     RecentFile? recentFile,
   }) async {
     final l10n = AppLocalizations.of(context)!;
-    final config = await ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(recentFile?.webDavProfileId);
     if (config == null || !config.enabled) {
       if (context.mounted) {
         _showErrorDialog(context, l10n.pleaseConfigureWebDAV);
@@ -381,9 +419,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       final exists = await localFile.exists();
       if (exists && _isCachedCopyCurrent(cachedFile, remoteInfo)) {
         // Local cache is current, open directly
+        _setCloudOnlineMode();
         ref.read(openedFromCloudProvider.notifier).state = true;
         if (context.mounted) {
-          context.push(_buildCloudUnlockQuery(cachedFile.path, remoteInfo));
+          context.push(
+            _buildCloudUnlockQuery(
+              cachedFile.path,
+              remoteInfo,
+              cachedFile.webDavProfileId,
+            ),
+          );
         }
         return;
       }
@@ -396,12 +441,41 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       builder: (ctx) => _SyncLoadingDialog(message: l10n.downloadingFromCloud),
     );
     try {
+      final cachedExists = cachedFile != null
+          ? await File(cachedFile.path).exists()
+          : false;
+      if (cachedExists) {
+        if (!mounted) return;
+        final action = await _resolveCloudOpenAction(
+          this.context,
+          l10n,
+          hasLocalCache: true,
+          remoteChanged: !_isCachedCopyCurrent(cachedFile, remoteInfo),
+        );
+        if (!mounted) return;
+        if (action == _CloudOpenAction.useCache) {
+          _setCloudOfflineMode(l10n.downloadingFromCloud);
+          ref.read(openedFromCloudProvider.notifier).state = true;
+          this.context.push(
+            _buildCloudUnlockQuery(
+              cachedFile.path,
+              null,
+              cachedFile.webDavProfileId,
+            ),
+          );
+          return;
+        }
+        if (action != _CloudOpenAction.downloadLatest) {
+          return;
+        }
+      }
       final localPath = await syncService.downloadToLocal(config);
       final recentService = ref.read(recentFilesServiceProvider);
       await recentService.addRecentFile(
         localPath,
         isCloud: true,
         remotePath: config.remoteFilePath,
+        webDavProfileId: config.id,
         lastSyncedETag: remoteInfo.eTag,
         lastSyncedMTime: remoteInfo.mTime,
       );
@@ -409,14 +483,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         localPath,
         isCloud: true,
         remotePath: config.remoteFilePath,
+        webDavProfileId: config.id,
         lastSyncedETag: remoteInfo.eTag,
         lastSyncedMTime: remoteInfo.mTime,
       );
+      _setCloudOnlineMode();
       ref.invalidate(recentFilesProvider);
       if (context.mounted) {
         Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push(_buildCloudUnlockQuery(localPath, remoteInfo));
+        context.push(_buildCloudUnlockQuery(localPath, remoteInfo, config.id));
       }
     } catch (e) {
       if (!context.mounted) return;
@@ -426,9 +502,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         final cachedExists = await cachedLocalFile.exists();
         if (!context.mounted) return;
         if (cachedExists) {
+          _setCloudOfflineMode(_translateDownloadError(e, l10n));
           ref.read(openedFromCloudProvider.notifier).state = true;
           context.push(
-            '/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true',
+            _buildCloudUnlockQuery(
+              cachedFile.path,
+              null,
+              cachedFile.webDavProfileId,
+            ),
           );
           return;
         }
@@ -448,12 +529,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     return false;
   }
 
-  String _buildCloudUnlockQuery(String path, RemoteFileInfo remoteInfo) {
+  String _buildCloudUnlockQuery(
+    String path,
+    RemoteFileInfo? remoteInfo,
+    String? profileId,
+  ) {
     final query = StringBuffer(
       '/unlock?path=${Uri.encodeComponent(path)}&cloud=true',
     );
-    if (remoteInfo.eTag != null) {
-      query.write('&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
+    if (profileId != null) {
+      query.write('&profile=${Uri.encodeComponent(profileId)}');
+    }
+    final remoteETag = remoteInfo?.eTag;
+    if (remoteETag != null) {
+      query.write('&etag=${Uri.encodeComponent(remoteETag)}');
     }
     return query.toString();
   }
@@ -511,7 +600,54 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (msg == 'remote_database_not_exist') return l10n.remoteDatabaseNotExist;
     return l10n.downloadFailed(msg);
   }
+
+  void _setCloudOfflineMode(String reason) {
+    ref.read(cloudOfflineModeProvider.notifier).state = true;
+    ref.read(cloudOfflineReasonProvider.notifier).state = reason;
+  }
+
+  void _setCloudOnlineMode() {
+    ref.read(cloudOfflineModeProvider.notifier).state = false;
+    ref.read(cloudOfflineReasonProvider.notifier).state = null;
+  }
+
+  Future<_CloudOpenAction?> _resolveCloudOpenAction(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool hasLocalCache,
+    required bool remoteChanged,
+  }) {
+    return showDialog<_CloudOpenAction>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.cloudDatabase),
+        content: Text(
+          remoteChanged && hasLocalCache
+              ? l10n.cloudModifiedSyncLatest
+              : l10n.downloadingFromCloud,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(_CloudOpenAction.cancel),
+            child: Text(l10n.cancel),
+          ),
+          if (hasLocalCache)
+            OutlinedButton(
+              onPressed: () => Navigator.of(ctx).pop(_CloudOpenAction.useCache),
+              child: Text(l10n.openLocalDatabase),
+            ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(ctx).pop(_CloudOpenAction.downloadLatest),
+            child: Text(l10n.downloadFromCloud),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+enum _CloudOpenAction { downloadLatest, useCache, cancel }
 
 class _SyncLoadingDialog extends StatelessWidget {
   final String message;

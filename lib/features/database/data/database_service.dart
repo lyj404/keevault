@@ -41,6 +41,41 @@ class SearchResult {
   const SearchResult(this.entry, this.score, this.matchPositions);
 }
 
+class SyncAuditChange {
+  final String type;
+  final String title;
+  final String? groupPath;
+  final String? modifiedAt;
+  final List<String> details;
+  final Map<String, String> localValues;
+  final Map<String, String> remoteValues;
+
+  const SyncAuditChange({
+    required this.type,
+    required this.title,
+    this.groupPath,
+    this.modifiedAt,
+    this.details = const [],
+    this.localValues = const {},
+    this.remoteValues = const {},
+  });
+}
+
+class SyncAuditReport {
+  final List<SyncAuditChange> localOnly;
+  final List<SyncAuditChange> remoteOnly;
+  final List<SyncAuditChange> modifiedBoth;
+
+  const SyncAuditReport({
+    required this.localOnly,
+    required this.remoteOnly,
+    required this.modifiedBoth,
+  });
+
+  bool get hasChanges =>
+      localOnly.isNotEmpty || remoteOnly.isNotEmpty || modifiedBoth.isNotEmpty;
+}
+
 class _SearchRecord {
   final KdbxEntry entry;
   final String title;
@@ -417,6 +452,146 @@ class DatabaseService {
       current = current.parent;
     }
     return parts.reversed.join('/');
+  }
+
+  SyncAuditReport buildSyncAuditReport(KdbxDatabase remoteDb) {
+    final localMap = {for (final entry in allEntries) entry.uuid.string: entry};
+    final remoteEntries = remoteDb.root.allEntries.toList();
+    final remoteMap = {
+      for (final entry in remoteEntries) entry.uuid.string: entry,
+    };
+
+    final localOnly = <SyncAuditChange>[];
+    final remoteOnly = <SyncAuditChange>[];
+    final modifiedBoth = <SyncAuditChange>[];
+
+    for (final entry in allEntries) {
+      final remoteEntry = remoteMap[entry.uuid.string];
+      if (remoteEntry == null) {
+        localOnly.add(_buildChange('local_only', entry));
+        continue;
+      }
+      final diff = _entryDiffDetails(entry, remoteEntry);
+      final details = diff.details;
+      if (details.isNotEmpty) {
+        modifiedBoth.add(
+          _buildChange(
+            'modified_both',
+            entry,
+            details: details,
+            localValues: diff.localValues,
+            remoteValues: diff.remoteValues,
+          ),
+        );
+      }
+    }
+
+    for (final entry in remoteEntries) {
+      if (!localMap.containsKey(entry.uuid.string)) {
+        remoteOnly.add(_buildChange('remote_only', entry));
+      }
+    }
+
+    return SyncAuditReport(
+      localOnly: localOnly,
+      remoteOnly: remoteOnly,
+      modifiedBoth: modifiedBoth,
+    );
+  }
+
+  Future<SyncAuditReport> buildSyncAuditReportFromBytes(
+    Uint8List remoteBytes,
+  ) async {
+    if (_db == null || _password == null) {
+      throw Exception('database_not_open');
+    }
+    final remoteDb = await _loadDatabase(
+      remoteBytes,
+      _password!,
+      keyData: _keyData,
+    );
+    return buildSyncAuditReport(remoteDb);
+  }
+
+  SyncAuditChange _buildChange(
+    String type,
+    KdbxEntry entry, {
+    List<String> details = const [],
+    Map<String, String> localValues = const {},
+    Map<String, String> remoteValues = const {},
+  }) {
+    final title = entry.fields['Title']?.text ?? '(Untitled)';
+    final groupPath = entry.parent != null ? getGroupPath(entry.parent!) : '';
+    final modifiedAt = entry.times.modification.time?.toIso8601String();
+    return SyncAuditChange(
+      type: type,
+      title: title,
+      groupPath: groupPath,
+      modifiedAt: modifiedAt,
+      details: details,
+      localValues: localValues,
+      remoteValues: remoteValues,
+    );
+  }
+
+  ({
+    List<String> details,
+    Map<String, String> localValues,
+    Map<String, String> remoteValues,
+  })
+  _entryDiffDetails(KdbxEntry local, KdbxEntry remote) {
+    final details = <String>[];
+    final localValues = <String, String>{};
+    final remoteValues = <String, String>{};
+    final keys = <String>{...local.fields.keys, ...remote.fields.keys}.toList()
+      ..sort();
+    for (final key in keys) {
+      final localValue = local.fields[key]?.text ?? '';
+      final remoteValue = remote.fields[key]?.text ?? '';
+      if (localValue != remoteValue) {
+        details.add('Field:$key');
+        localValues[key] = localValue;
+        remoteValues[key] = remoteValue;
+      }
+    }
+
+    final localTags = (local.tags ?? []).toSet();
+    final remoteTags = (remote.tags ?? []).toSet();
+    if (localTags.length != remoteTags.length ||
+        !localTags.containsAll(remoteTags)) {
+      details.add('Tags');
+      localValues['Tags'] = localTags.join(', ');
+      remoteValues['Tags'] = remoteTags.join(', ');
+    }
+
+    final localAttachments = local.binaries.keys.toSet();
+    final remoteAttachments = remote.binaries.keys.toSet();
+    if (localAttachments.length != remoteAttachments.length ||
+        !localAttachments.containsAll(remoteAttachments)) {
+      details.add('Attachments');
+      localValues['Attachments'] = localAttachments.join(', ');
+      remoteValues['Attachments'] = remoteAttachments.join(', ');
+    }
+
+    if (local.history.length != remote.history.length) {
+      details.add('History');
+      localValues['History'] = '${local.history.length}';
+      remoteValues['History'] = '${remote.history.length}';
+    }
+
+    final localModified = local.times.modification.time;
+    final remoteModified = remote.times.modification.time;
+    if (localModified != remoteModified) {
+      details.add('ModifiedTime');
+      localValues['ModifiedTime'] = localModified?.toIso8601String() ?? '';
+      remoteValues['ModifiedTime'] = remoteModified?.toIso8601String() ?? '';
+    }
+
+    return (
+      details: details,
+      localValues: localValues,
+      remoteValues: remoteValues,
+    );
   }
 
   /// Changes the master password of the currently open database.

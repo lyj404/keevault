@@ -28,8 +28,14 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final filePath = state.uri.queryParameters['path'] ?? '';
         final isCloud = state.uri.queryParameters['cloud'] == 'true';
+        final webDavProfileId = state.uri.queryParameters['profile'];
         final syncedETag = state.uri.queryParameters['etag'];
-        return UnlockScreen(filePath: filePath, isCloud: isCloud, syncedETag: syncedETag);
+        return UnlockScreen(
+          filePath: filePath,
+          isCloud: isCloud,
+          webDavProfileId: webDavProfileId,
+          syncedETag: syncedETag,
+        );
       },
     ),
     GoRoute(
@@ -53,10 +59,7 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final entryUuid = state.uri.queryParameters['uuid'];
         final groupPath = state.uri.queryParameters['groupPath'] ?? '';
-        return EntryEditScreen(
-          entryUuid: entryUuid,
-          groupPath: groupPath,
-        );
+        return EntryEditScreen(entryUuid: entryUuid, groupPath: groupPath);
       },
     ),
     GoRoute(
@@ -74,21 +77,12 @@ final appRouter = GoRouter(
         return GroupEditScreen(groupPath: groupPath);
       },
     ),
-    GoRoute(
-      path: '/search',
-      builder: (context, state) => const SearchScreen(),
-    ),
+    GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
     ),
-    GoRoute(
-      path: '/backup',
-      builder: (context, state) => const BackupScreen(),
-    ),
-    GoRoute(
-      path: '/about',
-      builder: (context, state) => const AboutScreen(),
-    ),
+    GoRoute(path: '/backup', builder: (context, state) => const BackupScreen()),
+    GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
   ],
 );

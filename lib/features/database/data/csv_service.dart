@@ -252,8 +252,38 @@ class CsvService {
   /// Export all entries to CSV string (KeePass-compatible format).
   String exportToCsv(List<KdbxEntry> entries) {
     final totpService = TotpService();
+    final customHeaders = <String>{};
+
+    for (final entry in entries) {
+      for (final key in entry.fields.keys) {
+        if (!_standardKeys.contains(key) && key != 'TOTP') {
+          customHeaders.add(key);
+        }
+      }
+    }
+
+    final sortedCustomHeaders = customHeaders.toList()..sort();
     final rows = <List<String>>[
-      ['Group', 'Title', 'Username', 'Password', 'URL', 'Notes', 'TOTP'],
+      [
+        'Group',
+        'Title',
+        'Username',
+        'Password',
+        'URL',
+        'Notes',
+        'TOTP',
+        'Tags',
+        'Attachments',
+        'AttachmentCount',
+        'HasHistory',
+        'HistoryCount',
+        'Expires',
+        'ExpiryTime',
+        'Created',
+        'Modified',
+        'LastAccessed',
+        ...sortedCustomHeaders,
+      ],
     ];
 
     for (final entry in entries) {
@@ -275,6 +305,17 @@ class CsvService {
         groupPath = pathParts.reversed.join('/');
       }
 
+      final tags = (entry.tags ?? []).join('|');
+      final attachments = entry.binaries.keys.join('|');
+      final attachmentCount = entry.binaries.length.toString();
+      final historyCount = entry.history.length;
+      final hasHistory = historyCount > 0 ? 'true' : 'false';
+      final expires = entry.times.expires ? 'true' : 'false';
+      final expiryTime = entry.times.expiry.time?.toIso8601String() ?? '';
+      final created = entry.times.creation.time?.toIso8601String() ?? '';
+      final modified = entry.times.modification.time?.toIso8601String() ?? '';
+      final lastAccessed = entry.times.access.time?.toIso8601String() ?? '';
+
       // TOTP
       String totp = '';
       final totpConfig = totpService.loadFromEntry(entry);
@@ -294,7 +335,28 @@ class CsvService {
         totp = entry.fields['TOTP']?.text ?? '';
       }
 
-      rows.add([groupPath, title, username, password, url, notes, totp]);
+      rows.add([
+        groupPath,
+        title,
+        username,
+        password,
+        url,
+        notes,
+        totp,
+        tags,
+        attachments,
+        attachmentCount,
+        hasHistory,
+        '$historyCount',
+        expires,
+        expiryTime,
+        created,
+        modified,
+        lastAccessed,
+        ...sortedCustomHeaders.map(
+          (header) => entry.fields[header]?.text ?? '',
+        ),
+      ]);
     }
 
     return const ListToCsvConverter().convert(rows);

@@ -36,6 +36,8 @@ final databaseProvider =
 class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   final Ref _ref;
   Object? _lastSyncError;
+  String? _currentWebDavProfileId;
+  SyncAuditReport? _lastSyncAuditReport;
 
   DatabaseNotifier(this._ref) : super(const AsyncValue.data(null)) {
     _service.onDirtyChanged = (isDirty) {
@@ -49,6 +51,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   /// The last sync error, if any. Used by UI to show user-friendly messages.
   Object? get lastSyncError => _lastSyncError;
+  SyncAuditReport? get lastSyncAuditReport => _lastSyncAuditReport;
 
   Future<void> preloadFile(String filePath) => _service.preloadFile(filePath);
 
@@ -56,6 +59,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     String filePath,
     String password, {
     bool isCloud = false,
+    String? webDavProfileId,
     String? syncedETag,
     Uint8List? keyData,
   }) async {
@@ -68,8 +72,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       if (isCloud) {
         final config = await _ref
             .read(webDavSettingsServiceProvider)
-            .getConfig();
+            .getConfigById(webDavProfileId);
         if (config != null && config.enabled) {
+          _currentWebDavProfileId = config.id;
           remotePath = config.remoteFilePath;
           if (syncedETag != null) {
             // Welcome screen already verified eTag, reuse it directly
@@ -83,6 +88,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             remoteMTime = info?.mTime;
           }
         }
+      } else {
+        _currentWebDavProfileId = null;
       }
       final recentSvc = _ref.read(recentFilesServiceProvider);
       await Future.wait([
@@ -90,6 +97,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           filePath,
           isCloud: isCloud,
           remotePath: remotePath,
+          webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: eTag,
           lastSyncedMTime: remoteMTime,
         ),
@@ -97,11 +105,15 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           filePath,
           isCloud: isCloud,
           remotePath: remotePath,
+          webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: eTag,
           lastSyncedMTime: remoteMTime,
         ),
       ]);
       _ref.read(openedFromCloudProvider.notifier).state = isCloud;
+      if (!isCloud) {
+        _currentWebDavProfileId = null;
+      }
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
       _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
@@ -142,7 +154,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Future<bool> save() async {
     final wasDirty = _service.isDirty;
     final bytes = await _service.save();
-    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await _ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(_currentWebDavProfileId);
     // Only sync to cloud if the current database was opened from or created as a cloud database
     if (config != null &&
         config.enabled &&
@@ -154,6 +168,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         final remoteInfo = await syncService.getRemoteFileInfo(config);
         final lastInfo = _service.lastSyncedRemoteInfo;
         if (_hasRemoteChanged(remoteInfo, lastInfo)) {
+          _lastSyncAuditReport = await inspectCloudDiff();
           _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
           return false;
         }
@@ -180,6 +195,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
               _service.filePath!,
               isCloud: wasCloud,
               remotePath: config.remoteFilePath,
+              webDavProfileId: _currentWebDavProfileId,
               lastSyncedETag: newInfo!.eTag,
               lastSyncedMTime: newInfo.mTime,
             ),
@@ -187,6 +203,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
               _service.filePath!,
               isCloud: wasCloud,
               remotePath: config.remoteFilePath,
+              webDavProfileId: _currentWebDavProfileId,
               lastSyncedETag: newInfo.eTag,
               lastSyncedMTime: newInfo.mTime,
             ),
@@ -205,7 +222,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   /// Force upload, ignoring conflict detection (used after user chooses to overwrite).
   Future<void> forceUpload() async {
-    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await _ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(_currentWebDavProfileId);
     if (config == null || !config.enabled) return;
     final backupSvc = _ref.read(backupServiceProvider);
     if (_service.filePath != null && await backupSvc.isAutoBackupEnabled()) {
@@ -226,6 +245,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             _service.filePath!,
             isCloud: true,
             remotePath: config.remoteFilePath,
+            webDavProfileId: _currentWebDavProfileId,
             lastSyncedETag: newInfo!.eTag,
             lastSyncedMTime: newInfo.mTime,
           ),
@@ -233,6 +253,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             _service.filePath!,
             isCloud: true,
             remotePath: config.remoteFilePath,
+            webDavProfileId: _currentWebDavProfileId,
             lastSyncedETag: newInfo.eTag,
             lastSyncedMTime: newInfo.mTime,
           ),
@@ -240,6 +261,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       }
       _ref.read(syncStateProvider.notifier).state = SyncState.success;
       _lastSyncError = null;
+      _lastSyncAuditReport = null;
     } catch (e) {
       _lastSyncError = e;
       _ref.read(syncStateProvider.notifier).state = SyncState.error;
@@ -267,6 +289,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   void close() {
     _service.close();
     state = const AsyncValue.data(null);
+    _currentWebDavProfileId = null;
     _ref.read(openedFromCloudProvider.notifier).state = false;
     unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
     _ref.read(autoLockProvider.notifier).cancelTimer();
@@ -276,7 +299,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   }
 
   Future<void> reloadFromCloud() async {
-    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await _ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(_currentWebDavProfileId);
     if (config == null || !config.enabled) {
       throw Exception('please_configure_webdav');
     }
@@ -298,6 +323,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           _service.filePath!,
           isCloud: wasCloud,
           remotePath: config.remoteFilePath,
+          webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: result.info.eTag,
           lastSyncedMTime: result.info.mTime,
         ),
@@ -305,6 +331,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           _service.filePath!,
           isCloud: wasCloud,
           remotePath: config.remoteFilePath,
+          webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: result.info.eTag,
           lastSyncedMTime: result.info.mTime,
         ),
@@ -315,13 +342,30 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   /// Checks if the remote file has changed since last sync.
   /// Returns true if remote has newer changes (conflict).
   Future<bool> checkRemoteChanges() async {
-    final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+    final config = await _ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(_currentWebDavProfileId);
     if (config == null || !config.enabled) return false;
     final syncService = _ref.read(syncServiceProvider);
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     final lastInfo = _service.lastSyncedRemoteInfo;
     if (remoteInfo == null || lastInfo == null) return false;
     return _hasRemoteChanged(remoteInfo, lastInfo);
+  }
+
+  Future<SyncAuditReport?> inspectCloudDiff() async {
+    final config = await _ref
+        .read(webDavSettingsServiceProvider)
+        .getConfigById(_currentWebDavProfileId);
+    if (config == null || !config.enabled || _service.db == null) return null;
+
+    final syncService = _ref.read(syncServiceProvider);
+    final result = await syncService.downloadWithInfo(config);
+    if (result == null) return null;
+
+    final report = await _service.buildSyncAuditReportFromBytes(result.bytes);
+    _lastSyncAuditReport = report;
+    return report;
   }
 
   bool _hasRemoteChanged(RemoteFileInfo? remoteInfo, RemoteFileInfo? lastInfo) {
@@ -362,6 +406,10 @@ final recentFilesProvider = FutureProvider<List<RecentFile>>((ref) async {
 
 /// Whether the current database was opened from WebDAV (cloud).
 final openedFromCloudProvider = StateProvider<bool>((ref) => false);
+
+final cloudOfflineModeProvider = StateProvider<bool>((ref) => false);
+
+final cloudOfflineReasonProvider = StateProvider<String?>((ref) => null);
 
 /// Whether the database has unsaved changes.
 final isDirtyProvider = StateProvider<bool>((ref) => false);

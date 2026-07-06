@@ -28,11 +28,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _profileNameController = TextEditingController();
   final _urlController = TextEditingController();
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   final _pathController = TextEditingController();
   final _filenameController = TextEditingController(text: 'database.kdbx');
+  List<WebDavConfig> _profiles = const [];
+  String? _selectedProfileId;
   bool _enabled = false;
   bool _testing = false;
   bool? _connectionOk;
@@ -45,21 +48,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadConfig() async {
-    final config = await ref.read(webDavSettingsServiceProvider).getConfig();
-    if (config != null && mounted) {
-      setState(() {
-        _enabled = config.enabled;
-        _urlController.text = config.serverUrl;
-        _userController.text = config.username;
-        _passwordController.text = config.password;
-        _pathController.text = config.remotePath;
-        _filenameController.text = config.remoteFilename;
-      });
-    }
+    final state = await ref
+        .read(webDavSettingsServiceProvider)
+        .getProfilesState();
+    if (!mounted) return;
+    setState(() {
+      _profiles = state.profiles;
+      _selectedProfileId = state.activeProfile?.id;
+      _applyConfigToForm(state.activeProfile);
+      _connectionOk = null;
+      _connectionError = null;
+    });
   }
 
   @override
   void dispose() {
+    _profileNameController.dispose();
     _urlController.dispose();
     _userController.dispose();
     _passwordController.dispose();
@@ -147,6 +151,82 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   .read(localeProvider.notifier)
                                   .setLocale(Locale(v));
                             }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: ClayDecoration.iconContainer(
+                                brightness: brightness,
+                              ),
+                              child: Icon(
+                                Icons.cloud_queue_rounded,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                l10n.webdavProfiles,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _createNewProfile,
+                              icon: const Icon(Icons.add_rounded, size: 20),
+                              tooltip: l10n.newProfile,
+                            ),
+                            IconButton(
+                              onPressed: _profiles.length <= 1
+                                  ? null
+                                  : _deleteCurrentProfile,
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 20,
+                              ),
+                              tooltip: l10n.delete,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedProfileId,
+                          decoration: InputDecoration(
+                            labelText: l10n.webdavProfile,
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (_) => _profiles.isEmpty
+                              ? l10n.pleaseCreateWebDavProfile
+                              : null,
+                          items: _profiles
+                              .map(
+                                (profile) => DropdownMenuItem<String>(
+                                  value: profile.id,
+                                  child: Text(profile.name),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            _selectProfile(value);
                           },
                         ),
                       ],
@@ -777,6 +857,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         children: [
                           TextFormField(
+                            controller: _profileNameController,
+                            decoration: InputDecoration(
+                              labelText: l10n.profileName,
+                            ),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? l10n.pleaseEnterName
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
                             controller: _urlController,
                             decoration: InputDecoration(
                               labelText: l10n.serverAddress,
@@ -953,6 +1043,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _connectionError = null;
     });
     final config = WebDavConfig(
+      id: _selectedProfileId ?? _generateProfileId(),
+      name: _profileNameController.text.trim(),
       serverUrl: _urlController.text.trim(),
       username: _userController.text.trim(),
       password: _passwordController.text,
@@ -987,7 +1079,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final profileId = _selectedProfileId ?? _generateProfileId();
     final config = WebDavConfig(
+      id: profileId,
+      name: _profileNameController.text.trim(),
       serverUrl: _urlController.text.trim(),
       username: _userController.text.trim(),
       password: _passwordController.text,
@@ -996,12 +1091,105 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       enabled: _enabled,
     );
     await ref.read(webDavSettingsServiceProvider).saveConfig(config);
+    await ref.read(webDavSettingsServiceProvider).setActiveProfile(profileId);
+    _selectedProfileId = profileId;
+    await _loadConfig();
     ref.invalidate(webDavConfigProvider);
+    ref.invalidate(webDavProfilesStateProvider);
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
       showToast(context, l10n.saved);
       context.pop();
     }
+  }
+
+  void _applyConfigToForm(WebDavConfig? config) {
+    if (config == null) {
+      _profileNameController.text = '';
+      _urlController.text = '';
+      _userController.text = '';
+      _passwordController.text = '';
+      _pathController.text = '';
+      _filenameController.text = 'database.kdbx';
+      _enabled = false;
+      return;
+    }
+    _profileNameController.text = config.name;
+    _urlController.text = config.serverUrl;
+    _userController.text = config.username;
+    _passwordController.text = config.password;
+    _pathController.text = config.remotePath;
+    _filenameController.text = config.remoteFilename;
+    _enabled = config.enabled;
+  }
+
+  Future<void> _selectProfile(String profileId) async {
+    final service = ref.read(webDavSettingsServiceProvider);
+    await service.setActiveProfile(profileId);
+    final config = await service.getConfigById(profileId);
+    if (!mounted) return;
+    setState(() {
+      _selectedProfileId = profileId;
+      _applyConfigToForm(config);
+      _connectionOk = null;
+      _connectionError = null;
+    });
+    ref.invalidate(webDavConfigProvider);
+    ref.invalidate(webDavProfilesStateProvider);
+  }
+
+  Future<void> _createNewProfile() async {
+    final l10n = AppLocalizations.of(context)!;
+    final index = _profiles.length + 1;
+    final profile = WebDavConfig(
+      id: _generateProfileId(),
+      name: '${l10n.profile} $index',
+      serverUrl: '',
+      username: '',
+      password: '',
+    );
+    await ref.read(webDavSettingsServiceProvider).saveConfig(profile);
+    await _loadConfig();
+    ref.invalidate(webDavConfigProvider);
+    ref.invalidate(webDavProfilesStateProvider);
+  }
+
+  Future<void> _deleteCurrentProfile() async {
+    final l10n = AppLocalizations.of(context)!;
+    final profile = _profiles
+        .where((p) => p.id == _selectedProfileId)
+        .firstOrNull;
+    if (profile == null) return;
+    if (_profiles.length <= 1) {
+      showToast(context, l10n.cannotDeleteLastProfile, isError: true);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.deleteProfileConfirm(profile.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(webDavSettingsServiceProvider).deleteProfile(profile.id);
+    await _loadConfig();
+    ref.invalidate(webDavConfigProvider);
+    ref.invalidate(webDavProfilesStateProvider);
+  }
+
+  String _generateProfileId() {
+    return 'webdav_${DateTime.now().microsecondsSinceEpoch}';
   }
 
   Future<void> _setUnlockMethod(

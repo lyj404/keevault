@@ -20,7 +20,11 @@ class _TagFilterBar extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Icon(Icons.label_outline_rounded, size: 16, color: colorScheme.onSurfaceVariant),
+            child: Icon(
+              Icons.label_outline_rounded,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(width: 4),
           _TagChip(
@@ -32,7 +36,8 @@ class _TagFilterBar extends ConsumerWidget {
             _TagChip(
               label: tag,
               selected: selectedTag == tag,
-              onTap: () => ref.read(selectedTagProvider.notifier).state = selectedTag == tag ? null : tag,
+              onTap: () => ref.read(selectedTagProvider.notifier).state =
+                  selectedTag == tag ? null : tag,
             ),
         ],
       ),
@@ -45,7 +50,11 @@ class _TagChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _TagChip({required this.label, required this.selected, required this.onTap});
+  const _TagChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +62,9 @@ class _TagChip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
       child: Material(
-        color: selected ? colorScheme.primaryContainer : colorScheme.surfaceContainerLow,
+        color: selected
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -66,7 +77,9 @@ class _TagChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
+                  color: selected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -96,7 +109,9 @@ class _ShortcutHintBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+          ),
         ),
       ),
       child: Wrap(
@@ -104,37 +119,71 @@ class _ShortcutHintBar extends StatelessWidget {
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-            Icon(Icons.keyboard_rounded, size: 14, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 8),
-            if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) ...[
-              const _KeyChip(label: 'Ctrl+F'),
-              const SizedBox(width: 4),
-              Text(l10n.shortcutSearch, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(width: 16),
-              const _KeyChip(label: 'Ctrl+S'),
-              const SizedBox(width: 4),
-              Text(l10n.shortcutSave, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(width: 16),
-            ],
-            if (username.isNotEmpty) ...[
-              const _KeyChip(label: 'Ctrl+B'),
-              const SizedBox(width: 4),
-              Text(l10n.copyUsername, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(width: 16),
-            ],
-            if (password.isNotEmpty) ...[
-              const _KeyChip(label: 'Ctrl+C'),
-              const SizedBox(width: 4),
-              Text(l10n.copyPassword, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(width: 16),
-            ],
-            const _KeyChip(label: 'Ctrl+U'),
+          Icon(
+            Icons.keyboard_rounded,
+            size: 14,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) ...[
+            const _KeyChip(label: 'Ctrl+F'),
             const SizedBox(width: 4),
-            Text(l10n.copyUrl, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(
+              l10n.shortcutSearch,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(width: 16),
-            const _KeyChip(label: 'Ctrl+T'),
+            const _KeyChip(label: 'Ctrl+S'),
             const SizedBox(width: 4),
-            Text(l10n.copyTotp, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+            Text(
+              l10n.shortcutSave,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          if (username.isNotEmpty) ...[
+            const _KeyChip(label: 'Ctrl+B'),
+            const SizedBox(width: 4),
+            Text(
+              l10n.copyUsername,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          if (password.isNotEmpty) ...[
+            const _KeyChip(label: 'Ctrl+C'),
+            const SizedBox(width: 4),
+            Text(
+              l10n.copyPassword,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
+          const _KeyChip(label: 'Ctrl+U'),
+          const SizedBox(width: 4),
+          Text(
+            l10n.copyUrl,
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(width: 16),
+          const _KeyChip(label: 'Ctrl+T'),
+          const SizedBox(width: 4),
+          Text(
+            l10n.copyTotp,
+            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+          ),
         ],
       ),
     );
@@ -153,11 +202,17 @@ class _KeyChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+        ),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.onSurfaceVariant),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -168,7 +223,12 @@ class _KeyChip extends StatelessWidget {
 Future<void> _syncToCloud(BuildContext context) async {
   final container = ProviderScope.containerOf(context);
   final l10n = AppLocalizations.of(context)!;
-  final config = await container.read(webDavSettingsServiceProvider).getConfig();
+  final recent = await container
+      .read(recentFilesServiceProvider)
+      .getLastOpenedFile();
+  final config = await container
+      .read(webDavSettingsServiceProvider)
+      .getConfigById(recent?.webDavProfileId);
   if (config == null || !config.enabled) {
     if (context.mounted) {
       showToast(context, l10n.pleaseConfigureWebDAV, isError: true);
@@ -186,9 +246,19 @@ Future<void> _syncToCloud(BuildContext context) async {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
             const SizedBox(height: 16),
-            Text(l10n.uploadingToCloud, style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface)),
+            Text(
+              l10n.uploadingToCloud,
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(ctx).colorScheme.onSurface,
+              ),
+            ),
           ],
         ),
       ),
@@ -204,7 +274,10 @@ Future<void> _syncToCloud(BuildContext context) async {
       } else {
         final error = container.read(databaseProvider.notifier).lastSyncError;
         if (context.mounted) {
-          _showSyncErrorDialog(context, _translateSyncError(error ?? Exception('unknown'), l10n));
+          _showSyncErrorDialog(
+            context,
+            _translateSyncError(error ?? Exception('unknown'), l10n),
+          );
         }
       }
     }
@@ -219,7 +292,12 @@ Future<void> _syncToCloud(BuildContext context) async {
 Future<void> _syncFromCloud(BuildContext context) async {
   final container = ProviderScope.containerOf(context);
   final l10n = AppLocalizations.of(context)!;
-  final config = await container.read(webDavSettingsServiceProvider).getConfig();
+  final recent = await container
+      .read(recentFilesServiceProvider)
+      .getLastOpenedFile();
+  final config = await container
+      .read(webDavSettingsServiceProvider)
+      .getConfigById(recent?.webDavProfileId);
   if (config == null || !config.enabled) {
     if (context.mounted) {
       _showSyncErrorDialog(context, l10n.pleaseConfigureWebDAV);
@@ -245,9 +323,19 @@ Future<void> _syncFromCloud(BuildContext context) async {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5)),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
             const SizedBox(height: 16),
-            Text(l10n.downloadingFromCloudShort, style: TextStyle(fontSize: 14, color: Theme.of(ctx).colorScheme.onSurface)),
+            Text(
+              l10n.downloadingFromCloudShort,
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(ctx).colorScheme.onSurface,
+              ),
+            ),
           ],
         ),
       ),
@@ -314,7 +402,9 @@ void _showSyncErrorDialog(BuildContext context, String message) {
           },
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: Text(l10n.goToSettings),
         ),

@@ -209,6 +209,33 @@ class AppLocalizationsZh extends AppLocalizations {
       '云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。';
 
   @override
+  String get syncAuditLocalOnly => '仅本地存在';
+
+  @override
+  String get syncAuditCloudOnly => '仅云端存在';
+
+  @override
+  String get syncAuditModifiedBoth => '双方都已修改';
+
+  @override
+  String get syncAuditLocalValue => '本地';
+
+  @override
+  String get syncAuditCloudValue => '云端';
+
+  @override
+  String get syncAuditModifiedTime => '修改时间';
+
+  @override
+  String get syncAuditNoDiffDetails => '没有更详细的差异信息';
+
+  @override
+  String get syncAuditAddedOnlyLocal => '仅在本地存在';
+
+  @override
+  String get syncAuditAddedOnlyCloud => '仅在云端存在';
+
+  @override
   String get downloadCloudVersion => '下载云端版本';
 
   @override
@@ -355,6 +382,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webdavSync => 'WebDAV 同步';
 
   @override
+  String get webdavProfiles => 'WebDAV 配置档案';
+
+  @override
+  String get webdavProfile => 'WebDAV 档案';
+
+  @override
+  String get profileName => '档案名称';
+
+  @override
+  String get newProfile => '新建档案';
+
+  @override
+  String get selectWebDavProfile => '选择 WebDAV 档案';
+
+  @override
+  String deleteProfileConfirm(Object name) {
+    return '确定删除档案「$name」？';
+  }
+
+  @override
+  String get cannotDeleteLastProfile => '至少保留一个 WebDAV 档案';
+
+  @override
   String get autoSyncOnSave => '保存时自动同步到云端';
 
   @override
@@ -395,6 +445,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connectionFailed => '连接失败';
+
+  @override
+  String get defaultProfileName => '默认档案';
+
+  @override
+  String get profile => '档案';
+
+  @override
+  String get pleaseCreateWebDavProfile => '请先创建一个 WebDAV 档案';
+
+  @override
+  String get profileRequired => '请选择 WebDAV 档案';
 
   @override
   String get moveToGroup => '移动到分组';

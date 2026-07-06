@@ -214,6 +214,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cloud database has been modified by another device. You can overwrite the cloud version (use local), or download the cloud version first.';
 
   @override
+  String get syncAuditLocalOnly => 'Local Only';
+
+  @override
+  String get syncAuditCloudOnly => 'Cloud Only';
+
+  @override
+  String get syncAuditModifiedBoth => 'Modified Both';
+
+  @override
+  String get syncAuditLocalValue => 'Local';
+
+  @override
+  String get syncAuditCloudValue => 'Cloud';
+
+  @override
+  String get syncAuditModifiedTime => 'Modified Time';
+
+  @override
+  String get syncAuditNoDiffDetails => 'No detailed differences available';
+
+  @override
+  String get syncAuditAddedOnlyLocal => 'Only in local';
+
+  @override
+  String get syncAuditAddedOnlyCloud => 'Only in cloud';
+
+  @override
   String get downloadCloudVersion => 'Download Cloud Version';
 
   @override
@@ -360,6 +387,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdavSync => 'WebDAV Sync';
 
   @override
+  String get webdavProfiles => 'WebDAV Profiles';
+
+  @override
+  String get webdavProfile => 'WebDAV Profile';
+
+  @override
+  String get profileName => 'Profile Name';
+
+  @override
+  String get newProfile => 'New Profile';
+
+  @override
+  String get selectWebDavProfile => 'Select WebDAV Profile';
+
+  @override
+  String deleteProfileConfirm(Object name) {
+    return 'Delete profile \'$name\'?';
+  }
+
+  @override
+  String get cannotDeleteLastProfile =>
+      'At least one WebDAV profile must remain';
+
+  @override
   String get autoSyncOnSave => 'Auto-sync to cloud on save';
 
   @override
@@ -401,6 +452,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionFailed => 'Connection failed';
+
+  @override
+  String get defaultProfileName => 'Default';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get pleaseCreateWebDavProfile =>
+      'Please create a WebDAV profile first';
+
+  @override
+  String get profileRequired => 'Please select a WebDAV profile';
 
   @override
   String get moveToGroup => 'Move to Group';
