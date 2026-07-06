@@ -286,7 +286,20 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     await _service.saveAs(newPath);
   }
 
-  void close() {
+  Future<void> close() async {
+    if (_service.isOpen && _service.isDirty) {
+      try {
+        final success = await save();
+        if (!success) {
+          log.w(
+            'Database saved locally before close, but cloud sync reported a conflict.',
+          );
+        }
+      } catch (e, st) {
+        log.e('Failed to save database before close', error: e, stackTrace: st);
+      }
+    }
+
     _service.close();
     state = const AsyncValue.data(null);
     _currentWebDavProfileId = null;

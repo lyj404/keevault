@@ -581,8 +581,18 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
             onPressed: () {
               final newName = ctrl.text.trim();
               if (newName.isEmpty) return;
+              final service = ref.read(databaseServiceProvider);
+              final oldPath = service.getGroupPath(group);
               group.name = newName;
-              ref.read(databaseServiceProvider).markDirty();
+              service.markDirty();
+              final newPath = service.getGroupPath(group);
+              final currentPath = ref.read(currentGroupPathProvider);
+              if (currentPath == oldPath || currentPath.startsWith('$oldPath/')) {
+                ref.read(currentGroupPathProvider.notifier).state =
+                    currentPath == oldPath
+                        ? newPath
+                        : currentPath.replaceFirst('$oldPath/', '$newPath/');
+              }
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
             },
@@ -961,7 +971,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
   }
 
   void _close(BuildContext context, WidgetRef ref) {
-    ref.read(databaseProvider.notifier).close();
+    unawaited(_closeAsync(context, ref));
+  }
+
+  Future<void> _closeAsync(BuildContext context, WidgetRef ref) async {
+    await ref.read(databaseProvider.notifier).close();
     if (context.mounted) context.go('/welcome');
   }
 

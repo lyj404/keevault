@@ -163,6 +163,9 @@ class DatabaseService {
   void Function(bool isDirty)? onDirtyChanged;
 
   void markDirty() {
+    if (_db != null) {
+      _rebuildEntryCache();
+    }
     _dirty = true;
     onDirtyChanged?.call(true);
   }
@@ -444,10 +447,11 @@ class DatabaseService {
     return current;
   }
 
-  String getGroupPath(KdbxGroup group) {
+  String getGroupPath(KdbxGroup group, {KdbxGroup? root}) {
     final parts = <String>[];
+    final effectiveRoot = root ?? _db?.root;
     KdbxGroup? current = group;
-    while (current != null && current != _db?.root) {
+    while (current != null && current != effectiveRoot) {
       parts.add(current.name);
       current = current.parent;
     }
@@ -468,7 +472,7 @@ class DatabaseService {
     for (final entry in allEntries) {
       final remoteEntry = remoteMap[entry.uuid.string];
       if (remoteEntry == null) {
-        localOnly.add(_buildChange('local_only', entry));
+        localOnly.add(_buildChange('local_only', entry, root: _db?.root));
         continue;
       }
       final diff = _entryDiffDetails(entry, remoteEntry);
@@ -478,6 +482,7 @@ class DatabaseService {
           _buildChange(
             'modified_both',
             entry,
+            root: _db?.root,
             details: details,
             localValues: diff.localValues,
             remoteValues: diff.remoteValues,
@@ -488,7 +493,7 @@ class DatabaseService {
 
     for (final entry in remoteEntries) {
       if (!localMap.containsKey(entry.uuid.string)) {
-        remoteOnly.add(_buildChange('remote_only', entry));
+        remoteOnly.add(_buildChange('remote_only', entry, root: remoteDb.root));
       }
     }
 
@@ -516,12 +521,14 @@ class DatabaseService {
   SyncAuditChange _buildChange(
     String type,
     KdbxEntry entry, {
+    KdbxGroup? root,
     List<String> details = const [],
     Map<String, String> localValues = const {},
     Map<String, String> remoteValues = const {},
   }) {
     final title = entry.fields['Title']?.text ?? '(Untitled)';
-    final groupPath = entry.parent != null ? getGroupPath(entry.parent!) : '';
+    final groupPath =
+        entry.parent != null ? getGroupPath(entry.parent!, root: root) : '';
     final modifiedAt = entry.times.modification.time?.toIso8601String();
     return SyncAuditChange(
       type: type,

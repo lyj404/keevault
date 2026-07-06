@@ -66,13 +66,21 @@ class BackupService {
           '${now.day.toString().padLeft(2, '0')}_'
           '${now.hour.toString().padLeft(2, '0')}'
           '${now.minute.toString().padLeft(2, '0')}'
-          '${now.second.toString().padLeft(2, '0')}';
+          '${now.second.toString().padLeft(2, '0')}_'
+          '${now.millisecond.toString().padLeft(3, '0')}'
+          '${now.microsecond.toString().padLeft(3, '0')}';
       final dbName = filePath
           .split(Platform.pathSeparator)
           .last
           .replaceAll('.kdbx', '');
-      final filename = '${dbName}_$ts.kdbx';
-      final backupFile = File('${dir.path}/$filename');
+      var filename = '${dbName}_$ts.kdbx';
+      var backupFile = File('${dir.path}/$filename');
+      var counter = 1;
+      while (await backupFile.exists()) {
+        filename = '${dbName}_${ts}_$counter.kdbx';
+        backupFile = File('${dir.path}/$filename');
+        counter++;
+      }
       await backupFile.writeAsBytes(bytes);
       await _writeMetadata(filename, sourcePath: filePath);
       log.i('Backup created: $filename (${bytes.length} bytes)');

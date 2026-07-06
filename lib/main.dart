@@ -9,6 +9,7 @@ import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/tray_service.dart';
 import 'l10n/app_localizations.dart';
+import 'features/database/providers/database_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,8 +81,26 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     } catch (_) {}
   }
 
+  Future<void> _persistDirtyDatabase() async {
+    final db = ref.read(databaseProvider).valueOrNull;
+    final isDirty = ref.read(isDirtyProvider);
+    if (db == null || !isDirty) return;
+
+    try {
+      final success = await ref.read(databaseProvider.notifier).save();
+      if (!success) {
+        log.w(
+          'Database save before app exit completed locally, but cloud sync reported a conflict.',
+        );
+      }
+    } catch (e, st) {
+      log.e('Failed to save database before app exit', error: e, stackTrace: st);
+    }
+  }
+
   Future<void> _exitApp() async {
     try {
+      await _persistDirtyDatabase();
       await windowManager.setPreventClose(false);
       await windowManager.close();
     } catch (_) {}
@@ -99,6 +118,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
   void onWindowClose() async {
     final behavior = ref.read(closeBehaviorProvider);
     if (behavior == CloseBehavior.exit) {
+      await _persistDirtyDatabase();
       await windowManager.setPreventClose(false);
       await windowManager.close();
       return;
@@ -107,6 +127,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       if (_trayInitialized) {
         await windowManager.hide();
       } else {
+        await _persistDirtyDatabase();
         await windowManager.setPreventClose(false);
         await windowManager.close();
       }
@@ -184,6 +205,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       if (remember) {
         await ref.read(closeBehaviorProvider.notifier).setCloseBehavior(CloseBehavior.exit);
       }
+      await _persistDirtyDatabase();
       await windowManager.setPreventClose(false);
       await windowManager.close();
     } else {
@@ -193,6 +215,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       if (_trayInitialized) {
         await windowManager.hide();
       } else {
+        await _persistDirtyDatabase();
         await windowManager.setPreventClose(false);
         await windowManager.close();
       }

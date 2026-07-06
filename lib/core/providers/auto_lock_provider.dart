@@ -41,12 +41,16 @@ class AutoLockNotifier extends StateNotifier<int> {
   }
 
   void _lock() {
+    unawaited(_lockAsync());
+  }
+
+  Future<void> _lockAsync() async {
     final dbNotifier = _ref.read(databaseProvider.notifier);
     final dbState = _ref.read(databaseProvider);
     final hasDb = dbState.valueOrNull != null;
     if (!hasDb) return;
 
-    dbNotifier.close();
+    await dbNotifier.close();
 
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {

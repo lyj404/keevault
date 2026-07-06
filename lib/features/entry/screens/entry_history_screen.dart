@@ -199,18 +199,55 @@ class EntryHistoryScreen extends ConsumerWidget {
   }
 
   void _restoreVersion(WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
-    // Save current state to history before restoring
+    // Save current state to history before restoring.
     currentEntry.times.touch();
     currentEntry.pushHistory();
-    // Copy fields from history entry
-    for (final field in historyEntry.fields.entries) {
-      currentEntry.fields[field.key] = field.value;
+
+    currentEntry.fields
+      ..clear()
+      ..addAll(
+        historyEntry.fields.map(
+          (key, value) => MapEntry(key, KdbxTextField.copyFrom(value)),
+        ),
+      );
+
+    currentEntry.binaries
+      ..clear()
+      ..addAll(
+        historyEntry.binaries.map(
+          (key, value) => MapEntry(key, BinaryReference(value.id)),
+        ),
+      );
+
+    final tags = historyEntry.tags;
+    currentEntry.tags = tags == null ? null : List<String>.from(tags);
+    currentEntry.icon = historyEntry.icon;
+    currentEntry.customIcon = historyEntry.customIcon;
+    currentEntry.foreground = historyEntry.foreground;
+    currentEntry.background = historyEntry.background;
+    currentEntry.overrideUrl = historyEntry.overrideUrl;
+    currentEntry.autoType
+      ..enabled = historyEntry.autoType.enabled
+      ..obfuscation = historyEntry.autoType.obfuscation
+      ..defaultSequence = historyEntry.autoType.defaultSequence
+      ..items = List.from(historyEntry.autoType.items);
+    currentEntry.times = KdbxTimes.copyFrom(historyEntry.times);
+    currentEntry.previousParent = historyEntry.previousParent;
+
+    final sourceCustomData = historyEntry.customData;
+    if (sourceCustomData == null) {
+      currentEntry.customData = null;
+    } else {
+      final customData = KdbxCustomData();
+      for (final item in sourceCustomData.map.entries) {
+        customData.map[item.key] = KdbxCustomItem(
+          value: item.value.value,
+          modification: KdbxTime(item.value.modification.time),
+        );
+      }
+      currentEntry.customData = customData;
     }
-    // Restore times
-    currentEntry.times.expires = historyEntry.times.expires;
-    currentEntry.times.expiry = historyEntry.times.expiry;
-    // Restore custom data (e.g. TOTP configuration)
-    currentEntry.customData = historyEntry.customData;
+
     ref.read(databaseServiceProvider).markDirty();
     refreshExplorerLists(ref);
   }
