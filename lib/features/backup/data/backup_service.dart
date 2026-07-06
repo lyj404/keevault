@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import '../../../core/utils/secure_storage_helper.dart';
 import 'package:path_provider/path_provider.dart';
@@ -43,7 +44,9 @@ class BackupService {
 
   Future<int> getRetentionCount() async {
     final val = await _storage.read(key: _retentionKey);
-    return val != null ? int.tryParse(val) ?? _defaultRetention : _defaultRetention;
+    return val != null
+        ? int.tryParse(val) ?? _defaultRetention
+        : _defaultRetention;
   }
 
   Future<void> setRetentionCount(int count) async {
@@ -57,18 +60,23 @@ class BackupService {
       final bytes = await file.readAsBytes();
       final dir = await _backupDir();
       final now = DateTime.now();
-      final ts = '${now.year}'
+      final ts =
+          '${now.year}'
           '${now.month.toString().padLeft(2, '0')}'
           '${now.day.toString().padLeft(2, '0')}_'
           '${now.hour.toString().padLeft(2, '0')}'
           '${now.minute.toString().padLeft(2, '0')}'
           '${now.second.toString().padLeft(2, '0')}';
-      final dbName = filePath.split(Platform.pathSeparator).last.replaceAll('.kdbx', '');
+      final dbName = filePath
+          .split(Platform.pathSeparator)
+          .last
+          .replaceAll('.kdbx', '');
       final filename = '${dbName}_$ts.kdbx';
       final backupFile = File('${dir.path}/$filename');
       await backupFile.writeAsBytes(bytes);
+      await _writeMetadata(filename, sourcePath: filePath);
       log.i('Backup created: $filename (${bytes.length} bytes)');
-      await _cleanupOldBackups();
+      await _cleanupOldBackups(filePath);
       return BackupInfo(
         filename: filename,
         timestamp: now,
@@ -83,19 +91,36 @@ class BackupService {
 
   Future<List<BackupInfo>> listBackups() async {
     final dir = await _backupDir();
-    final files = await dir.list().where((f) => f.path.endsWith('.kdbx')).toList();
+    final files = await dir
+        .list()
+        .where((f) => f.path.endsWith('.kdbx'))
+        .toList();
     final backups = <BackupInfo>[];
     for (final f in files) {
       final stat = await f.stat();
       final name = f.path.split(Platform.pathSeparator).last;
-      backups.add(BackupInfo(
-        filename: name,
-        timestamp: stat.modified,
-        sizeBytes: stat.size,
-      ));
+      final sourcePath = await _readSourcePath(name);
+      backups.add(
+        BackupInfo(
+          filename: name,
+          timestamp: stat.modified,
+          sizeBytes: stat.size,
+          sourcePath: sourcePath,
+        ),
+      );
     }
     backups.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return backups;
+  }
+
+  Future<List<BackupInfo>> listBackupsFor(String filePath) async {
+    final fileName = filePath.split(Platform.pathSeparator).last;
+    final backups = await listBackups();
+    return backups.where((backup) {
+      if (backup.sourcePath == filePath) return true;
+      if (backup.sourcePath != null) return false;
+      return backup.filename.startsWith('${fileName.replaceAll('.kdbx', '')}_');
+    }).toList();
   }
 
   Future<String?> getBackupPath(String filename) async {
@@ -110,6 +135,7 @@ class BackupService {
       final file = File('${dir.path}/$filename');
       if (await file.exists()) {
         await file.delete();
+        await _deleteMetadata(filename);
         log.i('Backup deleted: $filename');
         return true;
       }
@@ -120,13 +146,50 @@ class BackupService {
     }
   }
 
-  Future<void> _cleanupOldBackups() async {
+  Future<void> _cleanupOldBackups(String filePath) async {
     final retention = await getRetentionCount();
-    final backups = await listBackups();
+    final backups = await listBackupsFor(filePath);
     if (backups.length <= retention) return;
     final toRemove = backups.sublist(retention);
     for (final b in toRemove) {
       await deleteBackup(b.filename);
     }
+  }
+
+  Future<void> _writeMetadata(
+    String filename, {
+    required String sourcePath,
+  }) async {
+    final metaFile = await _metadataFile(filename);
+    await metaFile.writeAsString(
+      jsonEncode({'sourcePath': sourcePath}),
+      flush: true,
+    );
+  }
+
+  Future<String?> _readSourcePath(String filename) async {
+    final metaFile = await _metadataFile(filename);
+    if (!await metaFile.exists()) return null;
+    try {
+      final data =
+          jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+      final sourcePath = data['sourcePath'];
+      return sourcePath is String && sourcePath.isNotEmpty ? sourcePath : null;
+    } catch (e) {
+      log.w('Failed to read backup metadata for $filename: $e');
+      return null;
+    }
+  }
+
+  Future<void> _deleteMetadata(String filename) async {
+    final metaFile = await _metadataFile(filename);
+    if (await metaFile.exists()) {
+      await metaFile.delete();
+    }
+  }
+
+  Future<File> _metadataFile(String filename) async {
+    final dir = await _backupDir();
+    return File('${dir.path}/$filename.meta.json');
   }
 }

@@ -18,7 +18,11 @@ class EntryDetailScreen extends ConsumerWidget {
   final String entryUuid;
   final String groupPath;
 
-  const EntryDetailScreen({super.key, required this.entryUuid, required this.groupPath});
+  const EntryDetailScreen({
+    super.key,
+    required this.entryUuid,
+    required this.groupPath,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,22 +38,33 @@ class EntryDetailScreen extends ConsumerWidget {
     if (entryUuid.isNotEmpty) {
       final uuid = KdbxUuid.fromString(entryUuid);
       final group = service.findGroupByPath(groupPath);
-      log.d('[EntryDetail] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}');
+      log.d(
+        '[EntryDetail] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}',
+      );
       entry = group?.entries.where((e) => e.uuid == uuid).firstOrNull;
       if (entry == null) {
-        log.w('[EntryDetail] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}');
+        log.w(
+          '[EntryDetail] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}',
+        );
         entry = service.findEntryByUuid(uuid);
         if (entry == null) {
-          log.e('[EntryDetail] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath" dbOpen=${service.isOpen}');
+          log.e(
+            '[EntryDetail] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath" dbOpen=${service.isOpen}',
+          );
         } else {
-          log.i('[EntryDetail] found via cache, entry parent=${entry.parent?.name}');
+          log.i(
+            '[EntryDetail] found via cache, entry parent=${entry.parent?.name}',
+          );
         }
       }
     }
     if (entry == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l10n.entry)),
-        body: EmptyState(icon: Icons.error_outline_rounded, message: l10n.entryNotFound),
+        body: EmptyState(
+          icon: Icons.error_outline_rounded,
+          message: l10n.entryNotFound,
+        ),
       );
     }
     final matchedEntry = entry;
@@ -66,15 +81,24 @@ class EntryDetailScreen extends ConsumerWidget {
     // Check recycle bin using database metadata instead of icon comparison.
     final db = ref.read(databaseServiceProvider).db;
     final recycleBinUuid = db?.meta.recycleBinUuid;
-    final isInRecycleBin = recycleBinUuid != null && group?.uuid == recycleBinUuid;
+    final isInRecycleBin =
+        recycleBinUuid != null && group?.uuid == recycleBinUuid;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title.isEmpty ? l10n.entryDetail : title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        title: Text(
+          title.isEmpty ? l10n.entryDetail : title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           if (isInRecycleBin)
             IconButton(
-              icon: Icon(Icons.restore_rounded, size: 20, color: colorScheme.primary),
+              icon: Icon(
+                Icons.restore_rounded,
+                size: 20,
+                color: colorScheme.primary,
+              ),
               tooltip: l10n.restore,
               onPressed: () => _restoreEntry(context, ref, matchedEntry),
             )
@@ -82,25 +106,37 @@ class EntryDetailScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.history_rounded, size: 20),
               tooltip: l10n.history,
-              onPressed: () => context.push('/entry/history?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push(
+                '/entry/history?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}',
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.edit_rounded, size: 20),
               tooltip: l10n.edit,
-              onPressed: () => context.push('/entry/edit?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}'),
+              onPressed: () => context.push(
+                '/entry/edit?uuid=${Uri.encodeComponent(entryUuid)}&groupPath=${Uri.encodeComponent(groupPath)}',
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.drive_file_move_rounded, size: 20),
               tooltip: l10n.move,
-              onPressed: group != null ? () => _moveEntry(context, ref, matchedEntry, group) : null,
+              onPressed: group != null
+                  ? () => _moveEntry(context, ref, matchedEntry, group)
+                  : null,
             ),
           ],
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, size: 20, color: colorScheme.error),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              size: 20,
+              color: colorScheme.error,
+            ),
             tooltip: isInRecycleBin ? l10n.permanentDelete : l10n.delete,
             onPressed: () => isInRecycleBin
                 ? _permanentDeleteEntry(context, ref, matchedEntry)
-                : group != null ? _deleteEntry(context, ref, matchedEntry, group) : null,
+                : group != null
+                ? _deleteEntry(context, ref, matchedEntry, group)
+                : null,
           ),
         ],
       ),
@@ -110,36 +146,46 @@ class EntryDetailScreen extends ConsumerWidget {
           // Title card
           if (title.isNotEmpty)
             _SectionCard(
-              children: [
-                _FieldRow(label: l10n.title, value: title),
-              ],
+              children: [_FieldRow(label: l10n.title, value: title)],
             ),
           // Credentials card
           _SectionCard(
             children: [
-              _FieldRow(label: l10n.username, value: matchedEntry.fields['UserName']?.text ?? '', showCopy: true),
-              _PasswordField(value: matchedEntry.fields['Password']?.text ?? ''),
+              _FieldRow(
+                label: l10n.username,
+                value: matchedEntry.fields['UserName']?.text ?? '',
+                showCopy: true,
+              ),
+              _PasswordField(
+                value: matchedEntry.fields['Password']?.text ?? '',
+              ),
             ],
           ),
           // TOTP
           TotpDisplayWidget(entry: matchedEntry),
           // Details card
-          if ((matchedEntry.fields['URL']?.text ?? '').isNotEmpty || (matchedEntry.fields['Notes']?.text ?? '').isNotEmpty)
+          if ((matchedEntry.fields['URL']?.text ?? '').isNotEmpty ||
+              (matchedEntry.fields['Notes']?.text ?? '').isNotEmpty)
             _SectionCard(
               children: [
-                _FieldRow(label: l10n.url, value: matchedEntry.fields['URL']?.text ?? '', showCopy: true),
-                _FieldRow(label: l10n.notes, value: matchedEntry.fields['Notes']?.text ?? '', multiline: true),
+                _FieldRow(
+                  label: l10n.url,
+                  value: matchedEntry.fields['URL']?.text ?? '',
+                  showCopy: true,
+                ),
+                _FieldRow(
+                  label: l10n.notes,
+                  value: matchedEntry.fields['Notes']?.text ?? '',
+                  multiline: true,
+                ),
               ],
             ),
           // Tags
           if (matchedEntry.tags != null && matchedEntry.tags!.isNotEmpty)
-            _SectionCard(
-              children: [
-                _TagsRow(tags: matchedEntry.tags!),
-              ],
-            ),
+            _SectionCard(children: [_TagsRow(tags: matchedEntry.tags!)]),
           // Expiration
-          if (matchedEntry.times.expires && matchedEntry.times.expiry.time != null)
+          if (matchedEntry.times.expires &&
+              matchedEntry.times.expiry.time != null)
             _SectionCard(
               children: [
                 _ExpirationRow(expiryDate: matchedEntry.times.expiry.time!),
@@ -148,7 +194,15 @@ class EntryDetailScreen extends ConsumerWidget {
           // Custom fields
           ...() {
             final custom = matchedEntry.fields.entries
-                .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
+                .where(
+                  (e) => ![
+                    'Title',
+                    'UserName',
+                    'Password',
+                    'URL',
+                    'Notes',
+                  ].contains(e.key),
+                )
                 .toList();
             if (custom.isEmpty) return <Widget>[];
             return [
@@ -158,7 +212,11 @@ class EntryDetailScreen extends ConsumerWidget {
                     if (e.value is ProtectedTextField)
                       _PasswordField(value: e.value.text, label: e.key)
                     else
-                      _FieldRow(label: e.key, value: e.value.text, showCopy: true),
+                      _FieldRow(
+                        label: e.key,
+                        value: e.value.text,
+                        showCopy: true,
+                      ),
                 ],
               ),
             ];
@@ -176,7 +234,12 @@ class EntryDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry, KdbxGroup group) {
+  void _deleteEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+    KdbxGroup group,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -184,7 +247,10 @@ class EntryDetailScreen extends ConsumerWidget {
         title: Text(l10n.deleteEntry),
         content: Text(l10n.moveToRecycleBin),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -207,7 +273,11 @@ class EntryDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _permanentDeleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+  void _permanentDeleteEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -215,7 +285,10 @@ class EntryDetailScreen extends ConsumerWidget {
         title: Text(l10n.permanentDelete),
         content: Text(l10n.permanentDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
@@ -259,18 +332,26 @@ class EntryDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _moveEntry(BuildContext context, WidgetRef ref, KdbxEntry entry, KdbxGroup currentGroup) async {
+  Future<void> _moveEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+    KdbxGroup currentGroup,
+  ) async {
     final db = ref.read(databaseServiceProvider).db;
     if (db == null) return;
-    final target = await showMoveToGroupDialog(context, db: db, excludeGroup: currentGroup);
+    final target = await showMoveToGroupDialog(
+      context,
+      db: db,
+      excludeGroup: currentGroup,
+    );
     if (target == null) return;
     ref.read(databaseServiceProvider).moveItem(entry, target);
     refreshExplorerLists(ref);
+    if (!context.mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    if (context.mounted) {
-      showToast(context, l10n.moved);
-      context.pop();
-    }
+    showToast(context, l10n.moved);
+    context.pop();
   }
 }
 
@@ -302,7 +383,9 @@ class _SectionCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 12),
                 child: Divider(
                   height: 1,
-                  color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.15),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.15),
                 ),
               ),
             visibleChildren[i],
@@ -319,7 +402,12 @@ class _FieldRow extends StatelessWidget {
   final bool showCopy;
   final bool multiline;
 
-  const _FieldRow({required this.label, required this.value, this.showCopy = false, this.multiline = false});
+  const _FieldRow({
+    required this.label,
+    required this.value,
+    this.showCopy = false,
+    this.multiline = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -363,9 +451,9 @@ class _FieldRow extends StatelessWidget {
           const SizedBox(height: 4),
           SelectableText(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: multiline ? 1.5 : null,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: multiline ? 1.5 : null),
           ),
         ],
       ),
@@ -411,7 +499,12 @@ class _PasswordFieldState extends State<_PasswordField> {
                 width: 30,
                 height: 30,
                 child: IconButton(
-                  icon: Icon(_visible ? Icons.visibility_off_rounded : Icons.visibility_rounded, size: 15),
+                  icon: Icon(
+                    _visible
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    size: 15,
+                  ),
                   tooltip: _visible ? l10n.hide : l10n.show,
                   padding: EdgeInsets.zero,
                   onPressed: () => setState(() => _visible = !_visible),
@@ -475,7 +568,10 @@ class _TagsRow extends StatelessWidget {
             children: [
               for (final tag in tags)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
@@ -507,7 +603,8 @@ class _ExpirationRow extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
     final isExpired = expiryDate.isBefore(now);
-    final dateStr = '${expiryDate.year}-${expiryDate.month.toString().padLeft(2, '0')}-${expiryDate.day.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${expiryDate.year}-${expiryDate.month.toString().padLeft(2, '0')}-${expiryDate.day.toString().padLeft(2, '0')}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -529,7 +626,9 @@ class _ExpirationRow extends StatelessWidget {
               Icon(
                 isExpired ? Icons.warning_rounded : Icons.schedule_rounded,
                 size: 18,
-                color: isExpired ? colorScheme.error : colorScheme.onSurfaceVariant,
+                color: isExpired
+                    ? colorScheme.error
+                    : colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 8),
               Text(

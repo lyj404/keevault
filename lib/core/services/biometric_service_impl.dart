@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart';
-import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_android/local_auth_android.dart'
+    show AndroidAuthMessages;
 import 'package:local_auth_platform_interface/local_auth_platform_interface.dart';
+
 import '../utils/logger.dart';
 
 Future<bool> isBiometricAvailable() async {

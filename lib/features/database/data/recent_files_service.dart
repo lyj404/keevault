@@ -7,22 +7,34 @@ class RecentFile {
   final bool isCloud;
   final String? remotePath;
   final String? lastSyncedETag;
+  final DateTime? lastSyncedMTime;
 
-  const RecentFile({required this.path, this.isCloud = false, this.remotePath, this.lastSyncedETag});
+  const RecentFile({
+    required this.path,
+    this.isCloud = false,
+    this.remotePath,
+    this.lastSyncedETag,
+    this.lastSyncedMTime,
+  });
 
   Map<String, dynamic> toJson() => {
-        'path': path,
-        'isCloud': isCloud,
-        if (remotePath != null) 'remotePath': remotePath,
-        if (lastSyncedETag != null) 'lastSyncedETag': lastSyncedETag,
-      };
+    'path': path,
+    'isCloud': isCloud,
+    if (remotePath != null) 'remotePath': remotePath,
+    if (lastSyncedETag != null) 'lastSyncedETag': lastSyncedETag,
+    if (lastSyncedMTime != null)
+      'lastSyncedMTime': lastSyncedMTime!.toIso8601String(),
+  };
 
   factory RecentFile.fromJson(Map<String, dynamic> json) => RecentFile(
-        path: json['path'] as String? ?? '',
-        isCloud: json['isCloud'] as bool? ?? false,
-        remotePath: json['remotePath'] as String?,
-        lastSyncedETag: json['lastSyncedETag'] as String?,
-      );
+    path: json['path'] as String? ?? '',
+    isCloud: json['isCloud'] as bool? ?? false,
+    remotePath: json['remotePath'] as String?,
+    lastSyncedETag: json['lastSyncedETag'] as String?,
+    lastSyncedMTime: json['lastSyncedMTime'] is String
+        ? DateTime.tryParse(json['lastSyncedMTime'] as String)
+        : null,
+  );
 }
 
 class RecentFilesService {
@@ -44,10 +56,25 @@ class RecentFilesService {
     }
   }
 
-  Future<void> addRecentFile(String filePath, {bool isCloud = false, String? remotePath, String? lastSyncedETag}) async {
+  Future<void> addRecentFile(
+    String filePath, {
+    bool isCloud = false,
+    String? remotePath,
+    String? lastSyncedETag,
+    DateTime? lastSyncedMTime,
+  }) async {
     final files = await getRecentFiles();
     files.removeWhere((f) => f.path == filePath);
-    files.insert(0, RecentFile(path: filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: lastSyncedETag));
+    files.insert(
+      0,
+      RecentFile(
+        path: filePath,
+        isCloud: isCloud,
+        remotePath: remotePath,
+        lastSyncedETag: lastSyncedETag,
+        lastSyncedMTime: lastSyncedMTime,
+      ),
+    );
     if (files.length > AppConstants.maxRecentFiles) {
       files.removeRange(AppConstants.maxRecentFiles, files.length);
     }
@@ -76,10 +103,24 @@ class RecentFilesService {
     }
   }
 
-  Future<void> setLastOpenedFile(String filePath, {bool isCloud = false, String? remotePath, String? lastSyncedETag}) async {
+  Future<void> setLastOpenedFile(
+    String filePath, {
+    bool isCloud = false,
+    String? remotePath,
+    String? lastSyncedETag,
+    DateTime? lastSyncedMTime,
+  }) async {
     await _storage.write(
       key: _lastOpenedKey,
-      value: jsonEncode(RecentFile(path: filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: lastSyncedETag).toJson()),
+      value: jsonEncode(
+        RecentFile(
+          path: filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          lastSyncedETag: lastSyncedETag,
+          lastSyncedMTime: lastSyncedMTime,
+        ).toJson(),
+      ),
     );
   }
 

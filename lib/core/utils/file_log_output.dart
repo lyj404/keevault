@@ -23,9 +23,10 @@ class FileLogOutput extends LogOutput {
   bool _ready = false;
   bool _initFailed = false;
 
-  FileLogOutput({Level minLevel = Level.error}) : _minLevel = minLevel;
+  FileLogOutput({this._minLevel = Level.error});
 
   /// Initializes the log file. Must be called once before any log output.
+  @override
   Future<void> init() async {
     try {
       final dir = await _logDir();
@@ -39,7 +40,9 @@ class FileLogOutput extends LogOutput {
       }
       _buffer.clear();
       // Write a startup marker so we know the log is working.
-      _sink?.writeln('${DateTime.now()} [INFO] FileLogOutput initialized, path=${_file?.path}');
+      _sink?.writeln(
+        '${DateTime.now()} [INFO] FileLogOutput initialized, path=${_file?.path}',
+      );
       _sink?.flush();
     } catch (_) {
       // If file init fails, stop buffering to avoid unbounded memory growth.

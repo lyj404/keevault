@@ -96,15 +96,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.language_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.language_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.language, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(
+                                l10n.language,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -112,16 +125,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: currentLocale?.languageCode ?? 'system',
                           underline: const SizedBox.shrink(),
                           items: [
-                            DropdownMenuItem(value: 'system', child: Text(l10n.followSystem)),
-                            const DropdownMenuItem(value: 'zh', child: Text('中文')),
-                            const DropdownMenuItem(value: 'en', child: Text('English')),
+                            DropdownMenuItem(
+                              value: 'system',
+                              child: Text(l10n.followSystem),
+                            ),
+                            const DropdownMenuItem(
+                              value: 'zh',
+                              child: Text('中文'),
+                            ),
+                            const DropdownMenuItem(
+                              value: 'en',
+                              child: Text('English'),
+                            ),
                           ],
                           onChanged: (v) {
                             if (v == null) return;
                             if (v == 'system') {
                               ref.read(localeProvider.notifier).setLocale(null);
                             } else {
-                              ref.read(localeProvider.notifier).setLocale(Locale(v));
+                              ref
+                                  .read(localeProvider.notifier)
+                                  .setLocale(Locale(v));
                             }
                           },
                         ),
@@ -139,13 +163,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
                           child: Icon(
                             currentThemeMode == ThemeMode.dark
                                 ? Icons.dark_mode_rounded
                                 : currentThemeMode == ThemeMode.light
-                                    ? Icons.light_mode_rounded
-                                    : Icons.brightness_auto_rounded,
+                                ? Icons.light_mode_rounded
+                                : Icons.brightness_auto_rounded,
                             size: 20,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -155,7 +181,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.theme, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(
+                                l10n.theme,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -163,13 +196,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: currentThemeMode,
                           underline: const SizedBox.shrink(),
                           items: [
-                            DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.followSystem)),
-                            DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.lightTheme)),
-                            DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.darkTheme)),
+                            DropdownMenuItem(
+                              value: ThemeMode.system,
+                              child: Text(l10n.followSystem),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.light,
+                              child: Text(l10n.lightTheme),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.dark,
+                              child: Text(l10n.darkTheme),
+                            ),
                           ],
                           onChanged: (v) {
                             if (v != null) {
-                              ref.read(themeModeProvider.notifier).setThemeMode(v);
+                              ref
+                                  .read(themeModeProvider.notifier)
+                                  .setThemeMode(v);
                             }
                           },
                         ),
@@ -178,7 +222,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
 
                   // Close behavior card (desktop only)
-                  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ...[
+                  if (Platform.isWindows ||
+                      Platform.isLinux ||
+                      Platform.isMacOS) ...[
                     const SizedBox(height: 16),
                     _SectionCard(
                       brightness: brightness,
@@ -187,15 +233,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           Container(
                             width: 38,
                             height: 38,
-                            decoration: ClayDecoration.iconContainer(brightness: brightness),
-                            child: Icon(Icons.close_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                            decoration: ClayDecoration.iconContainer(
+                              brightness: brightness,
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l10n.closeBehavior, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                                Text(
+                                  l10n.closeBehavior,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -203,13 +262,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             value: ref.watch(closeBehaviorProvider),
                             underline: const SizedBox.shrink(),
                             items: [
-                              DropdownMenuItem(value: CloseBehavior.ask, child: Text(l10n.askEveryTime)),
-                              DropdownMenuItem(value: CloseBehavior.minimizeToTray, child: Text(l10n.minimizeToTray)),
-                              DropdownMenuItem(value: CloseBehavior.exit, child: Text(l10n.exitApp)),
+                              DropdownMenuItem(
+                                value: CloseBehavior.ask,
+                                child: Text(l10n.askEveryTime),
+                              ),
+                              DropdownMenuItem(
+                                value: CloseBehavior.minimizeToTray,
+                                child: Text(l10n.minimizeToTray),
+                              ),
+                              DropdownMenuItem(
+                                value: CloseBehavior.exit,
+                                child: Text(l10n.exitApp),
+                              ),
                             ],
                             onChanged: (v) {
                               if (v != null) {
-                                ref.read(closeBehaviorProvider.notifier).setCloseBehavior(v);
+                                ref
+                                    .read(closeBehaviorProvider.notifier)
+                                    .setCloseBehavior(v);
                               }
                             },
                           ),
@@ -228,16 +298,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.lock_clock_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.lock_clock_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.autoLock, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                              Text(l10n.autoLockDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.autoLock,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                l10n.autoLockDescription,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -245,12 +334,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: ref.watch(autoLockProvider),
                           underline: const SizedBox.shrink(),
                           items: [
-                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
-                            DropdownMenuItem(value: 1, child: Text('1 ${l10n.minute}')),
-                            DropdownMenuItem(value: 5, child: Text('5 ${l10n.minutes}')),
-                            DropdownMenuItem(value: 15, child: Text('15 ${l10n.minutes}')),
-                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.minutes}')),
-                            DropdownMenuItem(value: 60, child: Text('60 ${l10n.minutes}')),
+                            DropdownMenuItem(
+                              value: 0,
+                              child: Text(l10n.disabled),
+                            ),
+                            DropdownMenuItem(
+                              value: 1,
+                              child: Text('1 ${l10n.minute}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 5,
+                              child: Text('5 ${l10n.minutes}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 15,
+                              child: Text('15 ${l10n.minutes}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 30,
+                              child: Text('30 ${l10n.minutes}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 60,
+                              child: Text('60 ${l10n.minutes}'),
+                            ),
                           ],
                           onChanged: (v) {
                             if (v != null) {
@@ -269,14 +376,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     brightness: brightness,
                     child: Row(
                       children: [
-                        Icon(Icons.save_outlined, size: 20, color: colorScheme.primary),
+                        Icon(
+                          Icons.save_outlined,
+                          size: 20,
+                          color: colorScheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.autoSave, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                              Text(l10n.autoSaveDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.autoSave,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                l10n.autoSaveDescription,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -284,12 +408,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: ref.watch(autoSaveProvider),
                           underline: const SizedBox.shrink(),
                           items: [
-                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
-                            DropdownMenuItem(value: 15, child: Text('15 ${l10n.seconds}')),
-                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.seconds}')),
-                            DropdownMenuItem(value: 60, child: Text('60 ${l10n.seconds}')),
-                            DropdownMenuItem(value: 120, child: Text('120 ${l10n.seconds}')),
-                            DropdownMenuItem(value: 300, child: Text('300 ${l10n.seconds}')),
+                            DropdownMenuItem(
+                              value: 0,
+                              child: Text(l10n.disabled),
+                            ),
+                            DropdownMenuItem(
+                              value: 15,
+                              child: Text('15 ${l10n.seconds}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 30,
+                              child: Text('30 ${l10n.seconds}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 60,
+                              child: Text('60 ${l10n.seconds}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 120,
+                              child: Text('120 ${l10n.seconds}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 300,
+                              child: Text('300 ${l10n.seconds}'),
+                            ),
                           ],
                           onChanged: (v) {
                             if (v != null) {
@@ -311,16 +453,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.notifications_active_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.notifications_active_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.expirationReminder, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                              Text(l10n.expirationReminderDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.expirationReminder,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                l10n.expirationReminderDescription,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -328,16 +489,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           value: ref.watch(expirationReminderProvider),
                           underline: const SizedBox.shrink(),
                           items: [
-                            DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
-                            DropdownMenuItem(value: 1, child: Text('1 ${l10n.daysBeforeExpiry}')),
-                            DropdownMenuItem(value: 3, child: Text('3 ${l10n.daysBeforeExpiry}')),
-                            DropdownMenuItem(value: 7, child: Text('7 ${l10n.daysBeforeExpiry}')),
-                            DropdownMenuItem(value: 14, child: Text('14 ${l10n.daysBeforeExpiry}')),
-                            DropdownMenuItem(value: 30, child: Text('30 ${l10n.daysBeforeExpiry}')),
+                            DropdownMenuItem(
+                              value: 0,
+                              child: Text(l10n.disabled),
+                            ),
+                            DropdownMenuItem(
+                              value: 1,
+                              child: Text('1 ${l10n.daysBeforeExpiry}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 3,
+                              child: Text('3 ${l10n.daysBeforeExpiry}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 7,
+                              child: Text('7 ${l10n.daysBeforeExpiry}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 14,
+                              child: Text('14 ${l10n.daysBeforeExpiry}'),
+                            ),
+                            DropdownMenuItem(
+                              value: 30,
+                              child: Text('30 ${l10n.daysBeforeExpiry}'),
+                            ),
                           ],
                           onChanged: (v) {
                             if (v != null) {
-                              ref.read(expirationReminderProvider.notifier).setDays(v);
+                              ref
+                                  .read(expirationReminderProvider.notifier)
+                                  .setDays(v);
                             }
                           },
                         ),
@@ -348,7 +529,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 16),
 
                   // Unlock method card (Android only, requires biometric support)
-                  if (Platform.isAndroid && ref.watch(biometricAvailableProvider).valueOrNull == true) ...[
+                  if (Platform.isAndroid &&
+                      ref.watch(biometricAvailableProvider).valueOrNull ==
+                          true) ...[
                     _SectionCard(
                       brightness: brightness,
                       child: Column(
@@ -359,12 +542,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Container(
                                 width: 38,
                                 height: 38,
-                                decoration: ClayDecoration.iconContainer(brightness: brightness),
-                                child: Icon(Icons.lock_open_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                                decoration: ClayDecoration.iconContainer(
+                                  brightness: brightness,
+                                ),
+                                child: Icon(
+                                  Icons.lock_open_rounded,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
-                                child: Text(l10n.unlockMethod, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                                child: Text(
+                                  l10n.unlockMethod,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -374,15 +570,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _UnlockMethodChip(
                                 icon: Icons.password_rounded,
                                 label: l10n.unlockByPassword,
-                                selected: ref.watch(unlockMethodProvider) == UnlockMethod.password,
-                                onTap: () => _setUnlockMethod(UnlockMethod.password, l10n),
+                                selected:
+                                    ref.watch(unlockMethodProvider) ==
+                                    UnlockMethod.password,
+                                onTap: () => _setUnlockMethod(
+                                  UnlockMethod.password,
+                                  l10n,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               _UnlockMethodChip(
                                 icon: Icons.fingerprint_rounded,
                                 label: l10n.unlockByBiometric,
-                                selected: ref.watch(unlockMethodProvider) == UnlockMethod.biometric,
-                                onTap: () => _setUnlockMethod(UnlockMethod.biometric, l10n),
+                                selected:
+                                    ref.watch(unlockMethodProvider) ==
+                                    UnlockMethod.biometric,
+                                onTap: () => _setUnlockMethod(
+                                  UnlockMethod.biometric,
+                                  l10n,
+                                ),
                               ),
                             ],
                           ),
@@ -400,15 +606,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.key_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.key_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.changeMasterPassword, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(
+                                l10n.changeMasterPassword,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -425,7 +644,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10),
                               onTap: () => showChangePasswordDialog(context),
-                              child: Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                size: 20,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),
@@ -443,15 +666,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.backup_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.backup_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.databaseBackup, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                              Text(
+                                l10n.databaseBackup,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -468,7 +704,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10),
                               onTap: () => context.push('/backup'),
-                              child: Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                size: 20,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                         ),
@@ -486,24 +726,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Container(
                           width: 38,
                           height: 38,
-                          decoration: ClayDecoration.iconContainer(brightness: brightness),
-                          child: Icon(Icons.cloud_upload_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          decoration: ClayDecoration.iconContainer(
+                            brightness: brightness,
+                          ),
+                          child: Icon(
+                            Icons.cloud_upload_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(l10n.webdavSync, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                              Text(l10n.autoSyncOnSave,
-                                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                              Text(
+                                l10n.webdavSync,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              Text(
+                                l10n.autoSyncOnSave,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         Switch(
                           value: _enabled,
                           onChanged: (v) => setState(() => _enabled = v),
-                          activeThumbColor: Theme.of(context).colorScheme.primary,
+                          activeThumbColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                         ),
                       ],
                     ),
@@ -523,25 +783,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               hintText: l10n.serverAddressHint,
                               helperText: l10n.serverAddressHelper,
                             ),
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterServerAddress : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.pleaseEnterServerAddress
+                                : null,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _userController,
-                            decoration: InputDecoration(labelText: l10n.username),
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterUsername : null,
+                            decoration: InputDecoration(
+                              labelText: l10n.username,
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.pleaseEnterUsername
+                                : null,
                           ),
                           const SizedBox(height: 12),
                           PasswordTextField(
                             controller: _passwordController,
                             labelText: l10n.password,
                             showPrefixIcon: false,
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.pleaseEnterPassword
+                                : null,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             l10n.appPasswordHelper,
-                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -554,8 +825,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _filenameController,
-                            decoration: InputDecoration(labelText: l10n.filename, hintText: 'database.kdbx'),
-                            validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterName : null,
+                            decoration: InputDecoration(
+                              labelText: l10n.filename,
+                              hintText: 'database.kdbx',
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? l10n.pleaseEnterName
+                                : null,
                           ),
                         ],
                       ),
@@ -569,12 +845,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: OutlinedButton.icon(
                             onPressed: _testing ? null : _testConnection,
                             icon: _testing
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
                                 : const Icon(Icons.wifi_find_rounded, size: 18),
-                            label: Text(_testing ? l10n.testing : l10n.testConnection),
+                            label: Text(
+                              _testing ? l10n.testing : l10n.testConnection,
+                            ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
@@ -584,7 +870,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     if (_connectionOk != null) ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: _connectionOk!
                               ? ClayColors.secondary.withValues(alpha: 0.1)
@@ -594,17 +883,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              _connectionOk! ? Icons.check_circle_rounded : Icons.error_rounded,
+                              _connectionOk!
+                                  ? Icons.check_circle_rounded
+                                  : Icons.error_rounded,
                               size: 18,
-                              color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+                              color: _connectionOk!
+                                  ? ClayColors.secondary
+                                  : ClayColors.error,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                _connectionOk! ? l10n.connectionSuccess : (_connectionError ?? l10n.connectionFailed),
+                                _connectionOk!
+                                    ? l10n.connectionSuccess
+                                    : (_connectionError ??
+                                          l10n.connectionFailed),
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+                                  color: _connectionOk!
+                                      ? ClayColors.secondary
+                                      : ClayColors.error,
                                 ),
                               ),
                             ),
@@ -630,7 +928,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         onPressed: _save,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                         ),
                         child: Text(l10n.save),
                       ),
@@ -660,11 +960,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       remoteFilename: _filenameController.text.trim(),
     );
     final errorKey = await ref.read(syncServiceProvider).testConnection(config);
-    if (mounted) setState(() {
-      _testing = false;
-      _connectionOk = errorKey == null;
-      _connectionError = _translateError(errorKey);
-    });
+    if (mounted) {
+      setState(() {
+        _testing = false;
+        _connectionOk = errorKey == null;
+        _connectionError = _translateError(errorKey);
+      });
+    }
   }
 
   String? _translateError(String? errorKey) {
@@ -702,12 +1004,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _setUnlockMethod(UnlockMethod method, AppLocalizations l10n) async {
+  Future<void> _setUnlockMethod(
+    UnlockMethod method,
+    AppLocalizations l10n,
+  ) async {
     if (method == UnlockMethod.biometric) {
       final biometricService = BiometricService();
-      final authenticated = await biometricService.authenticate(l10n.authenticateToEnableBiometric);
+      final authenticated = await biometricService.authenticate(
+        l10n.authenticateToEnableBiometric,
+      );
       if (!authenticated) {
-        if (mounted) showToast(context, l10n.biometricAuthFailed, isError: true);
+        if (mounted) {
+          showToast(context, l10n.biometricAuthFailed, isError: true);
+        }
         return;
       }
     } else {
@@ -716,7 +1025,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     await ref.read(unlockMethodProvider.notifier).setMethod(method);
     if (mounted) {
-      showToast(context, method == UnlockMethod.biometric ? l10n.biometricEnabled : l10n.biometricDisabled);
+      showToast(
+        context,
+        method == UnlockMethod.biometric
+            ? l10n.biometricEnabled
+            : l10n.biometricDisabled,
+      );
     }
   }
 }
@@ -745,24 +1059,36 @@ class _UnlockMethodChip extends StatelessWidget {
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
+            color: selected
+                ? colorScheme.primaryContainer
+                : colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? colorScheme.primary : colorScheme.outlineVariant.withValues(alpha: 0.3),
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: selected ? 1.5 : 1,
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                  color: selected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

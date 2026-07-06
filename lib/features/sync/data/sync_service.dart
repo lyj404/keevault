@@ -13,14 +13,7 @@ class RemoteFileInfo {
 }
 
 /// Classification of sync errors for user-friendly messaging.
-enum SyncErrorType {
-  network,
-  auth,
-  notFound,
-  timeout,
-  serverError,
-  unknown,
-}
+enum SyncErrorType { network, auth, notFound, timeout, serverError, unknown }
 
 class SyncException implements Exception {
   final SyncErrorType type;
@@ -41,21 +34,29 @@ class SyncService {
   /// Classifies an exception into a [SyncErrorType] for user-friendly messaging.
   SyncErrorType _classifyError(Object e) {
     final msg = e.toString().toLowerCase();
-    if (msg.contains('401') || msg.contains('403') || msg.contains('unauthorized')) {
+    if (msg.contains('401') ||
+        msg.contains('403') ||
+        msg.contains('unauthorized')) {
       return SyncErrorType.auth;
     }
     if (msg.contains('404') || msg.contains('not found')) {
       return SyncErrorType.notFound;
     }
-    if (msg.contains('socketexception') || msg.contains('connection refused') ||
-        msg.contains('network') || msg.contains('host') ||
-        msg.contains('connection reset') || msg.contains('broken pipe')) {
+    if (msg.contains('socketexception') ||
+        msg.contains('connection refused') ||
+        msg.contains('network') ||
+        msg.contains('host') ||
+        msg.contains('connection reset') ||
+        msg.contains('broken pipe')) {
       return SyncErrorType.network;
     }
     if (msg.contains('timeout') || msg.contains('timed out')) {
       return SyncErrorType.timeout;
     }
-    if (msg.contains('500') || msg.contains('502') || msg.contains('503') || msg.contains('504')) {
+    if (msg.contains('500') ||
+        msg.contains('502') ||
+        msg.contains('503') ||
+        msg.contains('504')) {
       return SyncErrorType.serverError;
     }
     return SyncErrorType.unknown;
@@ -64,15 +65,12 @@ class SyncService {
   /// Whether an error is transient and worth retrying.
   bool _isRetryable(SyncErrorType type) {
     return type == SyncErrorType.network ||
-           type == SyncErrorType.timeout ||
-           type == SyncErrorType.serverError;
+        type == SyncErrorType.timeout ||
+        type == SyncErrorType.serverError;
   }
 
   /// Wraps an async operation with exponential backoff retry for transient errors.
-  Future<T> _withRetry<T>(
-    String operation,
-    Future<T> Function() action,
-  ) async {
+  Future<T> _withRetry<T>(String operation, Future<T> Function() action) async {
     Object? lastError;
     for (int attempt = 0; attempt < _maxRetries; attempt++) {
       try {
@@ -81,14 +79,19 @@ class SyncService {
         lastError = e;
         final type = _classifyError(e);
         if (!_isRetryable(type) || attempt == _maxRetries - 1) {
-          log.e('$operation failed (attempt ${attempt + 1}/$_maxRetries)', error: e);
+          log.e(
+            '$operation failed (attempt ${attempt + 1}/$_maxRetries)',
+            error: e,
+          );
           if (type != SyncErrorType.unknown) {
             throw SyncException(type, e.toString(), e);
           }
           rethrow;
         }
         final delay = _baseDelayMs * pow(2, attempt).toInt();
-        log.w('$operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/$_maxRetries): $e');
+        log.w(
+          '$operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/$_maxRetries): $e',
+        );
         await Future.delayed(Duration(milliseconds: delay));
       }
     }
@@ -175,7 +178,10 @@ class SyncService {
     log.i('Downloading from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      final bytes = await _withRetry('Download', () => client.read(config.remoteFilePath));
+      final bytes = await _withRetry(
+        'Download',
+        () => client.read(config.remoteFilePath),
+      );
       log.i('Downloaded ${bytes.length} bytes');
       return Uint8List.fromList(bytes);
     } catch (e) {
@@ -187,7 +193,10 @@ class SyncService {
   Future<RemoteFileInfo?> getRemoteFileInfo(WebDavConfig config) async {
     final client = _buildClient(config);
     try {
-      final file = await _withRetry('GetFileInfo', () => client.readProps(config.remoteFilePath));
+      final file = await _withRetry(
+        'GetFileInfo',
+        () => client.readProps(config.remoteFilePath),
+      );
       return RemoteFileInfo(eTag: file.eTag, mTime: file.mTime);
     } catch (_) {
       return null;
@@ -195,15 +204,23 @@ class SyncService {
   }
 
   /// Downloads database bytes along with remote file metadata.
-  Future<({Uint8List bytes, RemoteFileInfo info})?> downloadWithInfo(WebDavConfig config) async {
+  Future<({Uint8List bytes, RemoteFileInfo info})?> downloadWithInfo(
+    WebDavConfig config,
+  ) async {
     log.i('Downloading with metadata from: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      final bytes = await _withRetry('Download', () => client.read(config.remoteFilePath));
+      final bytes = await _withRetry(
+        'Download',
+        () => client.read(config.remoteFilePath),
+      );
       // Read props after download to get the eTag of the version we actually received.
       final file = await client.readProps(config.remoteFilePath);
       log.i('Downloaded ${bytes.length} bytes, eTag: ${file.eTag}');
-      return (bytes: Uint8List.fromList(bytes), info: RemoteFileInfo(eTag: file.eTag, mTime: file.mTime));
+      return (
+        bytes: Uint8List.fromList(bytes),
+        info: RemoteFileInfo(eTag: file.eTag, mTime: file.mTime),
+      );
     } catch (e) {
       log.e('Download with info failed', error: e);
       return null;
@@ -214,7 +231,10 @@ class SyncService {
     log.i('Uploading ${bytes.length} bytes to: ${config.remoteFilePath}');
     final client = _buildClient(config);
     try {
-      await _withRetry('Upload', () => client.write(config.remoteFilePath, bytes));
+      await _withRetry(
+        'Upload',
+        () => client.write(config.remoteFilePath, bytes),
+      );
       log.i('Upload complete');
     } catch (e) {
       log.e('Upload failed', error: e);
@@ -240,8 +260,46 @@ class SyncService {
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
-    final file = File('${cacheDir.path}/keevault_sync.kdbx');
+    final file = File('${cacheDir.path}/${_cacheFileNameFor(config)}');
     await file.writeAsBytes(bytes);
     return file.path;
+  }
+
+  String _cacheFileNameFor(WebDavConfig config) {
+    final extension = _normalizedExtension(config.remoteFilename);
+    final identity =
+        '${config.serverUrl.trim()}|${config.remoteFilePath.trim()}';
+    final hash = _stableHash(identity);
+    final safeName = _sanitizeFileStem(config.remoteFilename);
+    return '${safeName}_$hash$extension';
+  }
+
+  String _sanitizeFileStem(String filename) {
+    final normalized = filename.trim();
+    final dotIndex = normalized.lastIndexOf('.');
+    final stem = dotIndex > 0 ? normalized.substring(0, dotIndex) : normalized;
+    final cleaned = stem.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    return cleaned.isEmpty ? 'keevault_sync' : cleaned;
+  }
+
+  String _normalizedExtension(String filename) {
+    final normalized = filename.trim();
+    final dotIndex = normalized.lastIndexOf('.');
+    if (dotIndex <= 0 || dotIndex == normalized.length - 1) {
+      return '.kdbx';
+    }
+    final extension = normalized.substring(dotIndex);
+    final cleaned = extension.replaceAll(RegExp(r'[^A-Za-z0-9.]'), '');
+    return cleaned.isEmpty ? '.kdbx' : cleaned;
+  }
+
+  String _stableHash(String input) {
+    var hash = 0xcbf29ce484222325;
+    const prime = 0x100000001b3;
+    for (final unit in input.codeUnits) {
+      hash ^= unit;
+      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
+    }
+    return hash.toRadixString(16);
   }
 }

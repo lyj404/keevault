@@ -17,7 +17,12 @@ class UnlockScreen extends ConsumerStatefulWidget {
   final String filePath;
   final bool isCloud;
   final String? syncedETag;
-  const UnlockScreen({super.key, required this.filePath, this.isCloud = false, this.syncedETag});
+  const UnlockScreen({
+    super.key,
+    required this.filePath,
+    this.isCloud = false,
+    this.syncedETag,
+  });
 
   @override
   ConsumerState<UnlockScreen> createState() => _UnlockScreenState();
@@ -31,6 +36,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   String? _keyFileName;
 
   bool _biometricTriggered = false;
+  bool _lastUnlockUsedBiometric = false;
 
   @override
   void initState() {
@@ -64,11 +70,17 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
         setState(() => _error = null);
       } else if (next.hasValue) {
         if (next.value != null) {
-          // Store password for biometric only after successful manual unlock
-          // (skip when biometric was used — _passwordController.text is empty then,
-          //  overwriting would corrupt the stored password)
-          if (Platform.isAndroid && ref.read(biometricEnabledProvider) && _passwordController.text.isNotEmpty) {
-            BiometricService().storePassword(widget.filePath, _passwordController.text);
+          // Store credentials only after successful manual unlock.
+          if (Platform.isAndroid &&
+              ref.read(biometricEnabledProvider) &&
+              !_lastUnlockUsedBiometric &&
+              _passwordController.text.isNotEmpty) {
+            BiometricService().storeCredentials(
+              widget.filePath,
+              _passwordController.text,
+              keyData: _keyData,
+              keyFileName: _keyFileName,
+            );
           }
           context.go('/explorer');
         }
@@ -96,7 +108,11 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                 brightness: Theme.of(context).brightness,
                 radius: 12,
               ),
-              child: Icon(Icons.settings_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+              child: Icon(
+                Icons.settings_rounded,
+                size: 20,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -134,18 +150,26 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.lock_rounded, size: 34, color: colorScheme.primary),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      size: 34,
+                      color: colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     _fileName,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     widget.isCloud ? l10n.cloudDatabase : widget.filePath,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -155,7 +179,9 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                     controller: _passwordController,
                     labelText: l10n.masterPassword,
                     autofocus: true,
-                    validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? l10n.pleaseEnterPassword
+                        : null,
                     onFieldSubmitted: (_) => _unlock(),
                   ),
                   const SizedBox(height: 14),
@@ -163,9 +189,14 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        color: colorScheme.errorContainer.withValues(alpha: 0.6),
+                        color: colorScheme.errorContainer.withValues(
+                          alpha: 0.6,
+                        ),
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
@@ -177,12 +208,19 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline_rounded, size: 18, color: colorScheme.error),
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 18,
+                            color: colorScheme.error,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               _error!,
-                              style: TextStyle(color: colorScheme.onErrorContainer, fontSize: 13),
+                              style: TextStyle(
+                                color: colorScheme.onErrorContainer,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -196,12 +234,18 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                             SizedBox(
                               width: 28,
                               height: 28,
-                              child: CircularProgressIndicator(strokeWidth: 2.5, color: colorScheme.primary),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: colorScheme.primary,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               l10n.decryptingFirstTimeSlow,
-                              style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         )
@@ -212,7 +256,9 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                                 borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ClayColors.primary.withValues(alpha: 0.3),
+                                    color: ClayColors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   ),
@@ -222,20 +268,28 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                                 onPressed: _unlock,
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(50),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
                                 ),
                                 child: Text(l10n.unlock),
                               ),
                             ),
-                            if (Platform.isAndroid && ref.watch(biometricEnabledProvider)) ...[
+                            if (Platform.isAndroid &&
+                                ref.watch(biometricEnabledProvider)) ...[
                               const SizedBox(height: 12),
                               OutlinedButton.icon(
                                 onPressed: _biometricUnlock,
-                                icon: const Icon(Icons.fingerprint_rounded, size: 24),
+                                icon: const Icon(
+                                  Icons.fingerprint_rounded,
+                                  size: 24,
+                                ),
                                 label: Text(l10n.unlockWithBiometric),
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size.fromHeight(50),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
                                 ),
                               ),
                             ],
@@ -252,33 +306,59 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
 
   void _unlock() {
     if (!_formKey.currentState!.validate()) return;
+    _lastUnlockUsedBiometric = false;
     setState(() => _error = null);
 
     // Password will be stored after successful unlock in the ref.listen callback
-    ref.read(databaseProvider.notifier).openFile(widget.filePath, _passwordController.text, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
+    ref
+        .read(databaseProvider.notifier)
+        .openFile(
+          widget.filePath,
+          _passwordController.text,
+          isCloud: widget.isCloud,
+          syncedETag: widget.syncedETag,
+          keyData: _keyData,
+        );
   }
 
   Future<void> _biometricUnlock() async {
     final l10n = AppLocalizations.of(context)!;
     final biometricService = BiometricService();
 
-    final authenticated = await biometricService.authenticate(l10n.authenticateToUnlock);
+    final authenticated = await biometricService.authenticate(
+      l10n.authenticateToUnlock,
+    );
     if (!authenticated) return;
 
-    final storedPassword = await biometricService.getStoredPassword(widget.filePath);
-    if (storedPassword == null) {
+    final storedCredentials = await biometricService.getStoredCredentials(
+      widget.filePath,
+    );
+    if (storedCredentials == null) {
       // No stored password, need to unlock with password first
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.noStoredPassword)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.noStoredPassword)));
       }
       return;
     }
 
     if (!mounted) return;
-    setState(() => _error = null);
-    ref.read(databaseProvider.notifier).openFile(widget.filePath, storedPassword, isCloud: widget.isCloud, syncedETag: widget.syncedETag, keyData: _keyData);
+    _lastUnlockUsedBiometric = true;
+    setState(() {
+      _error = null;
+      _keyData = storedCredentials.keyData;
+      _keyFileName = storedCredentials.keyFileName;
+    });
+    ref
+        .read(databaseProvider.notifier)
+        .openFile(
+          widget.filePath,
+          storedCredentials.password,
+          isCloud: widget.isCloud,
+          syncedETag: widget.syncedETag,
+          keyData: storedCredentials.keyData,
+        );
   }
 
   Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {
@@ -296,19 +376,29 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                 Expanded(
                   child: Text(
                     _keyFileName ?? l10n.keyFileSelected,
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   onPressed: () => setState(() {
                     _keyData = null;
                     _keyFileName = null;
                   }),
                   tooltip: l10n.removeKeyFile,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
                 ),
               ],
             ),
@@ -319,7 +409,9 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
             label: Text(l10n.selectKeyFile),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
           );
   }
@@ -354,12 +446,12 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   Future<void> _offerBackupRestore() async {
     final l10n = AppLocalizations.of(context)!;
     final backupService = BackupService();
-    final backups = await backupService.listBackups();
+    final backups = await backupService.listBackupsFor(widget.filePath);
     if (!mounted || backups.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.noBackupAvailable)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.noBackupAvailable)));
       }
       return;
     }
@@ -384,29 +476,31 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
 
     if (restore == true && mounted) {
       try {
-        final backupPath = await backupService.getBackupPath(backups.first.filename);
+        final backupPath = await backupService.getBackupPath(
+          backups.first.filename,
+        );
         if (backupPath == null) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.backupNotFound)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.backupNotFound)));
           }
           return;
         }
         final backupBytes = await File(backupPath).readAsBytes();
         await File(widget.filePath).writeAsBytes(backupBytes);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.backupRestored)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.backupRestored)));
           // Re-trigger unlock with the restored file
           _unlock();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.backupRestoreFailed)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.backupRestoreFailed)));
         }
       }
     }

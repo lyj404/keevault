@@ -53,7 +53,13 @@ class CsvService {
 
     // Detect delimiter
     final delimiter = _detectDelimiter(csvContent);
-    log.i('CSV import: detected delimiter: ${delimiter == '\t' ? 'TAB' : delimiter == '  ' ? 'SPACES' : delimiter}');
+    log.i(
+      'CSV import: detected delimiter: ${delimiter == '\t'
+          ? 'TAB'
+          : delimiter == '  '
+          ? 'SPACES'
+          : delimiter}',
+    );
 
     final rows = _parseCsvLines(csvContent, delimiter);
 
@@ -104,6 +110,10 @@ class CsvService {
 
   /// Parse CSV content into rows, handling quoted fields with embedded delimiters.
   static List<List<String>> _parseCsvLines(String content, String delimiter) {
+    if (delimiter == '  ') {
+      return _parseSpaceDelimitedLines(content);
+    }
+
     final lines = content.split('\n');
     final rows = <List<String>>[];
     List<String>? currentRow;
@@ -167,14 +177,36 @@ class CsvService {
 
     log.i('CSV import: manual parser returned ${rows.length} rows');
     if (rows.isNotEmpty) {
-      log.i('CSV import: first row has ${rows.first.length} columns: ${rows.first}');
+      log.i(
+        'CSV import: first row has ${rows.first.length} columns: ${rows.first}',
+      );
+    }
+    return rows;
+  }
+
+  static List<List<String>> _parseSpaceDelimitedLines(String content) {
+    final pattern = RegExp(r' {2,}');
+    final rows = <List<String>>[];
+    for (final line in content.split('\n')) {
+      if (line.trim().isEmpty) continue;
+      rows.add(line.split(pattern).map((cell) => cell.trim()).toList());
+    }
+    log.i('CSV import: space-delimited parser returned ${rows.length} rows');
+    if (rows.isNotEmpty) {
+      log.i(
+        'CSV import: first row has ${rows.first.length} columns: ${rows.first}',
+      );
     }
     return rows;
   }
 
   /// Create KDBX entries from parsed CSV entries.
   /// Returns the number of entries created.
-  int createEntries(List<CsvEntry> csvEntries, KdbxDatabase db, KdbxGroup targetGroup) {
+  int createEntries(
+    List<CsvEntry> csvEntries,
+    KdbxDatabase db,
+    KdbxGroup targetGroup,
+  ) {
     int count = 0;
     for (final csv in csvEntries) {
       // Resolve target group
@@ -187,7 +219,10 @@ class CsvService {
       entry.times = KdbxTimes.fromTime();
       entry.fields['Title'] = KdbxTextField.fromText(text: csv.title);
       entry.fields['UserName'] = KdbxTextField.fromText(text: csv.username);
-      entry.fields['Password'] = KdbxTextField.fromText(text: csv.password, protected: true);
+      entry.fields['Password'] = KdbxTextField.fromText(
+        text: csv.password,
+        protected: true,
+      );
       entry.fields['URL'] = KdbxTextField.fromText(text: csv.url);
       entry.fields['Notes'] = KdbxTextField.fromText(text: csv.notes);
 
@@ -244,10 +279,13 @@ class CsvService {
       String totp = '';
       final totpConfig = totpService.loadFromEntry(entry);
       if (totpConfig != null) {
-        final algo = totpConfig.algorithm == 'SHA1' ? 'SHA1'
-            : totpConfig.algorithm == 'SHA256' ? 'SHA256'
+        final algo = totpConfig.algorithm == 'SHA1'
+            ? 'SHA1'
+            : totpConfig.algorithm == 'SHA256'
+            ? 'SHA256'
             : 'SHA512';
-        totp = 'otpauth://totp/${Uri.encodeComponent(title)}'
+        totp =
+            'otpauth://totp/${Uri.encodeComponent(title)}'
             '?secret=${totpConfig.secret}'
             '&digits=${totpConfig.digits}'
             '&period=${totpConfig.period}'
@@ -317,27 +355,48 @@ class CsvService {
         m.title = i;
       }
       // Username
-      else if (h == 'username' || h == 'login_username' || h == 'user' || h == 'login') {
+      else if (h == 'username' ||
+          h == 'login_username' ||
+          h == 'user' ||
+          h == 'login') {
         m.username = i;
       }
       // Password
-      else if (h == 'password' || h == 'login_password' || h == 'pass' || h == 'passwd') {
+      else if (h == 'password' ||
+          h == 'login_password' ||
+          h == 'pass' ||
+          h == 'passwd') {
         m.password = i;
       }
       // URL
-      else if (h == 'url' || h == 'login_uri' || h == 'website' || h == 'web site' || h == 'uri') {
+      else if (h == 'url' ||
+          h == 'login_uri' ||
+          h == 'website' ||
+          h == 'web site' ||
+          h == 'uri') {
         m.url = i;
       }
       // Notes
-      else if (h == 'notes' || h == 'extra' || h == 'note' || h == 'comments' || h == 'comment') {
+      else if (h == 'notes' ||
+          h == 'extra' ||
+          h == 'note' ||
+          h == 'comments' ||
+          h == 'comment') {
         m.notes = i;
       }
       // Group/Folder
-      else if (h == 'group' || h == 'grouping' || h == 'folder' || h == 'folders' || h == 'path') {
+      else if (h == 'group' ||
+          h == 'grouping' ||
+          h == 'folder' ||
+          h == 'folders' ||
+          h == 'path') {
         m.group = i;
       }
       // TOTP
-      else if (h == 'totp' || h == 'otpauth' || h == 'login_totp' || h == 'otp') {
+      else if (h == 'totp' ||
+          h == 'otpauth' ||
+          h == 'login_totp' ||
+          h == 'otp') {
         m.totp = i;
       }
       // Unknown -> custom field
@@ -363,7 +422,9 @@ class CsvService {
 
     KdbxGroup current = root;
     for (final segment in segments) {
-      final existing = current.groups.where((g) => g.name == segment).firstOrNull;
+      final existing = current.groups
+          .where((g) => g.name == segment)
+          .firstOrNull;
       if (existing != null) {
         current = existing;
       } else {

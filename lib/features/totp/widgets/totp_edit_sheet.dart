@@ -69,9 +69,9 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
       });
     } else {
       final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.totpInvalidUri)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.totpInvalidUri)));
     }
   }
 
@@ -85,13 +85,17 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
   void _submit() {
     final secret = _secretCtrl.text.trim().replaceAll(' ', '');
     if (secret.isEmpty) return;
-    Navigator.pop(context, TotpEditResult(TotpConfig(
-      secret: secret,
-      period: _period,
-      digits: _digits,
-      algorithm: _algorithm,
-    )));
-
+    Navigator.pop(
+      context,
+      TotpEditResult(
+        TotpConfig(
+          secret: secret,
+          period: _period,
+          digits: _digits,
+          algorithm: _algorithm,
+        ),
+      ),
+    );
   }
 
   @override
@@ -105,7 +109,10 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.setupTotp, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            l10n.setupTotp,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           if (_isUriMode) ...[
             if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) ...[
@@ -158,11 +165,14 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    value: _period,
+                    initialValue: _period,
                     decoration: InputDecoration(
                       labelText: l10n.totpPeriodLabel,
                       border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                     ),
                     items: const [
                       DropdownMenuItem(value: 15, child: Text('15s')),
@@ -175,11 +185,14 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<int>(
-                    value: _digits,
+                    initialValue: _digits,
                     decoration: InputDecoration(
                       labelText: l10n.totpDigitsLabel,
                       border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                     ),
                     items: const [
                       DropdownMenuItem(value: 6, child: Text('6')),
@@ -192,16 +205,25 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _algorithm,
+              initialValue: _algorithm,
               decoration: InputDecoration(
                 labelText: l10n.totpAlgorithmLabel,
                 border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
               items: [
                 DropdownMenuItem(value: 'SHA1', child: Text(l10n.totpAlgoSha1)),
-                DropdownMenuItem(value: 'SHA256', child: Text(l10n.totpAlgoSha256)),
-                DropdownMenuItem(value: 'SHA512', child: Text(l10n.totpAlgoSha512)),
+                DropdownMenuItem(
+                  value: 'SHA256',
+                  child: Text(l10n.totpAlgoSha256),
+                ),
+                DropdownMenuItem(
+                  value: 'SHA512',
+                  child: Text(l10n.totpAlgoSha512),
+                ),
               ],
               onChanged: (v) => setState(() => _algorithm = v ?? 'SHA1'),
             ),

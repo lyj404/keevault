@@ -41,23 +41,45 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   children: [
                     // Auto-backup toggle
                     Container(
-                      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
+                      decoration: ClayDecoration.card(
+                        brightness: brightness,
+                        radius: 18,
+                      ),
                       padding: const EdgeInsets.all(18),
                       child: Row(
                         children: [
                           Container(
                             width: 38,
                             height: 38,
-                            decoration: ClayDecoration.iconContainer(brightness: brightness),
-                            child: Icon(Icons.sync_rounded, size: 20, color: colorScheme.primary),
+                            decoration: ClayDecoration.iconContainer(
+                              brightness: brightness,
+                            ),
+                            child: Icon(
+                              Icons.sync_rounded,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l10n.autoBackup, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
-                                Text(l10n.autoBackupDescription, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant)),
+                                Text(
+                                  l10n.autoBackup,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                Text(
+                                  l10n.autoBackupDescription,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -65,12 +87,15 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             data: (enabled) => Switch(
                               value: enabled,
                               onChanged: (v) async {
-                                await ref.read(backupServiceProvider).setAutoBackupEnabled(v);
+                                await ref
+                                    .read(backupServiceProvider)
+                                    .setAutoBackupEnabled(v);
                                 ref.invalidate(autoBackupEnabledProvider);
                               },
                               activeThumbColor: colorScheme.primary,
                             ),
-                            loading: () => const SizedBox(width: 48, height: 32),
+                            loading: () =>
+                                const SizedBox(width: 48, height: 32),
                             error: (_, __) => const SizedBox.shrink(),
                           ),
                         ],
@@ -79,22 +104,38 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     const SizedBox(height: 16),
                     // Retention count
                     Container(
-                      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
+                      decoration: ClayDecoration.card(
+                        brightness: brightness,
+                        radius: 18,
+                      ),
                       padding: const EdgeInsets.all(18),
                       child: Row(
                         children: [
                           Container(
                             width: 38,
                             height: 38,
-                            decoration: ClayDecoration.iconContainer(brightness: brightness),
-                            child: Icon(Icons.inventory_2_rounded, size: 20, color: colorScheme.primary),
+                            decoration: ClayDecoration.iconContainer(
+                              brightness: brightness,
+                            ),
+                            child: Icon(
+                              Icons.inventory_2_rounded,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l10n.backupRetention, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colorScheme.onSurface)),
+                                Text(
+                                  l10n.backupRetention,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -102,18 +143,25 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             data: (count) => DropdownButton<int>(
                               value: count,
                               underline: const SizedBox.shrink(),
-                              items: [3, 5, 10, 20].map((n) => DropdownMenuItem(
-                                value: n,
-                                child: Text(l10n.backupRetentionCount(n)),
-                              )).toList(),
+                              items: [3, 5, 10, 20]
+                                  .map(
+                                    (n) => DropdownMenuItem(
+                                      value: n,
+                                      child: Text(l10n.backupRetentionCount(n)),
+                                    ),
+                                  )
+                                  .toList(),
                               onChanged: (v) async {
                                 if (v != null) {
-                                  await ref.read(backupServiceProvider).setRetentionCount(v);
+                                  await ref
+                                      .read(backupServiceProvider)
+                                      .setRetentionCount(v);
                                   ref.invalidate(backupRetentionProvider);
                                 }
                               },
                             ),
-                            loading: () => const SizedBox(width: 48, height: 32),
+                            loading: () =>
+                                const SizedBox(width: 48, height: 32),
                             error: (_, __) => const SizedBox.shrink(),
                           ),
                         ],
@@ -133,12 +181,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         ],
                       ),
                       child: FilledButton.icon(
-                        onPressed: () => _createManualBackup(context),
+                        onPressed: _createManualBackup,
                         icon: const Icon(Icons.backup_rounded, size: 20),
                         label: Text(l10n.createBackupNow),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                         ),
                       ),
                     ),
@@ -155,28 +205,44 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.inventory_2_outlined, size: 48, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 48,
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
                             const SizedBox(height: 12),
-                            Text(l10n.noBackups, style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant)),
+                            Text(
+                              l10n.noBackups,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       );
                     }
                     return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
                       itemCount: backups.length,
                       itemBuilder: (ctx, i) {
                         final backup = backups[i];
                         return _BackupTile(
                           backup: backup,
                           brightness: brightness,
-                          onRestore: () => _restoreBackup(context, backup.filename),
-                          onDelete: () => _deleteBackup(context, backup.filename),
+                          onRestore: () => _restoreBackup(backup.filename),
+                          onDelete: () => _deleteBackup(backup.filename),
                         );
                       },
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(child: Text('${l10n.error}: $e')),
                 ),
               ),
@@ -187,22 +253,21 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  Future<void> _createManualBackup(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+  Future<void> _createManualBackup() async {
     final filePath = ref.read(databaseServiceProvider).filePath;
     if (filePath == null) return;
     final backup = await ref.read(backupServiceProvider).createBackup(filePath);
-    if (mounted) {
-      if (backup != null) {
-        showToast(context, l10n.backupCreated);
-      } else {
-        showToast(context, l10n.backupFailed);
-      }
-      ref.invalidate(backupListProvider);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (backup != null) {
+      showToast(context, l10n.backupCreated);
+    } else {
+      showToast(context, l10n.backupFailed);
     }
+    ref.invalidate(backupListProvider);
   }
 
-  Future<void> _restoreBackup(BuildContext context, String filename) async {
+  Future<void> _restoreBackup(String filename) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -210,59 +275,81 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         title: Text(l10n.restoreBackup),
         content: Text(l10n.restoreBackupConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.confirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.confirm),
+          ),
         ],
       ),
     );
     if (confirmed != true) return;
 
     final service = ref.read(databaseServiceProvider);
-    final backupPath = await ref.read(backupServiceProvider).getBackupPath(filename);
+    final notifier = ref.read(databaseProvider.notifier);
+    final backupPath = await ref
+        .read(backupServiceProvider)
+        .getBackupPath(filename);
+    if (!mounted) return;
     if (backupPath == null) {
-      if (mounted) showToast(context, l10n.backupNotFound);
+      showToast(context, l10n.backupNotFound);
       return;
     }
 
     // Backup current file before restoring
     if (service.filePath != null) {
       await ref.read(backupServiceProvider).createBackup(service.filePath!);
+      if (!mounted) return;
     }
 
     final bytes = await File(backupPath).readAsBytes();
     try {
-      await service.reloadFromBytes(bytes);
-      await service.save();
-      if (mounted) {
-        showToast(context, l10n.backupRestored);
-        ref.invalidate(backupListProvider);
+      final restored = await notifier.restoreBackupBytes(bytes);
+      if (!mounted) return;
+      showToast(
+        context,
+        restored ? l10n.backupRestored : l10n.syncFailed,
+        isError: !restored,
+      );
+      ref.invalidate(backupListProvider);
+      if (restored) {
         context.go('/explorer');
       }
     } on InvalidCredentialsError {
       // Backup was encrypted with a different password (likely changed after backup)
       if (!mounted) return;
-      final backupPassword = await _askBackupPassword(context);
+      final backupPassword = await _askBackupPassword();
       if (backupPassword == null) return;
       try {
-        await service.reloadFromBytes(bytes, password: backupPassword);
-        await service.save();
-        if (mounted) {
-          showToast(context, l10n.backupRestored);
-          ref.invalidate(backupListProvider);
+        final restored = await notifier.restoreBackupBytes(
+          bytes,
+          password: backupPassword,
+        );
+        if (!mounted) return;
+        showToast(
+          context,
+          restored ? l10n.backupRestored : l10n.syncFailed,
+          isError: !restored,
+        );
+        ref.invalidate(backupListProvider);
+        if (restored) {
           context.go('/explorer');
         }
       } catch (e) {
-        if (mounted) showToast(context, l10n.backupRestoreFailed, isError: true);
+        if (!mounted) return;
+        showToast(context, l10n.backupRestoreFailed, isError: true);
       }
     } catch (e) {
-      if (mounted) {
-        final msg = e is KdbxError ? e.message : e.toString();
-        showToast(context, '${l10n.backupRestoreFailed}: $msg', isError: true);
-      }
+      if (!mounted) return;
+      final msg = e is KdbxError ? e.message : e.toString();
+      showToast(context, '${l10n.backupRestoreFailed}: $msg', isError: true);
     }
   }
 
-  Future<String?> _askBackupPassword(BuildContext context) async {
+  Future<String?> _askBackupPassword() async {
     final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     return showDialog<String>(
@@ -275,22 +362,26 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           children: [
             Text(
               l10n.backupPasswordDifferent,
-              style: TextStyle(fontSize: 13, color: Theme.of(ctx).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               obscureText: true,
               autofocus: true,
-              decoration: InputDecoration(
-                hintText: l10n.backupPasswordHint,
-              ),
+              decoration: InputDecoration(hintText: l10n.backupPasswordHint),
               onSubmitted: (v) => Navigator.pop(ctx, v),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
             child: Text(l10n.confirm),
@@ -300,7 +391,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  Future<void> _deleteBackup(BuildContext context, String filename) async {
+  Future<void> _deleteBackup(String filename) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -308,17 +399,22 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         title: Text(l10n.deleteBackup),
         content: Text(l10n.deleteBackupConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.confirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.confirm),
+          ),
         ],
       ),
     );
     if (confirmed != true) return;
     await ref.read(backupServiceProvider).deleteBackup(filename);
-    if (mounted) {
-      showToast(context, l10n.backupDeleted);
-      ref.invalidate(backupListProvider);
-    }
+    if (!mounted) return;
+    showToast(context, l10n.backupDeleted);
+    ref.invalidate(backupListProvider);
   }
 }
 
@@ -358,8 +454,15 @@ class _BackupTile extends StatelessWidget {
                   Container(
                     width: 40,
                     height: 40,
-                    decoration: ClayDecoration.iconContainer(brightness: brightness, radius: 13),
-                    child: Icon(Icons.inventory_2_rounded, size: 20, color: colorScheme.primary),
+                    decoration: ClayDecoration.iconContainer(
+                      brightness: brightness,
+                      radius: 13,
+                    ),
+                    child: Icon(
+                      Icons.inventory_2_rounded,
+                      size: 20,
+                      color: colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -370,12 +473,19 @@ class _BackupTile extends StatelessWidget {
                           backup.filename,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: colorScheme.onSurface),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '$timeStr · $sizeStr',
-                          style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -394,7 +504,11 @@ class _BackupTile extends StatelessWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
                         onTap: onRestore,
-                        child: Icon(Icons.settings_backup_restore_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                        child: Icon(
+                          Icons.settings_backup_restore_rounded,
+                          size: 18,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),
@@ -413,7 +527,11 @@ class _BackupTile extends StatelessWidget {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(10),
                         onTap: onDelete,
-                        child: Icon(Icons.delete_outline_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                        child: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),

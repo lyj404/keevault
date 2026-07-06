@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
@@ -27,7 +26,9 @@ bool isCorruptionError(Object e) {
       msg.contains('invalid header') ||
       msg.contains('dataerror') ||
       msg.contains('format') && msg.contains('invalid') ||
-      (e is InvalidCredentialsError == false && msg.contains('invalid') && msg.contains('key'));
+      (e is InvalidCredentialsError == false &&
+          msg.contains('invalid') &&
+          msg.contains('key'));
 }
 
 /// Pre-computed lowercase text for an entry, used for fast search.
@@ -39,6 +40,7 @@ class SearchResult {
   final List<int> matchPositions;
   const SearchResult(this.entry, this.score, this.matchPositions);
 }
+
 class _SearchRecord {
   final KdbxEntry entry;
   final String title;
@@ -49,15 +51,23 @@ class _SearchRecord {
   final List<String> tags;
 
   _SearchRecord(this.entry)
-      : title = (entry.fields['Title']?.text ?? '').toLowerCase(),
-        username = (entry.fields['UserName']?.text ?? '').toLowerCase(),
-        url = (entry.fields['URL']?.text ?? '').toLowerCase(),
-        notes = (entry.fields['Notes']?.text ?? '').toLowerCase(),
-        customFields = entry.fields.entries
-            .where((e) => !['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key))
-            .map((e) => e.value.text.toLowerCase())
-            .toList(),
-        tags = (entry.tags ?? []).map((t) => t.toLowerCase()).toList();
+    : title = (entry.fields['Title']?.text ?? '').toLowerCase(),
+      username = (entry.fields['UserName']?.text ?? '').toLowerCase(),
+      url = (entry.fields['URL']?.text ?? '').toLowerCase(),
+      notes = (entry.fields['Notes']?.text ?? '').toLowerCase(),
+      customFields = entry.fields.entries
+          .where(
+            (e) => ![
+              'Title',
+              'UserName',
+              'Password',
+              'URL',
+              'Notes',
+            ].contains(e.key),
+          )
+          .map((e) => e.value.text.toLowerCase())
+          .toList(),
+      tags = (entry.tags ?? []).map((t) => t.toLowerCase()).toList();
 
   /// Returns the best fuzzy match score across all fields, or null if no match.
   FuzzyMatchResult? matchScore(String query) {
@@ -77,12 +87,17 @@ class _SearchRecord {
     consider(url);
     consider(notes);
     // Custom fields & tags
-    for (final f in customFields) { consider(f); }
-    for (final t in tags) { consider(t); }
+    for (final f in customFields) {
+      consider(f);
+    }
+    for (final t in tags) {
+      consider(t);
+    }
 
     return best;
   }
 }
+
 class DatabaseService {
   final _backupService = BackupService();
   KdbxDatabase? _db;
@@ -100,7 +115,8 @@ class DatabaseService {
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
   RemoteFileInfo? get lastSyncedRemoteInfo => _lastSyncedRemoteInfo;
-  void setLastSyncedRemoteInfo(RemoteFileInfo? info) => _lastSyncedRemoteInfo = info;
+  void setLastSyncedRemoteInfo(RemoteFileInfo? info) =>
+      _lastSyncedRemoteInfo = info;
 
   KdbxDatabase? get db => _db;
   String? get filePath => _filePath;
@@ -115,6 +131,7 @@ class DatabaseService {
     _dirty = true;
     onDirtyChanged?.call(true);
   }
+
   void markClean() {
     _dirty = false;
     onDirtyChanged?.call(false);
@@ -125,7 +142,9 @@ class DatabaseService {
 
   void _rebuildEntryCache() {
     _allEntriesCache = _db?.root.allEntries.toList();
-    log.d('[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}');
+    log.d(
+      '[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}',
+    );
     _rebuildSearchIndex();
   }
 
@@ -155,7 +174,11 @@ class DatabaseService {
 
   /// Loads a KDBX database in a background isolate to avoid blocking the UI.
   /// The isolate initializes its own crypto engine (FFI if available, pure Dart fallback).
-  static Future<KdbxDatabase> _loadDatabase(Uint8List bytes, String password, {Uint8List? keyData}) async {
+  static Future<KdbxDatabase> _loadDatabase(
+    Uint8List bytes,
+    String password, {
+    Uint8List? keyData,
+  }) async {
     return await Isolate.run(() {
       CryptoService.initialize();
       final credentials = KdbxCredentials(
@@ -166,7 +189,11 @@ class DatabaseService {
     });
   }
 
-  Future<KdbxDatabase> openFile(String filePath, String password, {Uint8List? keyData}) async {
+  Future<KdbxDatabase> openFile(
+    String filePath,
+    String password, {
+    Uint8List? keyData,
+  }) async {
     log.i('Opening database: $filePath');
     final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
     _preloadedBytes = null;
@@ -190,7 +217,12 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<KdbxDatabase> createDatabase(String name, String password, String filePath, {Uint8List? keyData}) async {
+  Future<KdbxDatabase> createDatabase(
+    String name,
+    String password,
+    String filePath, {
+    Uint8List? keyData,
+  }) async {
     log.i('Creating database: $name -> $filePath');
     final credentials = KdbxCredentials(
       password: ProtectedData.fromString(password),
@@ -208,7 +240,10 @@ class DatabaseService {
     return _db!;
   }
 
-  Future<KdbxDatabase> reloadFromBytes(Uint8List bytes, {String? password}) async {
+  Future<KdbxDatabase> reloadFromBytes(
+    Uint8List bytes, {
+    String? password,
+  }) async {
     final pw = password ?? _password;
     if (pw == null) throw Exception('no_password_cannot_reload');
     _db = await _loadDatabase(bytes, pw, keyData: _keyData);
@@ -231,15 +266,19 @@ class DatabaseService {
     if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
     final db = _db!;
-    final bytes = Uint8List.fromList(await Isolate.run(() {
-      CryptoService.initialize();
-      return db.save();
-    }) as List<int>);
+    final bytes = Uint8List.fromList(
+      await Isolate.run(() {
+        CryptoService.initialize();
+        return db.save();
+      }),
+    );
     if (await _backupService.isAutoBackupEnabled()) {
-      unawaited(_backupService.createBackup(_filePath!).catchError((e) {
-        log.e('Auto-backup failed', error: e);
-        return null;
-      }));
+      unawaited(
+        _backupService.createBackup(_filePath!).catchError((e) {
+          log.e('Auto-backup failed', error: e);
+          return null;
+        }),
+      );
     }
     await File(_filePath!).writeAsBytes(bytes);
     _lastSavedBytes = bytes;
@@ -273,10 +312,12 @@ class DatabaseService {
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
     final db = _db!;
-    final bytes = Uint8List.fromList(await Isolate.run(() {
-      CryptoService.initialize();
-      return db.save();
-    }) as List<int>);
+    final bytes = Uint8List.fromList(
+      await Isolate.run(() {
+        CryptoService.initialize();
+        return db.save();
+      }),
+    );
     return bytes;
   }
 
@@ -330,7 +371,9 @@ class DatabaseService {
     for (final entry in allEntries) {
       if (entry.uuid == uuid) return entry;
     }
-    log.w('[DatabaseService] findEntryByUuid MISS uuid=${uuid.string} cacheSize=${allEntries.length}');
+    log.w(
+      '[DatabaseService] findEntryByUuid MISS uuid=${uuid.string} cacheSize=${allEntries.length}',
+    );
     return null;
   }
 
@@ -357,7 +400,9 @@ class DatabaseService {
       if (segment.isEmpty) continue;
       current = current?.groups.where((g) => g.name == segment).firstOrNull;
       if (current == null) {
-        log.w('[DatabaseService] findGroupByPath MISS path="$path" failed at segment="$segment"');
+        log.w(
+          '[DatabaseService] findGroupByPath MISS path="$path" failed at segment="$segment"',
+        );
         return null;
       }
     }
@@ -379,25 +424,23 @@ class DatabaseService {
   /// Does NOT save to disk — caller should invoke save() afterwards.
   /// If [updateKeyFile] is true, [newKeyData] will be used (null means remove key file).
   /// If [updateKeyFile] is false, the existing key file is preserved.
-  void changePassword(String oldPassword, String newPassword, {bool updateKeyFile = false, Uint8List? newKeyData}) {
+  void changePassword(
+    String oldPassword,
+    String newPassword, {
+    bool updateKeyFile = false,
+    Uint8List? newKeyData,
+  }) {
     if (_db == null) throw Exception('database_not_open');
-    // Verify old password by attempting to create valid credentials
-    // instead of comparing plain-text password in memory.
-    try {
-      final keyData = updateKeyFile ? newKeyData : _keyData;
-      KdbxCredentials(
-        password: ProtectedData.fromString(oldPassword),
-        keyData: keyData,
-      );
-      // Credentials creation succeeded, update to new password.
-      _db!.header.credentials = KdbxCredentials(
-        password: ProtectedData.fromString(newPassword),
-        keyData: keyData,
-      );
-      _keyData = keyData;
-    } catch (e) {
+    if (_password != oldPassword) {
       throw const InvalidCredentialsError('invalid key');
     }
+    final keyData = updateKeyFile ? newKeyData : _keyData;
+    _db!.header.credentials = KdbxCredentials(
+      password: ProtectedData.fromString(newPassword),
+      keyData: keyData,
+    );
+    _password = newPassword;
+    _keyData = keyData;
     markDirty();
     log.i('Master password changed');
   }

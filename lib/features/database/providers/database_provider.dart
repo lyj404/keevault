@@ -28,9 +28,10 @@ final recentFilesServiceProvider = Provider<RecentFilesService>((ref) {
   return RecentFilesService();
 });
 
-final databaseProvider = StateNotifierProvider<DatabaseNotifier, AsyncValue<KdbxDatabase?>>((ref) {
-  return DatabaseNotifier(ref);
-});
+final databaseProvider =
+    StateNotifierProvider<DatabaseNotifier, AsyncValue<KdbxDatabase?>>((ref) {
+      return DatabaseNotifier(ref);
+    });
 
 class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   final Ref _ref;
@@ -51,30 +52,54 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<void> preloadFile(String filePath) => _service.preloadFile(filePath);
 
-  Future<void> openFile(String filePath, String password, {bool isCloud = false, String? syncedETag, Uint8List? keyData}) async {
+  Future<void> openFile(
+    String filePath,
+    String password, {
+    bool isCloud = false,
+    String? syncedETag,
+    Uint8List? keyData,
+  }) async {
     state = const AsyncValue.loading();
     try {
       final db = await _service.openFile(filePath, password, keyData: keyData);
       String? remotePath;
       String? eTag = syncedETag;
+      DateTime? remoteMTime;
       if (isCloud) {
-        final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+        final config = await _ref
+            .read(webDavSettingsServiceProvider)
+            .getConfig();
         if (config != null && config.enabled) {
           remotePath = config.remoteFilePath;
           if (syncedETag != null) {
             // Welcome screen already verified eTag, reuse it directly
             _service.setLastSyncedRemoteInfo(RemoteFileInfo(eTag: syncedETag));
           } else {
-            final info = await _ref.read(syncServiceProvider).getRemoteFileInfo(config);
+            final info = await _ref
+                .read(syncServiceProvider)
+                .getRemoteFileInfo(config);
             _service.setLastSyncedRemoteInfo(info);
             eTag = info?.eTag;
+            remoteMTime = info?.mTime;
           }
         }
       }
       final recentSvc = _ref.read(recentFilesServiceProvider);
       await Future.wait([
-        recentSvc.addRecentFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
-        recentSvc.setLastOpenedFile(filePath, isCloud: isCloud, remotePath: remotePath, lastSyncedETag: eTag),
+        recentSvc.addRecentFile(
+          filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          lastSyncedETag: eTag,
+          lastSyncedMTime: remoteMTime,
+        ),
+        recentSvc.setLastOpenedFile(
+          filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          lastSyncedETag: eTag,
+          lastSyncedMTime: remoteMTime,
+        ),
       ]);
       _ref.read(openedFromCloudProvider.notifier).state = isCloud;
       state = AsyncValue.data(db);
@@ -85,10 +110,20 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     }
   }
 
-  Future<void> createDatabase(String name, String password, String filePath, {Uint8List? keyData}) async {
+  Future<void> createDatabase(
+    String name,
+    String password,
+    String filePath, {
+    Uint8List? keyData,
+  }) async {
     state = const AsyncValue.loading();
     try {
-      final db = await _service.createDatabase(name, password, filePath, keyData: keyData);
+      final db = await _service.createDatabase(
+        name,
+        password,
+        filePath,
+        keyData: keyData,
+      );
       final recentSvc = _ref.read(recentFilesServiceProvider);
       await Future.wait([
         recentSvc.addRecentFile(filePath),
@@ -109,16 +144,16 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     final bytes = await _service.save();
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
     // Only sync to cloud if the current database was opened from or created as a cloud database
-    if (config != null && config.enabled && _ref.read(openedFromCloudProvider)) {
+    if (config != null &&
+        config.enabled &&
+        _ref.read(openedFromCloudProvider)) {
       _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
       try {
         final syncService = _ref.read(syncServiceProvider);
         // Conflict detection: check if remote changed since last sync
         final remoteInfo = await syncService.getRemoteFileInfo(config);
         final lastInfo = _service.lastSyncedRemoteInfo;
-        if (remoteInfo != null && lastInfo != null &&
-            remoteInfo.eTag != null && lastInfo.eTag != null &&
-            remoteInfo.eTag != lastInfo.eTag) {
+        if (_hasRemoteChanged(remoteInfo, lastInfo)) {
           _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
           return false;
         }
@@ -137,10 +172,24 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         if (newInfo?.eTag != null && _service.filePath != null) {
           final recentSvc = _ref.read(recentFilesServiceProvider);
           final existing = await recentSvc.getRecentFiles();
-          final wasCloud = existing.any((f) => f.path == _service.filePath && f.isCloud);
+          final wasCloud = existing.any(
+            (f) => f.path == _service.filePath && f.isCloud,
+          );
           await Future.wait([
-            recentSvc.addRecentFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: newInfo!.eTag),
-            recentSvc.setLastOpenedFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: newInfo.eTag),
+            recentSvc.addRecentFile(
+              _service.filePath!,
+              isCloud: wasCloud,
+              remotePath: config.remoteFilePath,
+              lastSyncedETag: newInfo!.eTag,
+              lastSyncedMTime: newInfo.mTime,
+            ),
+            recentSvc.setLastOpenedFile(
+              _service.filePath!,
+              isCloud: wasCloud,
+              remotePath: config.remoteFilePath,
+              lastSyncedETag: newInfo.eTag,
+              lastSyncedMTime: newInfo.mTime,
+            ),
           ]);
         }
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
@@ -170,12 +219,45 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       await syncService.uploadDatabase(config, bytes);
       final newInfo = await syncService.getRemoteFileInfo(config);
       _service.setLastSyncedRemoteInfo(newInfo);
+      if (newInfo?.eTag != null && _service.filePath != null) {
+        final recentSvc = _ref.read(recentFilesServiceProvider);
+        await Future.wait([
+          recentSvc.addRecentFile(
+            _service.filePath!,
+            isCloud: true,
+            remotePath: config.remoteFilePath,
+            lastSyncedETag: newInfo!.eTag,
+            lastSyncedMTime: newInfo.mTime,
+          ),
+          recentSvc.setLastOpenedFile(
+            _service.filePath!,
+            isCloud: true,
+            remotePath: config.remoteFilePath,
+            lastSyncedETag: newInfo.eTag,
+            lastSyncedMTime: newInfo.mTime,
+          ),
+        ]);
+      }
       _ref.read(syncStateProvider.notifier).state = SyncState.success;
       _lastSyncError = null;
     } catch (e) {
       _lastSyncError = e;
       _ref.read(syncStateProvider.notifier).state = SyncState.error;
     }
+  }
+
+  Future<bool> restoreBackupBytes(Uint8List bytes, {String? password}) async {
+    final db = await _service.reloadFromBytes(bytes, password: password);
+    await _service.save();
+    state = AsyncValue.data(db);
+    _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
+
+    if (_ref.read(openedFromCloudProvider)) {
+      await forceUpload();
+      return _ref.read(syncStateProvider) == SyncState.success;
+    }
+
+    return true;
   }
 
   Future<void> saveAs(String newPath) async {
@@ -195,7 +277,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<void> reloadFromCloud() async {
     final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
-    if (config == null || !config.enabled) throw Exception('please_configure_webdav');
+    if (config == null || !config.enabled) {
+      throw Exception('please_configure_webdav');
+    }
     final syncService = _ref.read(syncServiceProvider);
     final result = await syncService.downloadWithInfo(config);
     if (result == null) throw Exception('cloud_database_not_exist');
@@ -206,10 +290,24 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     if (_service.filePath != null) {
       final recentSvc = _ref.read(recentFilesServiceProvider);
       final existing = await recentSvc.getRecentFiles();
-      final wasCloud = existing.any((f) => f.path == _service.filePath && f.isCloud);
+      final wasCloud = existing.any(
+        (f) => f.path == _service.filePath && f.isCloud,
+      );
       await Future.wait([
-        recentSvc.addRecentFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
-        recentSvc.setLastOpenedFile(_service.filePath!, isCloud: wasCloud, remotePath: config.remoteFilePath, lastSyncedETag: result.info.eTag),
+        recentSvc.addRecentFile(
+          _service.filePath!,
+          isCloud: wasCloud,
+          remotePath: config.remoteFilePath,
+          lastSyncedETag: result.info.eTag,
+          lastSyncedMTime: result.info.mTime,
+        ),
+        recentSvc.setLastOpenedFile(
+          _service.filePath!,
+          isCloud: wasCloud,
+          remotePath: config.remoteFilePath,
+          lastSyncedETag: result.info.eTag,
+          lastSyncedMTime: result.info.mTime,
+        ),
       ]);
     }
   }
@@ -223,12 +321,32 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     final lastInfo = _service.lastSyncedRemoteInfo;
     if (remoteInfo == null || lastInfo == null) return false;
-    return remoteInfo.eTag != null && lastInfo.eTag != null &&
-           remoteInfo.eTag != lastInfo.eTag;
+    return _hasRemoteChanged(remoteInfo, lastInfo);
   }
 
-  Future<void> changePassword(String oldPassword, String newPassword, {bool updateKeyFile = false, Uint8List? newKeyData}) async {
-    _service.changePassword(oldPassword, newPassword, updateKeyFile: updateKeyFile, newKeyData: newKeyData);
+  bool _hasRemoteChanged(RemoteFileInfo? remoteInfo, RemoteFileInfo? lastInfo) {
+    if (remoteInfo == null || lastInfo == null) return false;
+    if (remoteInfo.eTag != null && lastInfo.eTag != null) {
+      return remoteInfo.eTag != lastInfo.eTag;
+    }
+    if (remoteInfo.mTime != null && lastInfo.mTime != null) {
+      return remoteInfo.mTime != lastInfo.mTime;
+    }
+    return false;
+  }
+
+  Future<void> changePassword(
+    String oldPassword,
+    String newPassword, {
+    bool updateKeyFile = false,
+    Uint8List? newKeyData,
+  }) async {
+    _service.changePassword(
+      oldPassword,
+      newPassword,
+      updateKeyFile: updateKeyFile,
+      newKeyData: newKeyData,
+    );
     // Save + sync to cloud if enabled.
     await save();
   }

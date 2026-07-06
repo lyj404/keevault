@@ -7,8 +7,9 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/providers/settings_provider.dart';
+import '../../sync/data/sync_service.dart'
+    show RemoteFileInfo, SyncException, SyncErrorType;
 import '../../sync/providers/sync_provider.dart';
-import '../../sync/data/sync_service.dart' show SyncException, SyncErrorType;
 import '../providers/database_provider.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
@@ -72,10 +73,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (!mounted) return;
     if (remoteInfo != null) {
-      final lastETag = file.lastSyncedETag;
-      if (exists && lastETag != null && remoteInfo.eTag != null && lastETag == remoteInfo.eTag) {
+      if (_isCachedCopyCurrent(file, remoteInfo) && exists) {
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
+        final query = _buildCloudUnlockQuery(file.path, remoteInfo);
+        context.push('/unlock$query');
         return;
       }
       final l10n = AppLocalizations.of(context)!;
@@ -86,28 +87,50 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       );
       try {
         final localPath = await syncService.downloadToLocal(config);
-        if (remoteInfo.eTag != null) {
-          final recentService = ref.read(recentFilesServiceProvider);
-          await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
-          await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
-        }
+        final recentService = ref.read(recentFilesServiceProvider);
+        await recentService.addRecentFile(
+          localPath,
+          isCloud: true,
+          remotePath: config.remoteFilePath,
+          lastSyncedETag: remoteInfo.eTag,
+          lastSyncedMTime: remoteInfo.mTime,
+        );
+        await recentService.setLastOpenedFile(
+          localPath,
+          isCloud: true,
+          remotePath: config.remoteFilePath,
+          lastSyncedETag: remoteInfo.eTag,
+          lastSyncedMTime: remoteInfo.mTime,
+        );
         if (mounted) Navigator.of(context).pop();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          final etagParam = remoteInfo.eTag != null ? '&etag=${Uri.encodeComponent(remoteInfo.eTag!)}' : '';
-          context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
+          context.push(_buildCloudUnlockQuery(localPath, remoteInfo));
         }
       } catch (e) {
         _autoOpened = false;
         if (mounted) Navigator.of(context).pop();
-        if (mounted) {
+        if (mounted && exists) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
+          context.push(
+            '/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true',
+          );
+        } else if (mounted) {
+          _showErrorDialog(context, _translateDownloadError(e, l10n));
         }
       }
     } else {
-      ref.read(openedFromCloudProvider.notifier).state = true;
-      context.push('/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true');
+      if (exists) {
+        ref.read(openedFromCloudProvider.notifier).state = true;
+        context.push(
+          '/unlock?path=${Uri.encodeComponent(file.path)}&cloud=true',
+        );
+      } else {
+        _showErrorDialog(
+          context,
+          AppLocalizations.of(context)!.cloudDatabaseNotExist,
+        );
+      }
     }
   }
 
@@ -125,7 +148,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 48,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -164,7 +190,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         label: Text(l10n.openLocalDatabase),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                         ),
                       ),
                     ),
@@ -176,7 +204,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       label: Text(l10n.createNewDatabase),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -187,7 +217,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       label: Text(l10n.openCloudDatabase),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
                       ),
                     ),
 
@@ -211,7 +243,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                                   const Spacer(),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: colorScheme.primaryContainer,
                                       borderRadius: BorderRadius.circular(10),
@@ -227,21 +262,36 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              ...files.map((file) => _RecentFileTile(
-                                    recentFile: file,
-                                    onTap: () {
-                                      if (file.isCloud) {
-                                        ref.read(openedFromCloudProvider.notifier).state = true;
-                                        _downloadFromWebDav(context, recentFile: file);
-                                      } else {
-                                        context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
-                                      }
-                                    },
-                                    onRemove: () async {
-                                      await ref.read(recentFilesServiceProvider).removeRecentFile(file.path);
-                                      ref.invalidate(recentFilesProvider);
-                                    },
-                                  )),
+                              ...files.map(
+                                (file) => _RecentFileTile(
+                                  recentFile: file,
+                                  onTap: () {
+                                    if (file.isCloud) {
+                                      ref
+                                              .read(
+                                                openedFromCloudProvider
+                                                    .notifier,
+                                              )
+                                              .state =
+                                          true;
+                                      _downloadFromWebDav(
+                                        context,
+                                        recentFile: file,
+                                      );
+                                    } else {
+                                      context.push(
+                                        '/unlock?path=${Uri.encodeComponent(file.path)}',
+                                      );
+                                    }
+                                  },
+                                  onRemove: () async {
+                                    await ref
+                                        .read(recentFilesServiceProvider)
+                                        .removeRecentFile(file.path);
+                                    ref.invalidate(recentFilesProvider);
+                                  },
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -268,7 +318,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     brightness: Theme.of(context).brightness,
                     radius: 12,
                   ),
-                  child: Icon(Icons.settings_rounded, size: 20, color: colorScheme.primary),
+                  child: Icon(
+                    Icons.settings_rounded,
+                    size: 20,
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
             ),
@@ -285,12 +339,17 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
     if (result != null && result.files.single.path != null) {
       if (context.mounted) {
-        context.push('/unlock?path=${Uri.encodeComponent(result.files.single.path!)}');
+        context.push(
+          '/unlock?path=${Uri.encodeComponent(result.files.single.path!)}',
+        );
       }
     }
   }
 
-  Future<void> _downloadFromWebDav(BuildContext context, {RecentFile? recentFile}) async {
+  Future<void> _downloadFromWebDav(
+    BuildContext context, {
+    RecentFile? recentFile,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final config = await ref.read(webDavSettingsServiceProvider).getConfig();
     if (config == null || !config.enabled) {
@@ -311,17 +370,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     // eTag check: skip download if local cache is already up-to-date
     // Always look up latest from service to avoid stale etag from cached provider
-    final recentFiles = await ref.read(recentFilesServiceProvider).getRecentFiles();
-    var cachedFile = recentFiles.where((f) => f.isCloud && f.remotePath == config.remoteFilePath).firstOrNull;
+    final recentFiles = await ref
+        .read(recentFilesServiceProvider)
+        .getRecentFiles();
+    var cachedFile = recentFiles
+        .where((f) => f.isCloud && f.remotePath == config.remoteFilePath)
+        .firstOrNull;
     if (cachedFile != null && cachedFile.isCloud) {
       final localFile = File(cachedFile.path);
       final exists = await localFile.exists();
-      if (exists && cachedFile.lastSyncedETag != null && remoteInfo.eTag != null &&
-          cachedFile.lastSyncedETag == remoteInfo.eTag) {
+      if (exists && _isCachedCopyCurrent(cachedFile, remoteInfo)) {
         // Local cache is current, open directly
         ref.read(openedFromCloudProvider.notifier).state = true;
         if (context.mounted) {
-          context.push('/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
+          context.push(_buildCloudUnlockQuery(cachedFile.path, remoteInfo));
         }
         return;
       }
@@ -335,24 +397,65 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
     try {
       final localPath = await syncService.downloadToLocal(config);
-      if (remoteInfo.eTag != null) {
-        final recentService = ref.read(recentFilesServiceProvider);
-        await recentService.addRecentFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
-        await recentService.setLastOpenedFile(localPath, isCloud: true, remotePath: config.remoteFilePath, lastSyncedETag: remoteInfo.eTag);
-      }
+      final recentService = ref.read(recentFilesServiceProvider);
+      await recentService.addRecentFile(
+        localPath,
+        isCloud: true,
+        remotePath: config.remoteFilePath,
+        lastSyncedETag: remoteInfo.eTag,
+        lastSyncedMTime: remoteInfo.mTime,
+      );
+      await recentService.setLastOpenedFile(
+        localPath,
+        isCloud: true,
+        remotePath: config.remoteFilePath,
+        lastSyncedETag: remoteInfo.eTag,
+        lastSyncedMTime: remoteInfo.mTime,
+      );
       ref.invalidate(recentFilesProvider);
       if (context.mounted) {
         Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;
-        final etagParam = remoteInfo.eTag != null ? '&etag=${Uri.encodeComponent(remoteInfo.eTag!)}' : '';
-        context.push('/unlock?path=${Uri.encodeComponent(localPath)}&cloud=true$etagParam');
+        context.push(_buildCloudUnlockQuery(localPath, remoteInfo));
       }
     } catch (e) {
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        _showErrorDialog(context, _translateDownloadError(e, l10n));
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+      if (cachedFile != null) {
+        final cachedLocalFile = File(cachedFile.path);
+        final cachedExists = await cachedLocalFile.exists();
+        if (!context.mounted) return;
+        if (cachedExists) {
+          ref.read(openedFromCloudProvider.notifier).state = true;
+          context.push(
+            '/unlock?path=${Uri.encodeComponent(cachedFile.path)}&cloud=true',
+          );
+          return;
+        }
       }
+      if (!context.mounted) return;
+      _showErrorDialog(context, _translateDownloadError(e, l10n));
     }
+  }
+
+  bool _isCachedCopyCurrent(RecentFile file, RemoteFileInfo remoteInfo) {
+    if (file.lastSyncedETag != null && remoteInfo.eTag != null) {
+      return file.lastSyncedETag == remoteInfo.eTag;
+    }
+    if (file.lastSyncedMTime != null && remoteInfo.mTime != null) {
+      return file.lastSyncedMTime == remoteInfo.mTime;
+    }
+    return false;
+  }
+
+  String _buildCloudUnlockQuery(String path, RemoteFileInfo remoteInfo) {
+    final query = StringBuffer(
+      '/unlock?path=${Uri.encodeComponent(path)}&cloud=true',
+    );
+    if (remoteInfo.eTag != null) {
+      query.write('&etag=${Uri.encodeComponent(remoteInfo.eTag!)}');
+    }
+    return query.toString();
   }
 
   void _showErrorDialog(BuildContext context, String message) {
@@ -376,7 +479,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             },
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Text(l10n.goToSettings),
           ),
@@ -427,7 +532,10 @@ class _SyncLoadingDialog extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             ),
             const SizedBox(height: 16),
-            Text(message, style: TextStyle(fontSize: 14, color: colorScheme.onSurface)),
+            Text(
+              message,
+              style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
+            ),
           ],
         ),
       ),
@@ -440,7 +548,11 @@ class _RecentFileTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
-  const _RecentFileTile({required this.recentFile, required this.onTap, required this.onRemove});
+  const _RecentFileTile({
+    required this.recentFile,
+    required this.onTap,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -452,10 +564,7 @@ class _RecentFileTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
-        decoration: ClayDecoration.card(
-          brightness: brightness,
-          radius: 16,
-        ),
+        decoration: ClayDecoration.card(brightness: brightness, radius: 16),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
@@ -474,9 +583,13 @@ class _RecentFileTile extends StatelessWidget {
                       radius: 12,
                     ),
                     child: Icon(
-                      recentFile.isCloud ? Icons.cloud_rounded : Icons.description_rounded,
+                      recentFile.isCloud
+                          ? Icons.cloud_rounded
+                          : Icons.description_rounded,
                       size: 18,
-                      color: recentFile.isCloud ? Colors.teal : colorScheme.primary,
+                      color: recentFile.isCloud
+                          ? Colors.teal
+                          : colorScheme.primary,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -488,7 +601,11 @@ class _RecentFileTile extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: colorScheme.onSurface),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -497,7 +614,10 @@ class _RecentFileTile extends StatelessWidget {
                               : recentFile.path,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -510,7 +630,11 @@ class _RecentFileTile extends StatelessWidget {
                       onTap: onRemove,
                       child: Padding(
                         padding: const EdgeInsets.all(6),
-                        child: Icon(Icons.close_rounded, size: 15, color: colorScheme.outline),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 15,
+                          color: colorScheme.outline,
+                        ),
                       ),
                     ),
                   ),

@@ -4,7 +4,11 @@ import '../../l10n/app_localizations.dart';
 
 /// Shows a dialog to pick a target group from the group tree.
 /// Returns the selected [KdbxGroup] on confirm, or null if cancelled.
-Future<KdbxGroup?> showMoveToGroupDialog(BuildContext context, {required KdbxDatabase db, KdbxGroup? excludeGroup}) async {
+Future<KdbxGroup?> showMoveToGroupDialog(
+  BuildContext context, {
+  required KdbxDatabase db,
+  KdbxGroup? excludeGroup,
+}) async {
   return showDialog<KdbxGroup>(
     context: context,
     builder: (_) => _MoveToGroupDialog(db: db, excludeGroup: excludeGroup),
@@ -41,9 +45,14 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
         FilledButton(
-          onPressed: _selected != null ? () => Navigator.pop(context, _selected) : null,
+          onPressed: _selected != null
+              ? () => Navigator.pop(context, _selected)
+              : null,
           child: Text(l10n.move),
         ),
       ],
@@ -75,17 +84,24 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
         padding: EdgeInsets.only(left: 8.0 + depth * 20, right: 8),
         child: Row(
           children: [
-            Radio<KdbxGroup>(
-              value: group,
-              groupValue: _selected,
-              onChanged: (v) => setState(() => _selected = v),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
+            SizedBox(
+              width: 24,
+              child: Icon(
+                isSelected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 20,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+              ),
             ),
             Icon(
               isRoot ? Icons.folder_open_rounded : Icons.folder_rounded,
               size: 18,
-              color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -96,7 +112,9 @@ class _MoveToGroupDialogState extends State<_MoveToGroupDialog> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
                 ),
               ),
             ),

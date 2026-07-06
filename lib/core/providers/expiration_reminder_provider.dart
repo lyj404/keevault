@@ -8,7 +8,6 @@ const reminderThresholdOptions = [0, 1, 3, 7, 14, 30]; // days, 0 = disabled
 class ExpirationReminderNotifier extends StateNotifier<int> {
   static const _storage = SecureStorageHelper();
   static const _key = 'expiration_reminder_days';
-  static const _lastCheckKey = 'expiration_reminder_last_check';
 
   ExpirationReminderNotifier() : super(0) {
     _load();
@@ -30,7 +29,8 @@ class ExpirationReminderNotifier extends StateNotifier<int> {
     if (state <= 0) return;
 
     // Throttle: only check once per day
-    final lastCheck = await _storage.read(key: _lastCheckKey);
+    final lastCheckKey = _lastCheckKeyFor(db);
+    final lastCheck = await _storage.read(key: lastCheckKey);
     final now = DateTime.now();
     if (lastCheck != null) {
       final lastDate = DateTime.tryParse(lastCheck);
@@ -53,20 +53,27 @@ class ExpirationReminderNotifier extends StateNotifier<int> {
       }
     }
 
-    await _storage.write(key: _lastCheckKey, value: now.toIso8601String());
+    await _storage.write(key: lastCheckKey, value: now.toIso8601String());
 
     if (expiring.isEmpty && expired.isEmpty) return;
 
     final title = _buildTitle(expiring.length, expired.length);
     final body = _buildBody(expiring, expired);
 
-    await NotificationService().showExpiryNotification(title: title, body: body);
+    await NotificationService().showExpiryNotification(
+      title: title,
+      body: body,
+    );
   }
 
   String _buildTitle(int expiringCount, int expiredCount) {
     final parts = <String>[];
-    if (expiredCount > 0) parts.add('$expiredCount password(s) expired');
-    if (expiringCount > 0) parts.add('$expiringCount password(s) expiring soon');
+    if (expiredCount > 0) {
+      parts.add('$expiredCount password(s) expired');
+    }
+    if (expiringCount > 0) {
+      parts.add('$expiringCount password(s) expiring soon');
+    }
     return parts.join(', ');
   }
 
@@ -83,11 +90,17 @@ class ExpirationReminderNotifier extends StateNotifier<int> {
     if (total > 6) result += ' and ${total - 6} more';
     return result;
   }
+
+  String _lastCheckKeyFor(KdbxDatabase db) {
+    final rootUuid = db.root.uuid.string;
+    return 'expiration_reminder_last_check_$rootUuid';
+  }
 }
 
-final expirationReminderProvider = StateNotifierProvider<ExpirationReminderNotifier, int>((ref) {
-  return ExpirationReminderNotifier();
-});
+final expirationReminderProvider =
+    StateNotifierProvider<ExpirationReminderNotifier, int>((ref) {
+      return ExpirationReminderNotifier();
+    });
 
 final reminderThresholdOptionsProvider = Provider<List<int>>((ref) {
   return reminderThresholdOptions;
