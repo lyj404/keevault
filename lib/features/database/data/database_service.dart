@@ -183,7 +183,7 @@ class DatabaseService {
     log.d(
       '[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}',
     );
-    _rebuildSearchIndex();
+    _searchIndex = null;
   }
 
   void _rebuildSearchIndex() {
@@ -417,8 +417,11 @@ class DatabaseService {
 
   List<SearchResult> search(String query) {
     if (_db == null || query.isEmpty) return [];
-    final index = _searchIndex;
-    if (index == null) return [];
+    if (_searchIndex == null) {
+      log.d('[DatabaseService] building search index lazily');
+      _rebuildSearchIndex();
+    }
+    final index = _searchIndex ?? const <_SearchRecord>[];
     final results = <SearchResult>[];
     for (final record in index) {
       final match = record.matchScore(query);

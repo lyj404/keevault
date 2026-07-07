@@ -91,31 +91,37 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       } else {
         _currentWebDavProfileId = null;
       }
-      final recentSvc = _ref.read(recentFilesServiceProvider);
-      await Future.wait([
-        recentSvc.addRecentFile(
-          filePath,
-          isCloud: isCloud,
-          remotePath: remotePath,
-          webDavProfileId: _currentWebDavProfileId,
-          lastSyncedETag: eTag,
-          lastSyncedMTime: remoteMTime,
-        ),
-        recentSvc.setLastOpenedFile(
-          filePath,
-          isCloud: isCloud,
-          remotePath: remotePath,
-          webDavProfileId: _currentWebDavProfileId,
-          lastSyncedETag: eTag,
-          lastSyncedMTime: remoteMTime,
-        ),
-      ]);
       _ref.read(openedFromCloudProvider.notifier).state = isCloud;
       if (!isCloud) {
         _currentWebDavProfileId = null;
       }
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
+      unawaited(
+        (() async {
+          final recentSvc = _ref.read(recentFilesServiceProvider);
+          await Future.wait([
+            recentSvc.addRecentFile(
+              filePath,
+              isCloud: isCloud,
+              remotePath: remotePath,
+              webDavProfileId: _currentWebDavProfileId,
+              lastSyncedETag: eTag,
+              lastSyncedMTime: remoteMTime,
+            ),
+            recentSvc.setLastOpenedFile(
+              filePath,
+              isCloud: isCloud,
+              remotePath: remotePath,
+              webDavProfileId: _currentWebDavProfileId,
+              lastSyncedETag: eTag,
+              lastSyncedMTime: remoteMTime,
+            ),
+          ]);
+        })().catchError((e, st) {
+          log.w('Failed to update recent files after open: ' + e.toString());
+        }),
+      );
       _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
