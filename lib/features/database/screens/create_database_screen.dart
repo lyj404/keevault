@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/key_file_picker.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/database_provider.dart';
@@ -193,61 +194,11 @@ class _CreateDatabaseScreenState extends ConsumerState<CreateDatabaseScreen> {
   }
 
   Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {
-    return _keyData != null
-        ? Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.key_rounded, size: 18, color: colorScheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _keyFileName ?? l10n.keyFileSelected,
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close_rounded, size: 18, color: colorScheme.onSurfaceVariant),
-                  onPressed: () => setState(() {
-                    _keyData = null;
-                    _keyFileName = null;
-                  }),
-                  tooltip: l10n.removeKeyFile,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                ),
-              ],
-            ),
-          )
-        : OutlinedButton.icon(
-            onPressed: _pickKeyFile,
-            icon: const Icon(Icons.vpn_key_rounded, size: 18),
-            label: Text(l10n.selectKeyFile),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            ),
-          );
-  }
-
-  Future<void> _pickKeyFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      withData: true,
+    return KeyFilePicker(
+      keyData: _keyData,
+      keyFileName: _keyFileName,
+      onKeyDataChanged: (data) => setState(() => _keyData = data),
+      onKeyNameChanged: (name) => setState(() => _keyFileName = name),
     );
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.first;
-      if (file.bytes != null) {
-        setState(() {
-          _keyData = file.bytes;
-          _keyFileName = file.name;
-        });
-      }
-    }
   }
 }

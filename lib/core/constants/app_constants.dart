@@ -4,4 +4,7 @@ class AppConstants {
   static const maxRecentFiles = 10;
   static const appName = 'KeeVault';
   static const kdbxExtension = '.kdbx';
+  
+  /// Standard KDBX field keys.
+  static const standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 }

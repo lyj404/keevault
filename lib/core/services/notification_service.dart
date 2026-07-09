@@ -1,8 +1,10 @@
-import 'dart:ffi';
 import 'dart:io';
-import 'package:ffi/ffi.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:win32/win32.dart';
+
+// Conditional import - only import Windows-specific code on Windows
+import 'notification_service_stub.dart'
+    if (dart.library.io) 'notification_service_windows.dart'
+    as windows;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -10,6 +12,7 @@ class NotificationService {
   NotificationService._();
 
   final _plugin = FlutterLocalNotificationsPlugin();
+  final _windowsHelper = windows.WindowsNotificationHelper();
   bool _initialized = false;
 
   Future<void> init() async {
@@ -53,7 +56,7 @@ class NotificationService {
     if (!_initialized) await init();
 
     if (Platform.isWindows) {
-      _showWindowsBalloon(title, body);
+      _windowsHelper.showBalloon(title, body);
       return;
     }
 
@@ -91,75 +94,8 @@ class NotificationService {
     }
   }
 
-  /// Windows: Shell_NotifyIcon
-  void _showWindowsBalloon(String title, String body) {
-    final hInstance = GetModuleHandle(nullptr);
-    const className = 'KeeVaultNotifyWnd';
-    final classNamePtr = className.toNativeUtf16();
-    final windowTitlePtr = 'KeeVault Notify'.toNativeUtf16();
-    final wc = calloc<WNDCLASS>();
-    Pointer<NOTIFYICONDATA>? nid;
-    int hWnd = 0;
-
-    try {
-      wc.ref.lpfnWndProc = Pointer.fromFunction(NotificationService._defWindowProc, 0);
-      wc.ref.hInstance = hInstance;
-      wc.ref.lpszClassName = classNamePtr;
-      RegisterClass(wc);
-
-      hWnd = CreateWindowEx(
-        0,
-        classNamePtr,
-        windowTitlePtr,
-        0,
-        0, 0, 0, 0,
-        HWND_MESSAGE,
-        0,
-        hInstance,
-        nullptr,
-      );
-
-      if (hWnd == 0) return;
-
-      nid = calloc<NOTIFYICONDATA>();
-      nid.ref.cbSize = sizeOf<NOTIFYICONDATA>();
-      nid.ref.hWnd = hWnd;
-      nid.ref.uID = 1;
-      nid.ref.uFlags = NIF_INFO;
-      nid.ref.dwInfoFlags = NIIF_INFO;
-      nid.ref.Anonymous.uTimeout = 10000;
-      nid.ref.szInfoTitle = title;
-      nid.ref.szInfo = body;
-
-      Shell_NotifyIcon(NIM_ADD, nid);
-      Shell_NotifyIcon(NIM_DELETE, nid);
-    } finally {
-      if (nid != null) calloc.free(nid);
-      if (hWnd != 0) DestroyWindow(hWnd);
-      UnregisterClass(classNamePtr, hInstance);
-      calloc.free(wc);
-      calloc.free(classNamePtr);
-      calloc.free(windowTitlePtr);
-    }
-  }
-
-  /// Windows API callback - static method to prevent GC issues.
-  static int _defWindowProc(int hWnd, int uMsg, int wParam, int lParam) {
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
-  }
-
-  /// Linux: notify-send
+  /// Linux: use flutter_local_notifications plugin instead of spawning a process.
   Future<void> _showLinuxNotification(String title, String body) async {
-    try {
-      final result = await Process.run('notify-send', [
-        '--app-name=KeeVault',
-        '--urgency=normal',
-        title,
-        body,
-      ]);
-      if (result.exitCode == 0) return;
-    } catch (_) {}
-
     try {
       await _plugin.show(
         0,
@@ -169,6 +105,20 @@ class NotificationService {
           linux: LinuxNotificationDetails(),
         ),
       );
-    } catch (_) {}
+    } catch (_) {
+      // Fallback to notify-send if plugin fails
+      try {
+        await Process.run('notify-send', [
+          '--app-name=KeeVault',
+          '--urgency=normal',
+          title,
+          body,
+        ]);
+      } catch (_) {}
+    }
+  }
+
+  void dispose() {
+    _windowsHelper.dispose();
   }
 }

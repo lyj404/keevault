@@ -20,13 +20,22 @@ final allTagsProvider = Provider<List<String>>((ref) {
   final db = ref.watch(databaseProvider).valueOrNull;
   if (db == null) return [];
   final service = ref.read(databaseServiceProvider);
-  final tags = <String>{};
-  for (final entry in service.allEntries) {
-    final entryTags = entry.tags;
-    if (entryTags != null) tags.addAll(entryTags);
-  }
-  final sorted = tags.toList()..sort();
+  final sorted = service.allTags.toList()..sort();
   return sorted;
+});
+
+/// Whether a save operation is currently in progress.
+final isSavingProvider = StateProvider<bool>((ref) => false);
+
+/// Whether the current group is the recycle bin.
+final isRecycleBinProvider = Provider<bool>((ref) {
+  final group = ref.watch(currentGroupProvider);
+  if (group == null) return false;
+  final db = ref.watch(databaseProvider).valueOrNull;
+  if (db == null) return false;
+  final recycleBinUuid = db.meta.recycleBinUuid;
+  if (recycleBinUuid == null) return false;
+  return group.uuid == recycleBinUuid;
 });
 
 /// Entries for the current group, filtered by the selected tag.

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/clipboard_utils.dart';
+import '../../../core/widgets/confirm_dialogs.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
 import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -152,9 +153,10 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     final breadcrumbs = ref.watch(breadcrumbProvider);
     final isWide = MediaQuery.sizeOf(context).width >= 700;
     final service = ref.read(databaseServiceProvider);
-    final isRecycleBin = _isInRecycleBin(currentGroup);
+    final isRecycleBin = ref.watch(isRecycleBinProvider);
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);
     final isDirty = ref.watch(isDirtyProvider);
+    final isSaving = ref.watch(isSavingProvider);
     final selectedEntry = ref.watch(selectedEntryProvider);
     final isMultiSelect = ref.watch(isMultiSelectModeProvider);
     final selectedEntries = ref.watch(selectedEntriesProvider);
@@ -202,6 +204,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
           isCloudOfflineMode: isCloudOfflineMode,
           cloudOfflineReason: cloudOfflineReason,
           isDirty: isDirty,
+          isSaving: isSaving,
           onGroupTap: (group) {
             ref.read(selectedEntryProvider.notifier).state = null;
             ref.read(activeEntryProvider.notifier).state = null;
@@ -290,6 +293,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
         isCloudOfflineMode: isCloudOfflineMode,
         cloudOfflineReason: cloudOfflineReason,
         isDirty: isDirty,
+        isSaving: isSaving,
         onGroupTap: (group) {
           ref.read(selectedEntryProvider.notifier).state = null;
           ref.read(activeEntryProvider.notifier).state = null;
@@ -371,74 +375,40 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     );
   }
 
-  void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
+  void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    final confirmed = await showMoveToRecycleBinDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteEntry),
-        content: Text(l10n.moveToRecycleBin),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-              visualDensity: VisualDensity.compact,
-            ),
-            onPressed: () {
-              ref.read(databaseServiceProvider).deleteItem(entry);
-              refreshExplorerLists(ref);
-              Navigator.pop(ctx);
-              if (context.mounted) showToast(context, l10n.movedToRecycleBin);
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.deleteEntry,
+      message: l10n.moveToRecycleBin,
     );
+    if (confirmed) {
+      ref.read(databaseServiceProvider).deleteItem(entry);
+      refreshExplorerLists(ref);
+      if (context.mounted) showToast(context, l10n.movedToRecycleBin);
+    }
   }
 
   void _permanentDeleteEntry(
     BuildContext context,
     WidgetRef ref,
     KdbxEntry entry,
-  ) {
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    final confirmed = await showPermanentDeleteDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.permanentDelete),
-        content: Text(l10n.permanentDeleteConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-              visualDensity: VisualDensity.compact,
-            ),
-            onPressed: () {
-              final db = ref.read(databaseServiceProvider).db;
-              if (db != null) {
-                db.move(item: entry, target: null);
-                ref.read(databaseServiceProvider).markDirty();
-              }
-              refreshExplorerLists(ref);
-              Navigator.pop(ctx);
-              if (context.mounted) showToast(context, l10n.permanentlyDeleted);
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.permanentDelete,
+      message: l10n.permanentDeleteConfirm,
     );
+    if (confirmed) {
+      final db = ref.read(databaseServiceProvider).db;
+      if (db != null) {
+        db.move(item: entry, target: null);
+        ref.read(databaseServiceProvider).markDirty();
+      }
+      refreshExplorerLists(ref);
+      if (context.mounted) showToast(context, l10n.permanentlyDeleted);
+    }
   }
 
   void _restoreEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) {
@@ -469,39 +439,22 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     BuildContext context,
     WidgetRef ref,
     KdbxGroup group,
-  ) {
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    final confirmed = await showPermanentDeleteDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.permanentDelete),
-        content: Text(l10n.permanentDeleteConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-              visualDensity: VisualDensity.compact,
-            ),
-            onPressed: () {
-              final db = ref.read(databaseServiceProvider).db;
-              if (db != null) {
-                db.move(item: group, target: null);
-                ref.read(databaseServiceProvider).markDirty();
-              }
-              refreshExplorerLists(ref);
-              Navigator.pop(ctx);
-              if (context.mounted) showToast(context, l10n.permanentlyDeleted);
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.permanentDelete,
+      message: l10n.permanentDeleteConfirm,
     );
+    if (confirmed) {
+      final db = ref.read(databaseServiceProvider).db;
+      if (db != null) {
+        db.move(item: group, target: null);
+        ref.read(databaseServiceProvider).markDirty();
+      }
+      refreshExplorerLists(ref);
+      if (context.mounted) showToast(context, l10n.permanentlyDeleted);
+    }
   }
 
   Future<void> _moveEntry(
@@ -525,39 +478,22 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     }
   }
 
-  void _deleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
+  void _deleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) async {
     final l10n = AppLocalizations.of(context)!;
     if (group.entries.isNotEmpty || group.groups.isNotEmpty) {
       showToast(context, l10n.cannotDeleteNonEmptyGroup, isError: true);
       return;
     }
-    showDialog(
+    final confirmed = await showMoveToRecycleBinDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteGroup),
-        content: Text(l10n.deleteGroupConfirm(group.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-              visualDensity: VisualDensity.compact,
-            ),
-            onPressed: () {
-              ref.read(databaseServiceProvider).deleteItem(group);
-              refreshExplorerLists(ref);
-              Navigator.pop(ctx);
-              if (context.mounted) showToast(context, l10n.movedToRecycleBin);
-            },
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.deleteGroup,
+      message: l10n.deleteGroupConfirm(group.name),
     );
+    if (confirmed) {
+      ref.read(databaseServiceProvider).deleteItem(group);
+      refreshExplorerLists(ref);
+      if (context.mounted) showToast(context, l10n.movedToRecycleBin);
+    }
   }
 
   void _renameGroup(BuildContext context, WidgetRef ref, KdbxGroup group) {
@@ -603,15 +539,6 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     );
   }
 
-  bool _isInRecycleBin(KdbxGroup? group) {
-    KdbxGroup? current = group;
-    while (current != null) {
-      if (current.icon == KdbxIcon.trashBin) return true;
-      current = current.parent;
-    }
-    return false;
-  }
-
   VoidCallback? _popPath(WidgetRef ref) {
     final breadcrumbs = ref.read(breadcrumbProvider);
     if (breadcrumbs.length <= 1) return null;
@@ -622,16 +549,22 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     };
   }
 
-  void _save(BuildContext context, WidgetRef ref) {
+  void _save(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    ref.read(databaseProvider.notifier).save().then((success) {
+    final isSaving = ref.read(isSavingProvider.notifier);
+    isSaving.state = true;
+    
+    try {
+      final success = await ref.read(databaseProvider.notifier).save();
       if (!context.mounted) return;
       if (success) {
         showToast(context, l10n.saved);
       } else {
         _showConflictDialog(context, ref);
       }
-    });
+    } finally {
+      isSaving.state = false;
+    }
   }
 
   void _showConflictDialog(BuildContext context, WidgetRef ref) {
@@ -1160,28 +1093,12 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     final l10n = AppLocalizations.of(context)!;
     final selected = ref.read(selectedEntriesProvider);
     if (selected.isEmpty) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showMoveToRecycleBinDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.batchDelete),
-        content: Text(l10n.batchDeleteConfirm(selected.length)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+      title: l10n.batchDelete,
+      message: l10n.batchDeleteConfirm(selected.length),
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final service = ref.read(databaseServiceProvider);
     for (final entry in selected) {
       service.deleteItem(entry);

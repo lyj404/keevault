@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/password_generator_dialog.dart';
+import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
 import '../../explorer/providers/explorer_provider.dart';
 import '../../totp/data/totp_service.dart';
 import '../../totp/widgets/totp_edit_sheet.dart';
-
-const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
 class EntryEditScreen extends ConsumerStatefulWidget {
   final String? entryUuid;
@@ -125,7 +124,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
   void _loadCustomFields(KdbxEntry entry) {
     for (final e in entry.fields.entries) {
-      if (_standardKeys.contains(e.key)) continue;
+      if (AppConstants.standardKeys.contains(e.key)) continue;
       _customFields.add(_CustomFieldData(
         originalKey: e.key,
         name: e.key,
@@ -728,7 +727,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         showToast(context, l10n.fieldNameEmpty, isError: true);
         return;
       }
-      if (_standardKeys.contains(name)) {
+      if (AppConstants.standardKeys.contains(name)) {
         showToast(context, l10n.fieldNameReserved(name), isError: true);
         return;
       }
@@ -754,7 +753,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     // Save custom fields
     final currentKeys = names;
     final keysToRemove = entry.fields.keys
-        .where((k) => !_standardKeys.contains(k) && !currentKeys.contains(k))
+        .where((k) => !AppConstants.standardKeys.contains(k) && !currentKeys.contains(k))
         .toList();
     for (final key in keysToRemove) {
       entry.fields.remove(key);
@@ -798,13 +797,8 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
-      child: Column(
-        children: children,
-      ),
+    return SectionCard(
+      children: children,
     );
   }
 }

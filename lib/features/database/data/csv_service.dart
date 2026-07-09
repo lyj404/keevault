@@ -1,9 +1,8 @@
 import 'package:csv/csv.dart';
 import 'package:kpasslib/kpasslib.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/logger.dart';
 import '../../totp/data/totp_service.dart';
-
-const _standardKeys = {'Title', 'UserName', 'Password', 'URL', 'Notes'};
 
 /// A parsed entry from CSV, ready to be imported into KDBX.
 class CsvEntry {
@@ -229,7 +228,7 @@ class CsvService {
       // Custom fields
       final totpService = TotpService();
       for (final e in csv.customFields.entries) {
-        if (!_standardKeys.contains(e.key) && e.value.isNotEmpty) {
+        if (!AppConstants.standardKeys.contains(e.key) && e.value.isNotEmpty) {
           if (e.key == 'TOTP') {
             final config = totpService.parseUri(e.value);
             if (config != null) {
@@ -256,7 +255,7 @@ class CsvService {
 
     for (final entry in entries) {
       for (final key in entry.fields.keys) {
-        if (!_standardKeys.contains(key) && key != 'TOTP') {
+        if (!AppConstants.standardKeys.contains(key) && key != 'TOTP') {
           customHeaders.add(key);
         }
       }

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
+import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/providers/database_provider.dart';
@@ -361,7 +361,6 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
     final visibleChildren = children.where((c) {
       if (c is _FieldRow && c.value.isEmpty) return false;
       if (c is _PasswordField && c.value.isEmpty) return false;
@@ -370,28 +369,22 @@ class _SectionCard extends StatelessWidget {
 
     if (visibleChildren.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < visibleChildren.length; i++) ...[
-            if (i > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Divider(
-                  height: 1,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.15),
-                ),
+    return SectionCard(
+      children: [
+        for (int i = 0; i < visibleChildren.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Divider(
+                height: 1,
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.15),
               ),
-            visibleChildren[i],
-          ],
+            ),
+          visibleChildren[i],
         ],
-      ),
+      ],
     );
   }
 }

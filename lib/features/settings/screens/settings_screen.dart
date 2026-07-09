@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/widgets/password_text_field.dart';
+import '../../../core/widgets/section_card.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/widgets/change_password_dialog.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -1339,10 +1340,8 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
-      padding: const EdgeInsets.all(18),
-      child: child,
+    return SectionCard(
+      children: [child],
     );
   }
 }

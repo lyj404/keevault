@@ -144,6 +144,7 @@ class DatabaseService {
   Uint8List? _preloadedBytes;
   String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
+  Set<String>? _tagsCache;
   List<_SearchRecord>? _searchIndex;
   Uint8List? _lastSavedBytes;
   int? _lastSavedHash;
@@ -164,11 +165,14 @@ class DatabaseService {
   void Function(bool isDirty)? onDirtyChanged;
 
   void markDirty() {
-    if (_db != null) {
-      _rebuildEntryCache();
-    }
     _dirty = true;
     onDirtyChanged?.call(true);
+  }
+
+  void _ensureCacheFresh() {
+    if (_allEntriesCache == null && _db != null) {
+      _rebuildEntryCache();
+    }
   }
 
   void markClean() {
@@ -177,10 +181,26 @@ class DatabaseService {
   }
 
   /// All entries in a flat cached list. Rebuilt on open/create/mutation.
-  List<KdbxEntry> get allEntries => _allEntriesCache ?? [];
+  List<KdbxEntry> get allEntries {
+    _ensureCacheFresh();
+    return _allEntriesCache ?? [];
+  }
+
+  /// All unique tags across the entire database, sorted alphabetically.
+  Set<String> get allTags {
+    if (_tagsCache == null) {
+      _tagsCache = <String>{};
+      for (final entry in allEntries) {
+        final entryTags = entry.tags;
+        if (entryTags != null) _tagsCache!.addAll(entryTags);
+      }
+    }
+    return _tagsCache!;
+  }
 
   void _rebuildEntryCache() {
     _allEntriesCache = _db?.root.allEntries.toList();
+    _tagsCache = null;
     log.d(
       '[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}',
     );
@@ -384,15 +404,15 @@ class DatabaseService {
   KdbxEntry createEntry(KdbxGroup parent) {
     final entry = _db!.createEntry(parent: parent);
     entry.times = KdbxTimes.fromTime();
+    _allEntriesCache = null;
     markDirty();
-    _rebuildEntryCache();
     return entry;
   }
 
   void deleteItem(KdbxItem item) {
     _db!.remove(item);
+    _allEntriesCache = null;
     markDirty();
-    _rebuildEntryCache();
   }
 
   /// Restores an item from the recycle bin to its previous parent group.
@@ -404,15 +424,15 @@ class DatabaseService {
     final target = _db!.getGroup(uuid: prevUuid);
     if (target == null) return false;
     _db!.move(item: item, target: target);
+    _allEntriesCache = null;
     markDirty();
-    _rebuildEntryCache();
     return true;
   }
 
   void moveItem(KdbxItem item, KdbxGroup target) {
     _db!.move(item: item, target: target);
+    _allEntriesCache = null;
     markDirty();
-    _rebuildEntryCache();
   }
 
   KdbxEntry? findEntryByUuid(KdbxUuid uuid) {

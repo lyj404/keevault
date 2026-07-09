@@ -10,6 +10,7 @@ class _WideLayout extends StatelessWidget {
   final bool isCloudOfflineMode;
   final String? cloudOfflineReason;
   final bool isDirty;
+  final bool isSaving;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
   final ValueChanged<KdbxEntry> onEntryOpen;
@@ -52,6 +53,7 @@ class _WideLayout extends StatelessWidget {
     required this.isCloudOfflineMode,
     required this.cloudOfflineReason,
     required this.isDirty,
+    required this.isSaving,
     required this.onGroupTap,
     required this.onEntrySelect,
     required this.onEntryOpen,
@@ -275,6 +277,7 @@ class _WideLayout extends StatelessWidget {
                           tooltip: l10n.save,
                           onPressed: onSave,
                           showDot: isDirty,
+                          isLoading: isSaving,
                         ),
                         PopupMenuButton<String>(
                           tooltip: l10n.more,
@@ -444,12 +447,14 @@ class _ToolbarButton extends StatelessWidget {
   final String tooltip;
   final VoidCallback? onPressed;
   final bool showDot;
+  final bool isLoading;
 
   const _ToolbarButton({
     required this.icon,
     required this.tooltip,
     this.onPressed,
     this.showDot = false,
+    this.isLoading = false,
   });
 
   @override
@@ -464,19 +469,28 @@ class _ToolbarButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: IconButton(
-        icon: showDot
-            ? Badge(
-                smallSize: 6,
-                backgroundColor: colorScheme.primary,
-                child: Icon(
-                  icon,
-                  size: 20,
+        icon: isLoading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
                   color: colorScheme.onSurfaceVariant,
                 ),
               )
-            : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+            : showDot
+                ? Badge(
+                    smallSize: 6,
+                    backgroundColor: colorScheme.primary,
+                    child: Icon(
+                      icon,
+                      size: 20,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         tooltip: tooltip,
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: IconButton.styleFrom(
           minimumSize: const Size(34, 34),
           padding: EdgeInsets.zero,
@@ -636,6 +650,7 @@ class _NarrowLayout extends ConsumerStatefulWidget {
   final bool isCloudOfflineMode;
   final String? cloudOfflineReason;
   final bool isDirty;
+  final bool isSaving;
   final ValueChanged<KdbxGroup> onGroupTap;
   final ValueChanged<KdbxEntry> onEntrySelect;
   final ValueChanged<KdbxEntry> onEntryOpen;
@@ -677,6 +692,7 @@ class _NarrowLayout extends ConsumerStatefulWidget {
     required this.isCloudOfflineMode,
     required this.cloudOfflineReason,
     required this.isDirty,
+    required this.isSaving,
     required this.onGroupTap,
     required this.onEntrySelect,
     required this.onEntryOpen,
@@ -722,6 +738,7 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -913,15 +930,24 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
           onPressed: () => ref.read(mobileTabIndexProvider.notifier).state = 2,
         ),
         IconButton(
-          icon: widget.isDirty
-              ? Badge(
-                  smallSize: 6,
-                  backgroundColor: colorScheme.primary,
-                  child: const Icon(Icons.save_outlined, size: 20),
+          icon: widget.isSaving
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 )
-              : const Icon(Icons.save_outlined, size: 20),
+              : widget.isDirty
+                  ? Badge(
+                      smallSize: 6,
+                      backgroundColor: colorScheme.primary,
+                      child: const Icon(Icons.save_outlined, size: 20),
+                    )
+                  : const Icon(Icons.save_outlined, size: 20),
           tooltip: l10n.save,
-          onPressed: widget.onSave,
+          onPressed: widget.isSaving ? null : widget.onSave,
         ),
         PopupMenuButton<String>(
           tooltip: l10n.more,
@@ -1030,11 +1056,18 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
           filled: false,
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
         ),
-        onChanged: (v) {
-          ref.read(searchQueryProvider.notifier).state = v;
-        },
+        onChanged: _onSearchChanged,
       ),
     );
+  }
+
+  Timer? _searchDebounce;
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      ref.read(searchQueryProvider.notifier).state = value;
+    });
   }
 
   Widget _buildBody(

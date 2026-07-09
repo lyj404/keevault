@@ -20,6 +20,8 @@ class EntryListTile extends StatelessWidget {
   final bool isChecked;
   final bool draggable;
 
+  static final _totpService = TotpService();
+
   const EntryListTile({super.key, required this.entry, this.isSelected = false, this.onTap, this.onOpen, this.onDelete, this.onRestore, this.onMove, this.query, this.showCheckbox = false, this.isChecked = false, this.draggable = false});
 
   String get _title => entry.fields['Title']?.text ?? '';
@@ -28,9 +30,9 @@ class EntryListTile extends StatelessWidget {
   bool get _isExpired => entry.times.expires && entry.times.expiry.time != null && entry.times.expiry.time!.isBefore(DateTime.now());
 
   String? _getTotpCode() {
-    final config = TotpService().loadFromEntry(entry);
+    final config = _totpService.loadFromEntry(entry);
     if (config == null) return null;
-    return TotpService().generateCode(config);
+    return _totpService.generateCode(config);
   }
 
 
