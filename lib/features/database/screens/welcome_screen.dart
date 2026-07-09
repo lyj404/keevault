@@ -83,7 +83,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           remoteInfo,
           file.webDavProfileId,
         );
-        context.push('/unlock$query');
+        context.push(query);
         return;
       }
       final l10n = AppLocalizations.of(context)!;
