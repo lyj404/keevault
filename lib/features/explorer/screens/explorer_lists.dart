@@ -1,15 +1,23 @@
 part of 'explorer_screen.dart';
 
-class _BreadcrumbBar extends StatelessWidget {
+class _BreadcrumbBar extends ConsumerWidget {
   final List<String> breadcrumbs;
   const _BreadcrumbBar({required this.breadcrumbs});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final service = ref.read(databaseServiceProvider);
+    final recycleBinName = service.recycleBinName;
     final displayNames = [
-      for (final b in breadcrumbs) b == 'Root' ? l10n.rootDirectory : b,
+      for (final b in breadcrumbs)
+        if (b == 'Root')
+          l10n.rootDirectory
+        else if (recycleBinName != null && b == recycleBinName)
+          l10n.recycleBin
+        else
+          b,
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

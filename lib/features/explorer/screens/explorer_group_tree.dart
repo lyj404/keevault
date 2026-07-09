@@ -107,10 +107,13 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
     final isSelected = group == widget.currentGroup;
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-    final isTrashGroup = group.icon == KdbxIcon.trashBin;
+    final l10n = AppLocalizations.of(context)!;
+    final service = ref.read(databaseServiceProvider);
+    final isTrashGroup = service.isRecycleBinGroup(group);
     final canDelete = depth > 0 && !isTrashGroup;
     final hasChildren = group.groups.isNotEmpty;
     final isExpanded = _expanded.contains(group);
+    final displayName = isTrashGroup ? l10n.recycleBin : group.name;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -190,7 +193,7 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      group.name,
+                      displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

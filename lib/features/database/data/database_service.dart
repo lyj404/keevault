@@ -198,6 +198,24 @@ class DatabaseService {
 
   void rebuildEntryCache() => _rebuildEntryCache();
 
+  /// Returns true if the given group is the recycle bin group.
+  bool isRecycleBinGroup(KdbxGroup group) {
+    final recycleBinUuid = _db?.meta.recycleBinUuid;
+    return recycleBinUuid != null && group.uuid == recycleBinUuid;
+  }
+
+  /// Returns the name of the recycle bin group, or null if no recycle bin exists.
+  String? get recycleBinName {
+    final recycleBinUuid = _db?.meta.recycleBinUuid;
+    if (recycleBinUuid == null) return null;
+    final root = _db?.root;
+    if (root == null) return null;
+    for (final group in root.groups) {
+      if (group.uuid == recycleBinUuid) return group.name;
+    }
+    return null;
+  }
+
   /// Preloads file bytes into memory so openFile doesn't block on I/O.
   /// Runs in a background isolate to avoid blocking the UI.
   Future<void> preloadFile(String filePath) async {
