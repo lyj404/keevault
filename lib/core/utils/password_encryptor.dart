@@ -8,6 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class PasswordEncryptor {
   static const _keyStorageName = 'webdav_enc_key';
   static const _ivLength = 16;
+  /// Marker prefix to distinguish encrypted passwords from plaintext.
+  static const encryptedMarker = 'ENC:';
 
   final FlutterSecureStorage _storage;
   Uint8List? _cachedKey;
@@ -35,10 +37,14 @@ class PasswordEncryptor {
     return key;
   }
 
-  /// Encrypts a plaintext password. Returns a base64url string containing
-  /// the IV prepended to the ciphertext.
+  /// Returns true if the password is already encrypted (has the marker prefix).
+  bool isEncrypted(String password) => password.startsWith(encryptedMarker);
+
+  /// Encrypts a plaintext password. Returns a string with the ENC: prefix
+  /// followed by base64url-encoded IV+ciphertext.
   Future<String> encrypt(String plaintext) async {
     if (plaintext.isEmpty) return '';
+    if (isEncrypted(plaintext)) return plaintext;
 
     final key = await _getOrCreateKey();
     final iv = _generateIv();
@@ -55,15 +61,18 @@ class PasswordEncryptor {
     final result = Uint8List(iv.length + encrypted.length);
     result.setRange(0, iv.length, iv);
     result.setRange(iv.length, result.length, encrypted);
-    return base64Url.encode(result);
+    return '$encryptedMarker${base64Url.encode(result)}';
   }
 
   /// Decrypts an encrypted password string produced by [encrypt].
-  Future<String> decrypt(String encryptedBase64) async {
-    if (encryptedBase64.isEmpty) return '';
+  /// If the string doesn't have the ENC: prefix, returns it as-is (legacy plaintext).
+  Future<String> decrypt(String encryptedPassword) async {
+    if (encryptedPassword.isEmpty) return '';
+    if (!isEncrypted(encryptedPassword)) return encryptedPassword;
 
+    final base64Data = encryptedPassword.substring(encryptedMarker.length);
     final key = await _getOrCreateKey();
-    final data = base64Url.decode(encryptedBase64);
+    final data = base64Url.decode(base64Data);
 
     if (data.length <= _ivLength) return '';
 

@@ -108,14 +108,8 @@ class WebDavSettingsService {
     final decryptedProfiles = <WebDavConfig>[];
     for (final profile in state.profiles) {
       if (profile.password.isNotEmpty) {
-        try {
-          final decrypted = await _encryptor.decrypt(profile.password);
-          decryptedProfiles.add(profile.copyWith(password: decrypted));
-        } catch (_) {
-          // Password may be unencrypted (legacy or first run after upgrade).
-          // Try using as-is.
-          decryptedProfiles.add(profile);
-        }
+        final decrypted = await _encryptor.decrypt(profile.password);
+        decryptedProfiles.add(profile.copyWith(password: decrypted));
       } else {
         decryptedProfiles.add(profile);
       }
