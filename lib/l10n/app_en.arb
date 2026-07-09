@@ -414,5 +414,10 @@
   "toolsTab": "Tools",
   "noTotpEntries": "No entries with TOTP configured",
   "unsavedChanges": "Unsaved changes",
-  "allSaved": "All changes saved"
+  "allSaved": "All changes saved",
+
+  "strengthWeak": "Weak",
+  "strengthFair": "Fair",
+  "strengthGood": "Good",
+  "strengthStrong": "Strong"
 }

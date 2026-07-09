@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/logger.dart';
 import '../../../core/widgets/password_text_field.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../core/widgets/change_password_dialog.dart';
@@ -1042,22 +1043,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _connectionOk = null;
       _connectionError = null;
     });
-    final config = WebDavConfig(
-      id: _selectedProfileId ?? _generateProfileId(),
-      name: _profileNameController.text.trim(),
-      serverUrl: _urlController.text.trim(),
-      username: _userController.text.trim(),
-      password: _passwordController.text,
-      remotePath: _pathController.text.trim(),
-      remoteFilename: _filenameController.text.trim(),
-    );
-    final errorKey = await ref.read(syncServiceProvider).testConnection(config);
-    if (mounted) {
-      setState(() {
-        _testing = false;
-        _connectionOk = errorKey == null;
-        _connectionError = _translateError(errorKey);
-      });
+    try {
+      final config = WebDavConfig(
+        id: _selectedProfileId ?? _generateProfileId(),
+        name: _profileNameController.text.trim(),
+        serverUrl: _urlController.text.trim(),
+        username: _userController.text.trim(),
+        password: _passwordController.text,
+        remotePath: _pathController.text.trim(),
+        remoteFilename: _filenameController.text.trim(),
+      );
+      final errorKey =
+          await ref.read(syncServiceProvider).testConnection(config);
+      if (mounted) {
+        setState(() {
+          _testing = false;
+          _connectionOk = errorKey == null;
+          _connectionError = _translateError(errorKey);
+        });
+      }
+    } catch (e, st) {
+      log.e('WebDAV test connection failed', error: e, stackTrace: st);
+      if (mounted) {
+        setState(() {
+          _testing = false;
+          _connectionOk = false;
+          _connectionError = e.toString();
+        });
+      }
     }
   }
 
@@ -1079,27 +1092,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final profileId = _selectedProfileId ?? _generateProfileId();
-    final config = WebDavConfig(
-      id: profileId,
-      name: _profileNameController.text.trim(),
-      serverUrl: _urlController.text.trim(),
-      username: _userController.text.trim(),
-      password: _passwordController.text,
-      remotePath: _pathController.text.trim(),
-      remoteFilename: _filenameController.text.trim(),
-      enabled: _enabled,
-    );
-    await ref.read(webDavSettingsServiceProvider).saveConfig(config);
-    await ref.read(webDavSettingsServiceProvider).setActiveProfile(profileId);
-    _selectedProfileId = profileId;
-    await _loadConfig();
-    ref.invalidate(webDavConfigProvider);
-    ref.invalidate(webDavProfilesStateProvider);
-    if (mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      showToast(context, l10n.saved);
-      context.pop();
+    try {
+      final profileId = _selectedProfileId ?? _generateProfileId();
+      final config = WebDavConfig(
+        id: profileId,
+        name: _profileNameController.text.trim(),
+        serverUrl: _urlController.text.trim(),
+        username: _userController.text.trim(),
+        password: _passwordController.text,
+        remotePath: _pathController.text.trim(),
+        remoteFilename: _filenameController.text.trim(),
+        enabled: _enabled,
+      );
+      await ref.read(webDavSettingsServiceProvider).saveConfig(config);
+      await ref
+          .read(webDavSettingsServiceProvider)
+          .setActiveProfile(profileId);
+      _selectedProfileId = profileId;
+      await _loadConfig();
+      ref.invalidate(webDavConfigProvider);
+      ref.invalidate(webDavProfilesStateProvider);
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showToast(context, l10n.saved);
+        context.pop();
+      }
+    } catch (e, st) {
+      log.e('Failed to save WebDAV config', error: e, stackTrace: st);
+      if (mounted) {
+        showToast(context, e.toString(), isError: true);
+      }
     }
   }
 
@@ -1124,41 +1146,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _selectProfile(String profileId) async {
-    final service = ref.read(webDavSettingsServiceProvider);
-    await service.setActiveProfile(profileId);
-    final config = await service.getConfigById(profileId);
-    if (!mounted) return;
-    setState(() {
-      _selectedProfileId = profileId;
-      _applyConfigToForm(config);
-      _connectionOk = null;
-      _connectionError = null;
-    });
-    ref.invalidate(webDavConfigProvider);
-    ref.invalidate(webDavProfilesStateProvider);
+    try {
+      final service = ref.read(webDavSettingsServiceProvider);
+      await service.setActiveProfile(profileId);
+      final config = await service.getConfigById(profileId);
+      if (!mounted) return;
+      setState(() {
+        _selectedProfileId = profileId;
+        _applyConfigToForm(config);
+        _connectionOk = null;
+        _connectionError = null;
+      });
+      ref.invalidate(webDavConfigProvider);
+      ref.invalidate(webDavProfilesStateProvider);
+    } catch (e, st) {
+      log.e('Failed to select profile', error: e, stackTrace: st);
+      if (mounted) {
+        showToast(context, e.toString(), isError: true);
+      }
+    }
   }
 
   Future<void> _createNewProfile() async {
-    final l10n = AppLocalizations.of(context)!;
-    final index = _profiles.length + 1;
-    final profile = WebDavConfig(
-      id: _generateProfileId(),
-      name: '${l10n.profile} $index',
-      serverUrl: '',
-      username: '',
-      password: '',
-    );
-    await ref.read(webDavSettingsServiceProvider).saveConfig(profile);
-    await _loadConfig();
-    ref.invalidate(webDavConfigProvider);
-    ref.invalidate(webDavProfilesStateProvider);
+    try {
+      final l10n = AppLocalizations.of(context)!;
+      final index = _profiles.length + 1;
+      final profile = WebDavConfig(
+        id: _generateProfileId(),
+        name: '${l10n.profile} $index',
+        serverUrl: '',
+        username: '',
+        password: '',
+      );
+      await ref.read(webDavSettingsServiceProvider).saveConfig(profile);
+      await _loadConfig();
+      ref.invalidate(webDavConfigProvider);
+      ref.invalidate(webDavProfilesStateProvider);
+    } catch (e, st) {
+      log.e('Failed to create profile', error: e, stackTrace: st);
+      if (mounted) {
+        showToast(context, e.toString(), isError: true);
+      }
+    }
   }
 
   Future<void> _deleteCurrentProfile() async {
     final l10n = AppLocalizations.of(context)!;
-    final profile = _profiles
-        .where((p) => p.id == _selectedProfileId)
-        .firstOrNull;
+    final profile =
+        _profiles.where((p) => p.id == _selectedProfileId).firstOrNull;
     if (profile == null) return;
     if (_profiles.length <= 1) {
       showToast(context, l10n.cannotDeleteLastProfile, isError: true);
@@ -1182,10 +1217,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
     if (confirmed != true) return;
-    await ref.read(webDavSettingsServiceProvider).deleteProfile(profile.id);
-    await _loadConfig();
-    ref.invalidate(webDavConfigProvider);
-    ref.invalidate(webDavProfilesStateProvider);
+    try {
+      await ref
+          .read(webDavSettingsServiceProvider)
+          .deleteProfile(profile.id);
+      await _loadConfig();
+      ref.invalidate(webDavConfigProvider);
+      ref.invalidate(webDavProfilesStateProvider);
+    } catch (e, st) {
+      log.e('Failed to delete profile', error: e, stackTrace: st);
+      if (mounted) {
+        showToast(context, e.toString(), isError: true);
+      }
+    }
   }
 
   String _generateProfileId() {

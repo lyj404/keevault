@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import '../utils/fnv_hash.dart';
 import '../utils/logger.dart';
 import '../utils/secure_storage_helper.dart';
 
@@ -156,17 +157,7 @@ class BiometricService {
     }
   }
 
-  String _hashPath(String path) {
-    final bytes = utf8.encode(path);
-    // FNV-1a 64-bit hash — stable across platforms and runs.
-    int hash = 0xcbf29ce484222325;
-    const int prime = 0x100000001b3;
-    for (final byte in bytes) {
-      hash ^= byte;
-      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
-    }
-    return hash.toRadixString(16);
-  }
+  String _hashPath(String path) => FnvHash.hashString(path);
 }
 
 class StoredBiometricCredentials {

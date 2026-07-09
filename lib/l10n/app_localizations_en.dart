@@ -1163,4 +1163,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allSaved => 'All changes saved';
+
+  @override
+  String get strengthWeak => 'Weak';
+
+  @override
+  String get strengthFair => 'Fair';
+
+  @override
+  String get strengthGood => 'Good';
+
+  @override
+  String get strengthStrong => 'Strong';
 }

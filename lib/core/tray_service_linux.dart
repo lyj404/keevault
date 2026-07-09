@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:dart_xdg_status_notifier_item/dart_xdg_status_notifier_item.dart';
+import '../utils/logger.dart';
 import 'tray_service.dart';
 
 TrayServiceBase createTrayServiceLinux() => TrayServiceLinux();
@@ -33,14 +33,14 @@ class TrayServiceLinux implements TrayServiceBase {
       iconPath = releasePath;
     }
 
-    debugPrint('TrayServiceLinux: Using icon path: $iconPath');
+    log.d('TrayServiceLinux: Using icon path: $iconPath');
 
     // Create menu items
     final menu = DBusMenuItem(children: [
       DBusMenuItem(
         label: showLabel,
         onClicked: () async {
-          debugPrint('TrayServiceLinux: Show window clicked');
+          log.d('TrayServiceLinux: Show window clicked');
           onShowWindow();
         },
       ),
@@ -48,7 +48,7 @@ class TrayServiceLinux implements TrayServiceBase {
       DBusMenuItem(
         label: exitLabel,
         onClicked: () async {
-          debugPrint('TrayServiceLinux: Exit clicked');
+          log.d('TrayServiceLinux: Exit clicked');
           onExitApp();
         },
       ),
@@ -62,13 +62,12 @@ class TrayServiceLinux implements TrayServiceBase {
     );
 
     try {
-      debugPrint('TrayServiceLinux: Connecting to D-Bus...');
+      log.d('TrayServiceLinux: Connecting to D-Bus...');
       await _client!.connect();
       _initialized = true;
-      debugPrint('TrayServiceLinux: Connected successfully');
+      log.d('TrayServiceLinux: Connected successfully');
     } catch (e, stackTrace) {
-      debugPrint('TrayServiceLinux: Failed to connect: $e');
-      debugPrint('TrayServiceLinux: Stack trace: $stackTrace');
+      log.e('TrayServiceLinux: Failed to connect', error: e, stackTrace: stackTrace);
     }
   }
 

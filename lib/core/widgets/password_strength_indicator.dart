@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/password_strength.dart';
 
 class PasswordStrengthIndicator extends StatelessWidget {
@@ -11,8 +12,8 @@ class PasswordStrengthIndicator extends StatelessWidget {
     if (password.isEmpty) return const SizedBox.shrink();
 
     final level = evaluatePasswordStrength(password);
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
-    final label = isZh ? level.labelZh : level.labelEn;
+    final l10n = AppLocalizations.of(context)!;
+    final label = level.getLabel(l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

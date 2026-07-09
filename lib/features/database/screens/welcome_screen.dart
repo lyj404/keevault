@@ -39,6 +39,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final file = files.first;
     final localFile = File(file.path);
     final exists = await localFile.exists();
+    if (!mounted) return;
 
     if (!file.isCloud) {
       if (exists && mounted) {

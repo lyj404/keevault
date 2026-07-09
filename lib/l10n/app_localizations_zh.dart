@@ -1137,4 +1137,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get allSaved => '所有更改已保存';
+
+  @override
+  String get strengthWeak => '弱';
+
+  @override
+  String get strengthFair => '一般';
+
+  @override
+  String get strengthGood => '良好';
+
+  @override
+  String get strengthStrong => '强';
 }

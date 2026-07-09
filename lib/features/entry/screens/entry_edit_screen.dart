@@ -715,7 +715,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _wasDirtyBeforeCreate = service.isDirty;
       _entry = service.createEntry(_targetGroup!);
     }
-    if (_entry == null) return;
+    final entry = _entry;
+    if (entry == null) return;
 
     final l10n = AppLocalizations.of(context)!;
 
@@ -738,49 +739,50 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     }
 
     if (_isEdit) {
-      _entry!.times.touch();
-      _entry!.pushHistory();
+      entry.times.touch();
+      entry.pushHistory();
     }
-    _entry!.times.expires = _expires;
-    _entry!.times.expiry = KdbxTime(_expires ? _expiryDate : null);
-    _entry!.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
-    _entry!.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
-    _entry!.fields['Password'] = KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
-    _entry!.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
-    _entry!.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
+    entry.times.expires = _expires;
+    entry.times.expiry = KdbxTime(_expires ? _expiryDate : null);
+    entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
+    entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
+    entry.fields['Password'] =
+        KdbxTextField.fromText(text: _passwordCtrl.text, protected: true);
+    entry.fields['URL'] = KdbxTextField.fromText(text: _urlCtrl.text);
+    entry.fields['Notes'] = KdbxTextField.fromText(text: _notesCtrl.text);
 
     // Save custom fields
     final currentKeys = names;
-    final keysToRemove = _entry!.fields.keys
+    final keysToRemove = entry.fields.keys
         .where((k) => !_standardKeys.contains(k) && !currentKeys.contains(k))
         .toList();
     for (final key in keysToRemove) {
-      _entry!.fields.remove(key);
+      entry.fields.remove(key);
     }
 
     // Remove old keys first (separate pass to avoid data loss on field rename swaps)
     for (final f in _customFields) {
       final name = f.nameCtrl.text.trim();
       if (f.originalKey.isNotEmpty && f.originalKey != name) {
-        _entry!.fields.remove(f.originalKey);
+        entry.fields.remove(f.originalKey);
       }
     }
     for (final f in _customFields) {
       final name = f.nameCtrl.text.trim();
-      _entry!.fields[name] = KdbxTextField.fromText(
+      entry.fields[name] = KdbxTextField.fromText(
         text: f.valueCtrl.text,
         protected: f.protected,
       );
     }
 
     // Save tags
-    _entry!.tags = _tags.isEmpty ? null : List.from(_tags);
+    entry.tags = _tags.isEmpty ? null : List.from(_tags);
 
     // Save TOTP
     if (_totpConfig != null) {
-      _totpService.saveToEntry(_entry!, _totpConfig!);
+      _totpService.saveToEntry(entry, _totpConfig!);
     } else if (_isEdit) {
-      _totpService.removeFromEntry(_entry!);
+      _totpService.removeFromEntry(entry);
     }
 
     _saved = true;

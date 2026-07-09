@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/crypto/crypto_service.dart';
+import '../../../core/utils/fnv_hash.dart';
 import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
 import '../../../core/utils/fuzzy_match.dart';
@@ -327,15 +328,7 @@ class DatabaseService {
   }
 
   /// FNV-1a 64-bit hash for fast byte comparison.
-  static int _computeBytesHash(Uint8List bytes) {
-    int hash = 0xcbf29ce484222325;
-    const int prime = 0x100000001b3;
-    for (int i = 0; i < bytes.length; i++) {
-      hash ^= bytes[i];
-      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
-    }
-    return hash;
-  }
+  static int _computeBytesHash(Uint8List bytes) => FnvHash.hashBytes(bytes);
 
   /// Returns true if the given bytes are identical to the last saved bytes.
   /// Uses hash comparison for O(1) lookup with length pre-check (Bug #6 fix).

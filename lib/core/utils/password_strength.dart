@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 
 enum PasswordStrengthLevel {
   weak,
@@ -6,29 +7,16 @@ enum PasswordStrengthLevel {
   good,
   strong;
 
-  String get labelZh {
+  String getLabel(AppLocalizations l10n) {
     switch (this) {
       case PasswordStrengthLevel.weak:
-        return '弱';
+        return l10n.strengthWeak;
       case PasswordStrengthLevel.fair:
-        return '一般';
+        return l10n.strengthFair;
       case PasswordStrengthLevel.good:
-        return '良好';
+        return l10n.strengthGood;
       case PasswordStrengthLevel.strong:
-        return '强';
-    }
-  }
-
-  String get labelEn {
-    switch (this) {
-      case PasswordStrengthLevel.weak:
-        return 'Weak';
-      case PasswordStrengthLevel.fair:
-        return 'Fair';
-      case PasswordStrengthLevel.good:
-        return 'Good';
-      case PasswordStrengthLevel.strong:
-        return 'Strong';
+        return l10n.strengthStrong;
     }
   }
 

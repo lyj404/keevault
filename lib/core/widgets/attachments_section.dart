@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kpasslib/kpasslib.dart';
 import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
+import '../utils/format_utils.dart';
 import '../utils/logger.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/database/data/database_service.dart';
@@ -238,9 +239,5 @@ class _AttachmentTile extends StatelessWidget {
     );
   }
 
-  String _formatSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
+  String _formatSize(int bytes) => FormatUtils.formatSize(bytes);
 }

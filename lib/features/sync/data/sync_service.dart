@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
+import '../../../core/utils/fnv_hash.dart';
 import '../../../core/utils/logger.dart';
 import '../../settings/data/webdav_config.dart';
 
@@ -293,13 +294,5 @@ class SyncService {
     return cleaned.isEmpty ? '.kdbx' : cleaned;
   }
 
-  String _stableHash(String input) {
-    var hash = 0xcbf29ce484222325;
-    const prime = 0x100000001b3;
-    for (final unit in input.codeUnits) {
-      hash ^= unit;
-      hash = (hash * prime) & 0x7FFFFFFFFFFFFFFF;
-    }
-    return hash.toRadixString(16);
-  }
+  String _stableHash(String input) => FnvHash.hashString(input);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'logger.dart';
 
 /// A wrapper around [FlutterSecureStorage] that gracefully handles
 /// Windows DPAPI corruption errors (CryptUnprotectData failure).
@@ -17,7 +18,8 @@ class SecureStorageHelper {
   Future<String?> read({required String key}) async {
     try {
       return await _storage.read(key: key);
-    } catch (_) {
+    } catch (e) {
+      log.w('SecureStorage read failed for key: $key', error: e);
       return null;
     }
   }
@@ -25,24 +27,32 @@ class SecureStorageHelper {
   Future<void> write({required String key, required String? value}) async {
     try {
       await _storage.write(key: key, value: value);
-    } catch (_) {
+    } catch (e) {
+      log.w('SecureStorage write failed for key: $key, retrying after delete',
+          error: e);
       try {
         await _storage.delete(key: key);
         await _storage.write(key: key, value: value);
-      } catch (_) {}
+      } catch (e2) {
+        log.e('SecureStorage retry write also failed for key: $key',
+            error: e2);
+      }
     }
   }
 
   Future<void> delete({required String key}) async {
     try {
       await _storage.delete(key: key);
-    } catch (_) {}
+    } catch (e) {
+      log.w('SecureStorage delete failed for key: $key', error: e);
+    }
   }
 
   Future<Map<String, String>> readAll() async {
     try {
       return await _storage.readAll();
-    } catch (_) {
+    } catch (e) {
+      log.w('SecureStorage readAll failed', error: e);
       return {};
     }
   }

@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:system_tray/system_tray.dart';
+import '../utils/logger.dart';
 import 'tray_service.dart';
 
 TrayServiceBase createTrayServiceDesktop() => TrayServiceDesktop();
@@ -44,7 +44,7 @@ class TrayServiceDesktop implements TrayServiceBase {
         iconPath: iconPath,
       );
     } catch (e) {
-      debugPrint('TrayServiceDesktop: initSystemTray failed for $iconPath: $e');
+      log.e('TrayServiceDesktop: initSystemTray failed for $iconPath', error: e);
       rethrow;
     }
 

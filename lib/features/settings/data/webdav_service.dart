@@ -1,3 +1,4 @@
+import '../../../core/utils/password_encryptor.dart';
 import '../../../core/utils/secure_storage_helper.dart';
 import 'webdav_config.dart';
 
@@ -5,6 +6,7 @@ class WebDavSettingsService {
   static const _configKey = 'webdav_profiles';
   static const _legacyConfigKey = 'webdav_config';
   final _storage = const SecureStorageHelper();
+  final _encryptor = PasswordEncryptor();
 
   Future<WebDavConfig?> getConfig() async {
     return (await getProfilesState()).activeProfile;
@@ -22,7 +24,9 @@ class WebDavSettingsService {
   Future<WebDavProfilesState> getProfilesState() async {
     final json = await _storage.read(key: _configKey);
     if (json != null) {
-      return WebDavProfilesState.decode(json);
+      return _decryptProfilesState(
+        WebDavProfilesState.decode(json),
+      );
     }
 
     final legacyJson = await _storage.read(key: _legacyConfigKey);
@@ -37,7 +41,7 @@ class WebDavSettingsService {
       profiles: [legacyConfig],
       activeProfileId: legacyConfig.id,
     );
-    await _storage.write(key: _configKey, value: migrated.encode());
+    await saveConfig(legacyConfig);
     await _storage.delete(key: _legacyConfigKey);
     return migrated;
   }
@@ -46,10 +50,11 @@ class WebDavSettingsService {
     final state = await getProfilesState();
     final profiles = [...state.profiles];
     final index = profiles.indexWhere((profile) => profile.id == config.id);
+    final encryptedConfig = await _encryptConfig(config);
     if (index >= 0) {
-      profiles[index] = config;
+      profiles[index] = encryptedConfig;
     } else {
-      profiles.add(config);
+      profiles.add(encryptedConfig);
     }
     final updated = WebDavProfilesState(
       profiles: profiles,
@@ -87,5 +92,37 @@ class WebDavSettingsService {
       activeProfileId: profileId,
     );
     await _storage.write(key: _configKey, value: updated.encode());
+  }
+
+  /// Encrypts the password in a [WebDavConfig] before storage.
+  Future<WebDavConfig> _encryptConfig(WebDavConfig config) async {
+    if (config.password.isEmpty) return config;
+    final encrypted = await _encryptor.encrypt(config.password);
+    return config.copyWith(password: encrypted);
+  }
+
+  /// Decrypts passwords in a [WebDavProfilesState] after loading.
+  Future<WebDavProfilesState> _decryptProfilesState(
+    WebDavProfilesState state,
+  ) async {
+    final decryptedProfiles = <WebDavConfig>[];
+    for (final profile in state.profiles) {
+      if (profile.password.isNotEmpty) {
+        try {
+          final decrypted = await _encryptor.decrypt(profile.password);
+          decryptedProfiles.add(profile.copyWith(password: decrypted));
+        } catch (_) {
+          // Password may be unencrypted (legacy or first run after upgrade).
+          // Try using as-is.
+          decryptedProfiles.add(profile);
+        }
+      } else {
+        decryptedProfiles.add(profile);
+      }
+    }
+    return WebDavProfilesState(
+      profiles: decryptedProfiles,
+      activeProfileId: state.activeProfileId,
+    );
   }
 }

@@ -2275,6 +2275,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'所有更改已保存'**
   String get allSaved;
+
+  /// No description provided for @strengthWeak.
+  ///
+  /// In zh, this message translates to:
+  /// **'弱'**
+  String get strengthWeak;
+
+  /// No description provided for @strengthFair.
+  ///
+  /// In zh, this message translates to:
+  /// **'一般'**
+  String get strengthFair;
+
+  /// No description provided for @strengthGood.
+  ///
+  /// In zh, this message translates to:
+  /// **'良好'**
+  String get strengthGood;
+
+  /// No description provided for @strengthStrong.
+  ///
+  /// In zh, this message translates to:
+  /// **'强'**
+  String get strengthStrong;
 }
 
 class _AppLocalizationsDelegate

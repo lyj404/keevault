@@ -820,8 +820,8 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
               tooltip: l10n.search,
               onPressed: () {
                 final state = _totpTabKey.currentState;
-                if (state != null) {
-                  (state as dynamic).toggleSearch();
+                if (state is _MobileTotpTabState) {
+                  state.toggleSearch();
                 }
               },
             ),
@@ -830,8 +830,8 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
               tooltip: l10n.addEntry,
               onPressed: () {
                 final state = _totpTabKey.currentState;
-                if (state != null) {
-                  (state as dynamic).addTotpEntry(context);
+                if (state is _MobileTotpTabState) {
+                  state.addTotpEntry(context);
                 }
               },
             ),

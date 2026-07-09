@@ -69,7 +69,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       );
       _trayInitialized = true;
     } catch (e) {
-      debugPrint('Tray init failed, close will exit app: $e');
+      log.w('Tray init failed, close will exit app', error: e);
       _trayInitialized = false;
     }
   }

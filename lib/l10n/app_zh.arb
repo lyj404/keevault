@@ -423,5 +423,10 @@
   "toolsTab": "工具",
   "noTotpEntries": "暂无配置 TOTP 的条目",
   "unsavedChanges": "有未保存的更改",
-  "allSaved": "所有更改已保存"
+  "allSaved": "所有更改已保存",
+
+  "strengthWeak": "弱",
+  "strengthFair": "一般",
+  "strengthGood": "良好",
+  "strengthStrong": "强"
 }
