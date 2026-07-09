@@ -1,6 +1,7 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dart_xdg_status_notifier_item/dart_xdg_status_notifier_item.dart';
-import '../utils/logger.dart';
+import 'utils/logger.dart';
 import 'tray_service.dart';
 
 TrayServiceBase createTrayServiceLinux() => TrayServiceLinux();
