@@ -38,6 +38,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Object? _lastSyncError;
   String? _currentWebDavProfileId;
   SyncAuditReport? _lastSyncAuditReport;
+  Future<bool>? _saveInFlight;
 
   DatabaseNotifier(this._ref) : super(const AsyncValue.data(null)) {
     _service.onDirtyChanged = (isDirty) {
@@ -119,7 +120,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             ),
           ]);
         })().catchError((e, st) {
-          log.w('Failed to update recent files after open: ' + e.toString());
+          log.w('Failed to update recent files after open: $e');
         }),
       );
       _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
@@ -157,7 +158,17 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   /// Saves locally and syncs to WebDAV if enabled.
   /// Returns true on success, false if a conflict was detected (caller should show dialog).
-  Future<bool> save() async {
+  /// Concurrent callers (auto-save timer, manual save, close, app exit) share
+  /// the same in-flight save instead of racing on disk writes and uploads.
+  Future<bool> save() {
+    final inFlight = _saveInFlight;
+    if (inFlight != null) return inFlight;
+    final future = _doSave().whenComplete(() => _saveInFlight = null);
+    _saveInFlight = future;
+    return future;
+  }
+
+  Future<bool> _doSave() async {
     final wasDirty = _service.isDirty;
     final bytes = await _service.save();
     final config = await _ref
@@ -186,7 +197,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         }
         await syncService.ensureRemoteDirectory(config);
         await syncService.uploadDatabase(config, bytes);
-        // Store the remote metadata after successful upload
+        // Store the remote metadata after successful upload.
+        // NOTE: webdav_client has no If-Match support, so the check-then-put
+        // above is not atomic; if another device writes between our upload and
+        // this readProps, we may record their eTag as ours. Window is small
+        // but cannot be fully closed with this library.
         final newInfo = await syncService.getRemoteFileInfo(config);
         _service.setLastSyncedRemoteInfo(newInfo);
         // Persist the eTag so next startup can skip redundant download

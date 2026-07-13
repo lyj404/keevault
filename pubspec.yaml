@@ -1,7 +1,7 @@
 name: keevault
 description: "A KeePass-compatible password manager built with Flutter."
 publish_to: 'none'
-version: 0.6.7+6
+version: 0.6.8+6
 
 environment:
   sdk: ^3.12.0
@@ -62,6 +62,9 @@ dependencies:
 
   webdav_client: ^1.2.2
   image_picker: ^1.2.3
+
+  # AES-GCM encryption for stored WebDAV passwords
+  cryptography: ^2.7.0
 
 dev_dependencies:
   flutter_test:

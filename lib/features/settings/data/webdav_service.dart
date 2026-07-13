@@ -24,9 +24,16 @@ class WebDavSettingsService {
   Future<WebDavProfilesState> getProfilesState() async {
     final json = await _storage.read(key: _configKey);
     if (json != null) {
-      return _decryptProfilesState(
-        WebDavProfilesState.decode(json),
+      final stored = WebDavProfilesState.decode(json);
+      final decrypted = await _decryptProfilesState(stored);
+      // Migrate legacy XOR-encrypted passwords to AES-GCM in storage.
+      final hasLegacy = stored.profiles.any(
+        (p) => _encryptor.isLegacyEncrypted(p.password),
       );
+      if (hasLegacy) {
+        await _persistState(decrypted);
+      }
+      return decrypted;
     }
 
     final legacyJson = await _storage.read(key: _legacyConfigKey);
@@ -50,17 +57,14 @@ class WebDavSettingsService {
     final state = await getProfilesState();
     final profiles = [...state.profiles];
     final index = profiles.indexWhere((profile) => profile.id == config.id);
-    final encryptedConfig = await _encryptConfig(config);
     if (index >= 0) {
-      profiles[index] = encryptedConfig;
+      profiles[index] = config;
     } else {
-      profiles.add(encryptedConfig);
+      profiles.add(config);
     }
-    final updated = WebDavProfilesState(
-      profiles: profiles,
-      activeProfileId: config.id,
+    await _persistState(
+      WebDavProfilesState(profiles: profiles, activeProfileId: config.id),
     );
-    await _storage.write(key: _configKey, value: updated.encode());
   }
 
   Future<void> deleteConfig() async {
@@ -76,22 +80,21 @@ class WebDavSettingsService {
     final nextActive = state.activeProfileId == profileId
         ? (profiles.isEmpty ? null : profiles.first.id)
         : state.activeProfileId;
-    final updated = WebDavProfilesState(
-      profiles: profiles,
-      activeProfileId: nextActive,
+    await _persistState(
+      WebDavProfilesState(profiles: profiles, activeProfileId: nextActive),
     );
-    await _storage.write(key: _configKey, value: updated.encode());
   }
 
   Future<void> setActiveProfile(String profileId) async {
     final state = await getProfilesState();
     final exists = state.profiles.any((profile) => profile.id == profileId);
     if (!exists) return;
-    final updated = WebDavProfilesState(
-      profiles: state.profiles,
-      activeProfileId: profileId,
+    await _persistState(
+      WebDavProfilesState(
+        profiles: state.profiles,
+        activeProfileId: profileId,
+      ),
     );
-    await _storage.write(key: _configKey, value: updated.encode());
   }
 
   /// Encrypts the password in a [WebDavConfig] before storage.
@@ -99,6 +102,19 @@ class WebDavSettingsService {
     if (config.password.isEmpty) return config;
     final encrypted = await _encryptor.encrypt(config.password);
     return config.copyWith(password: encrypted);
+  }
+
+  /// Encrypts all profile passwords and writes the state to storage.
+  Future<void> _persistState(WebDavProfilesState state) async {
+    final encryptedProfiles = <WebDavConfig>[];
+    for (final profile in state.profiles) {
+      encryptedProfiles.add(await _encryptConfig(profile));
+    }
+    final updated = WebDavProfilesState(
+      profiles: encryptedProfiles,
+      activeProfileId: state.activeProfileId,
+    );
+    await _storage.write(key: _configKey, value: updated.encode());
   }
 
   /// Decrypts passwords in a [WebDavProfilesState] after loading.

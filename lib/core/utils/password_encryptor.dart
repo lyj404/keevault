@@ -1,15 +1,27 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Encrypts and decrypts WebDAV passwords using XOR stream cipher
+/// Encrypts and decrypts WebDAV passwords using AES-256-GCM
 /// with a device-bound key stored in secure storage.
+///
+/// Legacy formats are still readable:
+/// - `ENC:` prefix — old XOR scheme (cryptographically weak, decrypt-only)
+/// - no prefix — plaintext
+/// Both are transparently migrated to `ENC2:` when re-encrypted.
 class PasswordEncryptor {
   static const _keyStorageName = 'webdav_enc_key';
-  static const _ivLength = 16;
-  /// Marker prefix to distinguish encrypted passwords from plaintext.
-  static const encryptedMarker = 'ENC:';
+  static const _legacyIvLength = 16;
+
+  /// Marker for the current AES-GCM format.
+  static const encryptedMarker = 'ENC2:';
+
+  /// Marker for the legacy XOR format (decrypt-only).
+  static const legacyEncryptedMarker = 'ENC:';
+
+  static final _aesGcm = AesGcm.with256bits();
 
   final FlutterSecureStorage _storage;
   Uint8List? _cachedKey;
@@ -27,7 +39,6 @@ class PasswordEncryptor {
       return _cachedKey!;
     }
 
-    // Generate a new 256-bit key
     final random = Random.secure();
     final key = Uint8List.fromList(
       List.generate(32, (_) => random.nextInt(256)),
@@ -37,60 +48,86 @@ class PasswordEncryptor {
     return key;
   }
 
-  /// Returns true if the password is already encrypted (has the marker prefix).
+  /// Returns true if the password is encrypted in the current format.
   bool isEncrypted(String password) => password.startsWith(encryptedMarker);
 
-  /// Encrypts a plaintext password. Returns a string with the ENC: prefix
-  /// followed by base64url-encoded IV+ciphertext.
+  /// Returns true if the password is encrypted in the legacy XOR format.
+  bool isLegacyEncrypted(String password) =>
+      password.startsWith(legacyEncryptedMarker) && !isEncrypted(password);
+
+  /// Encrypts a plaintext password with AES-256-GCM. Returns a string with
+  /// the ENC2: prefix followed by base64url of nonce+ciphertext+tag.
+  /// Legacy-encrypted input is decrypted first and re-encrypted.
   Future<String> encrypt(String plaintext) async {
     if (plaintext.isEmpty) return '';
     if (isEncrypted(plaintext)) return plaintext;
-
-    final key = await _getOrCreateKey();
-    final iv = _generateIv();
-
-    // Derive a keystream from key + IV by repeated XOR mixing
-    final plainBytes = utf8.encode(plaintext);
-    final encrypted = Uint8List(plainBytes.length);
-    for (var i = 0; i < plainBytes.length; i++) {
-      final k = key[i % key.length] ^ iv[i % iv.length];
-      encrypted[i] = plainBytes[i] ^ k;
+    if (isLegacyEncrypted(plaintext)) {
+      plaintext = await decrypt(plaintext);
+      if (plaintext.isEmpty) return '';
     }
 
-    // Prepend IV to ciphertext
-    final result = Uint8List(iv.length + encrypted.length);
-    result.setRange(0, iv.length, iv);
-    result.setRange(iv.length, result.length, encrypted);
-    return '$encryptedMarker${base64Url.encode(result)}';
+    final key = await _getOrCreateKey();
+    final secretKey = SecretKey(key);
+    final secretBox = await _aesGcm.encrypt(
+      utf8.encode(plaintext),
+      secretKey: secretKey,
+    );
+    final combined = secretBox.concatenation(); // nonce + ciphertext + mac
+    return '$encryptedMarker${base64Url.encode(combined)}';
   }
 
-  /// Decrypts an encrypted password string produced by [encrypt].
-  /// If the string doesn't have the ENC: prefix, returns it as-is (legacy plaintext).
+  /// Decrypts an encrypted password string. Supports the current AES-GCM
+  /// format, the legacy XOR format, and plaintext (returned as-is).
+  /// Returns '' if decryption fails (e.g. tampered data or wrong key).
   Future<String> decrypt(String encryptedPassword) async {
     if (encryptedPassword.isEmpty) return '';
-    if (!isEncrypted(encryptedPassword)) return encryptedPassword;
-
-    final base64Data = encryptedPassword.substring(encryptedMarker.length);
-    final key = await _getOrCreateKey();
-    final data = base64Url.decode(base64Data);
-
-    if (data.length <= _ivLength) return '';
-
-    final iv = data.sublist(0, _ivLength);
-    final ciphertext = data.sublist(_ivLength);
-
-    final decrypted = Uint8List(ciphertext.length);
-    for (var i = 0; i < ciphertext.length; i++) {
-      final k = key[i % key.length] ^ iv[i % iv.length];
-      decrypted[i] = ciphertext[i] ^ k;
+    if (isEncrypted(encryptedPassword)) {
+      return _decryptAesGcm(encryptedPassword);
     }
-    return utf8.decode(decrypted);
+    if (isLegacyEncrypted(encryptedPassword)) {
+      return _decryptLegacyXor(encryptedPassword);
+    }
+    return encryptedPassword;
   }
 
-  Uint8List _generateIv() {
-    final random = Random.secure();
-    return Uint8List.fromList(
-      List.generate(_ivLength, (_) => random.nextInt(256)),
-    );
+  Future<String> _decryptAesGcm(String encryptedPassword) async {
+    try {
+      final data = base64Url.decode(
+        encryptedPassword.substring(encryptedMarker.length),
+      );
+      final key = await _getOrCreateKey();
+      final secretBox = SecretBox.fromConcatenation(
+        data,
+        nonceLength: AesGcm.defaultNonceLength,
+        macLength: 16,
+      );
+      final clear = await _aesGcm.decrypt(secretBox, secretKey: SecretKey(key));
+      return utf8.decode(clear);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Future<String> _decryptLegacyXor(String encryptedPassword) async {
+    try {
+      final base64Data =
+          encryptedPassword.substring(legacyEncryptedMarker.length);
+      final key = await _getOrCreateKey();
+      final data = base64Url.decode(base64Data);
+
+      if (data.length <= _legacyIvLength) return '';
+
+      final iv = data.sublist(0, _legacyIvLength);
+      final ciphertext = data.sublist(_legacyIvLength);
+
+      final decrypted = Uint8List(ciphertext.length);
+      for (var i = 0; i < ciphertext.length; i++) {
+        final k = key[i % key.length] ^ iv[i % iv.length];
+        decrypted[i] = ciphertext[i] ^ k;
+      }
+      return utf8.decode(decrypted);
+    } catch (_) {
+      return '';
+    }
   }
 }

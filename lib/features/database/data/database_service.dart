@@ -141,9 +141,13 @@ class DatabaseService {
   String? _password;
   Uint8List? _keyData;
   bool _dirty = false;
+  // Incremented on every markDirty so save() can detect mutations that
+  // happened while serialization was running in the background isolate.
+  int _mutationCount = 0;
   Uint8List? _preloadedBytes;
   String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
+  Map<String, KdbxEntry>? _entryByUuid;
   Set<String>? _tagsCache;
   List<_SearchRecord>? _searchIndex;
   Uint8List? _lastSavedBytes;
@@ -166,6 +170,7 @@ class DatabaseService {
 
   void markDirty() {
     _dirty = true;
+    _mutationCount++;
     onDirtyChanged?.call(true);
   }
 
@@ -200,6 +205,9 @@ class DatabaseService {
 
   void _rebuildEntryCache() {
     _allEntriesCache = _db?.root.allEntries.toList();
+    _entryByUuid = _allEntriesCache == null
+        ? null
+        : {for (final e in _allEntriesCache!) e.uuid.string: e};
     _tagsCache = null;
     log.d(
       '[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}',
@@ -343,6 +351,7 @@ class DatabaseService {
     if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
     final db = _db!;
+    final mutationCountAtStart = _mutationCount;
     final bytes = Uint8List.fromList(
       await Isolate.run(() {
         CryptoService.initialize();
@@ -360,7 +369,14 @@ class DatabaseService {
     await File(_filePath!).writeAsBytes(bytes);
     _lastSavedBytes = bytes;
     _lastSavedHash = _computeBytesHash(bytes);
-    markClean();
+    // Only clear the dirty flag if no mutations happened while the
+    // serialization isolate was running; otherwise those changes would be
+    // silently lost (never auto-saved, never saved on close).
+    if (_mutationCount == mutationCountAtStart) {
+      markClean();
+    } else {
+      log.i('Database mutated during save, keeping dirty flag');
+    }
     log.i('Database saved (${bytes.length} bytes)');
     return bytes;
   }
@@ -437,13 +453,14 @@ class DatabaseService {
 
   KdbxEntry? findEntryByUuid(KdbxUuid uuid) {
     if (_db == null) return null;
-    for (final entry in allEntries) {
-      if (entry.uuid == uuid) return entry;
+    _ensureCacheFresh();
+    final entry = _entryByUuid?[uuid.string];
+    if (entry == null) {
+      log.w(
+        '[DatabaseService] findEntryByUuid MISS uuid=${uuid.string} cacheSize=${_allEntriesCache?.length}',
+      );
     }
-    log.w(
-      '[DatabaseService] findEntryByUuid MISS uuid=${uuid.string} cacheSize=${allEntries.length}',
-    );
-    return null;
+    return entry;
   }
 
   List<SearchResult> search(String query) {
@@ -670,7 +687,12 @@ class DatabaseService {
     markClean();
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
+    _preloadedFilePath = null;
     _allEntriesCache = null;
+    _entryByUuid = null;
+    _tagsCache = null;
     _searchIndex = null;
+    _lastSavedBytes = null;
+    _lastSavedHash = null;
   }
 }

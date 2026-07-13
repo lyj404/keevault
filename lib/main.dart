@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/crypto/crypto_service.dart';
+import 'core/utils/clipboard_utils.dart';
 import 'core/utils/logger.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
@@ -87,12 +89,19 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     if (db == null || !isDirty) return;
 
     try {
-      final success = await ref.read(databaseProvider.notifier).save();
+      // Local disk write happens first inside save(); the timeout mainly
+      // bounds slow cloud sync retries so app exit isn't blocked for ~45s.
+      final success = await ref
+          .read(databaseProvider.notifier)
+          .save()
+          .timeout(const Duration(seconds: 20));
       if (!success) {
         log.w(
           'Database save before app exit completed locally, but cloud sync reported a conflict.',
         );
       }
+    } on TimeoutException {
+      log.w('Save before app exit timed out; local save may have completed.');
     } catch (e, st) {
       log.e('Failed to save database before app exit', error: e, stackTrace: st);
     }
@@ -101,6 +110,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
   Future<void> _exitApp() async {
     try {
       await _persistDirtyDatabase();
+      await clearClipboardIfCopied();
       await windowManager.setPreventClose(false);
       await windowManager.close();
     } catch (_) {}
@@ -119,6 +129,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     final behavior = ref.read(closeBehaviorProvider);
     if (behavior == CloseBehavior.exit) {
       await _persistDirtyDatabase();
+      await clearClipboardIfCopied();
       await windowManager.setPreventClose(false);
       await windowManager.close();
       return;
@@ -128,6 +139,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
         await windowManager.hide();
       } else {
         await _persistDirtyDatabase();
+        await clearClipboardIfCopied();
         await windowManager.setPreventClose(false);
         await windowManager.close();
       }
@@ -206,6 +218,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
         await ref.read(closeBehaviorProvider.notifier).setCloseBehavior(CloseBehavior.exit);
       }
       await _persistDirtyDatabase();
+      await clearClipboardIfCopied();
       await windowManager.setPreventClose(false);
       await windowManager.close();
     } else {
@@ -216,6 +229,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
         await windowManager.hide();
       } else {
         await _persistDirtyDatabase();
+        await clearClipboardIfCopied();
         await windowManager.setPreventClose(false);
         await windowManager.close();
       }

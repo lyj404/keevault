@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/logger.dart';
 import '../utils/secure_storage_helper.dart';
 import '../../features/database/providers/database_provider.dart';
 
@@ -52,9 +53,14 @@ class AutoSaveNotifier extends StateNotifier<int> {
     if (!hasDb || !isDirty) return;
 
     try {
-      await _ref.read(databaseProvider.notifier).save();
-    } catch (_) {
-      // Auto-save failure is silent; user can manually save.
+      final success = await _ref.read(databaseProvider.notifier).save();
+      if (!success) {
+        // Cloud conflict or sync error; syncStateProvider drives the UI.
+        log.w('Auto-save completed locally but cloud sync did not succeed');
+      }
+    } catch (e) {
+      log.w('Auto-save failed, retrying once', error: e);
+      _scheduleIfDirty();
     }
   }
 
