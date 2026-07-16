@@ -116,7 +116,9 @@ class ClayDecoration {
     }
     final key = (brightness, radius);
     return _cardCache[key] ??= BoxDecoration(
-      color: brightness == Brightness.dark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
+      color: brightness == Brightness.dark
+          ? ClayColors.surfaceCardDark
+          : ClayColors.surfaceCardLight,
       borderRadius: BorderRadius.circular(radius),
       boxShadow: outerShadow(brightness),
     );
@@ -129,13 +131,16 @@ class ClayDecoration {
   }) {
     final isDark = brightness == Brightness.dark;
     return BoxDecoration(
-      color: isDark ? ClayColors.surfaceContainerDark : ClayColors.surfaceContainerLight,
+      color: isDark
+          ? ClayColors.surfaceContainerDark
+          : ClayColors.surfaceContainerLight,
       borderRadius: BorderRadius.circular(16),
       boxShadow: innerShadow(brightness),
       border: focused
           ? Border.all(color: ClayColors.primary, width: 2)
           : Border.all(
-              color: (isDark ? ClayColors.outlineDark : ClayColors.outlineLight).withValues(alpha: 0.3),
+              color: (isDark ? ClayColors.outlineDark : ClayColors.outlineLight)
+                  .withValues(alpha: 0.3),
               width: 1,
             ),
     );
@@ -165,7 +170,10 @@ class ClayDecoration {
     return _iconContainerCache[key] ??= _buildIconContainer(brightness, radius);
   }
 
-  static BoxDecoration _buildIconContainer(Brightness brightness, double radius) {
+  static BoxDecoration _buildIconContainer(
+    Brightness brightness,
+    double radius,
+  ) {
     final isDark = brightness == Brightness.dark;
     final bgColor = isDark
         ? ClayColors.primaryMuted.withValues(alpha: 0.2)
@@ -191,9 +199,9 @@ class AppTheme {
 
   // Cross-platform CJK font fallback
   static const _fontFallback = <String>[
-    'Microsoft YaHei',    // Windows
-    'PingFang SC',        // macOS
-    'Noto Sans CJK SC',   // Linux
+    'Microsoft YaHei', // Windows
+    'PingFang SC', // macOS
+    'Noto Sans CJK SC', // Linux
     'sans-serif',
   ];
 
@@ -292,10 +300,16 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: ClayColors.error, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
         filled: true,
         fillColor: ClayColors.surfaceContainerLight,
-        labelStyle: TextStyle(color: ClayColors.onSurfaceVariantLight, fontSize: 14),
+        labelStyle: TextStyle(
+          color: ClayColors.onSurfaceVariantLight,
+          fontSize: 14,
+        ),
         hintStyle: TextStyle(color: ClayColors.outlineLight, fontSize: 14),
         prefixIconColor: ClayColors.onSurfaceVariantLight,
         suffixIconColor: ClayColors.onSurfaceVariantLight,
@@ -319,18 +333,30 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: ClayColors.primary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceLight,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
+          textStyle: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: ClayColors.onSurfaceLight,
+          ),
           side: BorderSide.none,
           backgroundColor: ClayColors.surfaceContainerLight,
         ),
@@ -338,13 +364,21 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontFamily: 'Noto Sans SC',
+          fontFamilyFallback: _fontFallback,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
         backgroundColor: ClayColors.onSurfaceLight,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
@@ -372,14 +406,19 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       popupMenuTheme: const PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
         elevation: 4,
         color: Colors.white,
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceLight,
-          textStyle: TextStyle(fontWeight: FontWeight.w700, color: ClayColors.onSurfaceLight),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: ClayColors.onSurfaceLight,
+          ),
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -458,16 +497,25 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: ClayColors.primaryMuted, width: 2),
+          borderSide: const BorderSide(
+            color: ClayColors.primaryMuted,
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFFEF9A9A), width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
         filled: true,
         fillColor: ClayColors.surfaceContainerDark,
-        labelStyle: TextStyle(color: ClayColors.onSurfaceVariantDark, fontSize: 14),
+        labelStyle: TextStyle(
+          color: ClayColors.onSurfaceVariantDark,
+          fontSize: 14,
+        ),
         hintStyle: TextStyle(color: ClayColors.outlineDark, fontSize: 14),
         prefixIconColor: ClayColors.onSurfaceVariantDark,
         suffixIconColor: ClayColors.onSurfaceVariantDark,
@@ -491,18 +539,30 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: ClayColors.primaryDark,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
           elevation: 0,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceDark,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
+          textStyle: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: ClayColors.onSurfaceDark,
+          ),
           side: BorderSide.none,
           backgroundColor: ClayColors.surfaceContainerDark,
         ),
@@ -510,13 +570,21 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontFamily: 'Noto Sans SC',
+          fontFamilyFallback: _fontFallback,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
         backgroundColor: ClayColors.surfaceContainerDark,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primaryMuted,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
@@ -551,7 +619,10 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceDark,
-          textStyle: TextStyle(fontWeight: FontWeight.w700, color: ClayColors.onSurfaceDark),
+          textStyle: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: ClayColors.onSurfaceDark,
+          ),
         ),
       ),
       checkboxTheme: CheckboxThemeData(

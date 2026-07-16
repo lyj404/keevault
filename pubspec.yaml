@@ -1,8 +1,7 @@
 name: keevault
 description: "A KeePass-compatible password manager built with Flutter."
 publish_to: 'none'
-version: 0.6.8+6
-
+version: 0.6.9+6
 environment:
   sdk: ^3.12.0
 
