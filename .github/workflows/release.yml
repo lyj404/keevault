@@ -293,12 +293,13 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            KeeVault-*
-            keevault_*
-            build/windows/installer/KeeVault-*
-            SHA256SUMS
+            KeeVault-*.zip
+            KeeVault-*.tar.gz
+            KeeVault-*.apk
+            KeeVault-*-setup.exe
             KeeVault-*.spdx.json
-
+            keevault_*.deb
+            SHA256SUMS
   publish-aur:
     needs: [release]
     runs-on: ubuntu-latest
