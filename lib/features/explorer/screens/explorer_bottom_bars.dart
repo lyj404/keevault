@@ -368,6 +368,8 @@ String _translateSyncError(Object e, AppLocalizations l10n) {
         return l10n.syncErrorNotFound;
       case SyncErrorType.timeout:
         return l10n.syncErrorTimeout;
+      case SyncErrorType.conflict:
+        return l10n.syncConflict;
       case SyncErrorType.serverError:
         return l10n.syncErrorServer;
       case SyncErrorType.unknown:

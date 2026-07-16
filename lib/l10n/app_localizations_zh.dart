@@ -1149,4 +1149,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get strengthStrong => '强';
+
+  @override
+  String get csvPlaintextWarningTitle => '导出明文密码';
+
+  @override
+  String get csvPlaintextWarningBody =>
+      'CSV 文件不会加密，并包含所有条目的明文密码。任何能访问该文件的人都可以读取这些密码。建议优先导出 KDBX。是否仍要继续？';
+
+  @override
+  String get webDavInvalidUrl => '服务器地址必须是有效的 HTTP 或 HTTPS URL';
+
+  @override
+  String get webDavInsecureHttpTitle => '不安全的 WebDAV 连接';
+
+  @override
+  String get webDavInsecureHttpBody =>
+      '此服务器使用未加密的 HTTP，登录凭据和数据库可能被网络中的其他人截获。建议使用 HTTPS。是否仍要继续？';
+
+  @override
+  String get privacyProtection => '隐私保护';
+
+  @override
+  String get blockScreenshots => '禁止截屏';
+
+  @override
+  String get blockScreenshotsDescription => '在 Android 上阻止截屏和最近任务预览。';
+
+  @override
+  String get hideInBackground => '后台隐藏内容';
+
+  @override
+  String get hideInBackgroundDescription => '应用失去焦点或进入后台时遮挡密码库内容。';
 }

@@ -591,6 +591,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           return l10n.syncErrorNotFound;
         case SyncErrorType.timeout:
           return l10n.syncErrorTimeout;
+        case SyncErrorType.conflict:
+          return l10n.syncConflict;
         case SyncErrorType.serverError:
           return l10n.syncErrorServer;
         case SyncErrorType.unknown:

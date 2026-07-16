@@ -2299,6 +2299,66 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'强'**
   String get strengthStrong;
+
+  /// No description provided for @csvPlaintextWarningTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出明文密码'**
+  String get csvPlaintextWarningTitle;
+
+  /// No description provided for @csvPlaintextWarningBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'CSV 文件不会加密，并包含所有条目的明文密码。任何能访问该文件的人都可以读取这些密码。建议优先导出 KDBX。是否仍要继续？'**
+  String get csvPlaintextWarningBody;
+
+  /// No description provided for @webDavInvalidUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器地址必须是有效的 HTTP 或 HTTPS URL'**
+  String get webDavInvalidUrl;
+
+  /// No description provided for @webDavInsecureHttpTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'不安全的 WebDAV 连接'**
+  String get webDavInsecureHttpTitle;
+
+  /// No description provided for @webDavInsecureHttpBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'此服务器使用未加密的 HTTP，登录凭据和数据库可能被网络中的其他人截获。建议使用 HTTPS。是否仍要继续？'**
+  String get webDavInsecureHttpBody;
+
+  /// No description provided for @privacyProtection.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐私保护'**
+  String get privacyProtection;
+
+  /// No description provided for @blockScreenshots.
+  ///
+  /// In zh, this message translates to:
+  /// **'禁止截屏'**
+  String get blockScreenshots;
+
+  /// No description provided for @blockScreenshotsDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'在 Android 上阻止截屏和最近任务预览。'**
+  String get blockScreenshotsDescription;
+
+  /// No description provided for @hideInBackground.
+  ///
+  /// In zh, this message translates to:
+  /// **'后台隐藏内容'**
+  String get hideInBackground;
+
+  /// No description provided for @hideInBackgroundDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用失去焦点或进入后台时遮挡密码库内容。'**
+  String get hideInBackgroundDescription;
 }
 
 class _AppLocalizationsDelegate

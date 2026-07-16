@@ -1,45 +1,73 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/services.dart';
+
 import '../constants/app_constants.dart';
-import 'fnv_hash.dart';
 
 Timer? _clipboardTimer;
-String? _lastCopiedHash;
+List<int>? _lastCopiedMac;
+final Uint8List _clipboardMacKey = Uint8List.fromList(
+  List<int>.generate(32, (_) => Random.secure().nextInt(256)),
+);
+final Hmac _clipboardHmac = Hmac.sha256();
+
+Future<List<int>> _mac(String value) async {
+  final result = await _clipboardHmac.calculateMac(
+    utf8.encode(value),
+    secretKey: SecretKey(_clipboardMacKey),
+  );
+  return result.bytes;
+}
+
+bool _constantTimeEquals(List<int> left, List<int> right) {
+  if (left.length != right.length) return false;
+  var difference = 0;
+  for (var i = 0; i < left.length; i++) {
+    difference |= left[i] ^ right[i];
+  }
+  return difference == 0;
+}
 
 void copyToClipboardWithAutoClear(
   String text, {
   Duration timeout = AppConstants.clipboardClearTimeout,
 }) {
   _clipboardTimer?.cancel();
-  Clipboard.setData(ClipboardData(text: text));
-  // Hold only a hash of the copied value so the plaintext isn't retained
-  // in the timer closure for the whole timeout window.
-  final copiedHash = FnvHash.hashString(text);
-  _lastCopiedHash = copiedHash;
-  if (timeout.inSeconds > 0) {
-    _clipboardTimer = Timer(timeout, () async {
-      final current = await Clipboard.getData(Clipboard.kTextPlain);
-      final currentText = current?.text;
-      if (currentText != null &&
-          FnvHash.hashString(currentText) == copiedHash) {
-        Clipboard.setData(const ClipboardData(text: ''));
-        _lastCopiedHash = null;
-      }
-    });
-  }
+  unawaited(Clipboard.setData(ClipboardData(text: text)));
+  unawaited(_scheduleClear(text, timeout));
 }
 
-/// Clears the clipboard on app exit if it still holds a value we copied.
+Future<void> _scheduleClear(String text, Duration timeout) async {
+  final copiedMac = await _mac(text);
+  _lastCopiedMac = copiedMac;
+  if (timeout.inSeconds <= 0) return;
+  _clipboardTimer = Timer(timeout, () async {
+    final current = await Clipboard.getData(Clipboard.kTextPlain);
+    final currentText = current?.text;
+    if (currentText != null &&
+        _constantTimeEquals(await _mac(currentText), copiedMac)) {
+      await Clipboard.setData(const ClipboardData(text: ''));
+      _lastCopiedMac = null;
+    }
+  });
+}
+
 Future<void> clearClipboardIfCopied() async {
   _clipboardTimer?.cancel();
-  final lastHash = _lastCopiedHash;
-  if (lastHash == null) return;
+  final lastMac = _lastCopiedMac;
+  if (lastMac == null) return;
   try {
     final current = await Clipboard.getData(Clipboard.kTextPlain);
     final currentText = current?.text;
-    if (currentText != null && FnvHash.hashString(currentText) == lastHash) {
+    if (currentText != null &&
+        _constantTimeEquals(await _mac(currentText), lastMac)) {
       await Clipboard.setData(const ClipboardData(text: ''));
     }
-  } catch (_) {}
-  _lastCopiedHash = null;
+  } catch (_) {
+    // Clipboard access can fail while an application is shutting down.
+  }
+  _lastCopiedMac = null;
 }

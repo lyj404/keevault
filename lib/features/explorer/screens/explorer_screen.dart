@@ -375,7 +375,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     );
   }
 
-  void _deleteEntry(BuildContext context, WidgetRef ref, KdbxEntry entry) async {
+  void _deleteEntry(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry entry,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showMoveToRecycleBinDialog(
       context: context,
@@ -478,7 +482,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     }
   }
 
-  void _deleteGroup(BuildContext context, WidgetRef ref, KdbxGroup group) async {
+  void _deleteGroup(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxGroup group,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     if (group.entries.isNotEmpty || group.groups.isNotEmpty) {
       showToast(context, l10n.cannotDeleteNonEmptyGroup, isError: true);
@@ -523,11 +531,13 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
               service.markDirty();
               final newPath = service.getGroupPath(group);
               final currentPath = ref.read(currentGroupPathProvider);
-              if (currentPath == oldPath || currentPath.startsWith('$oldPath/')) {
-                ref.read(currentGroupPathProvider.notifier).state =
-                    currentPath == oldPath
-                        ? newPath
-                        : currentPath.replaceFirst('$oldPath/', '$newPath/');
+              if (currentPath == oldPath ||
+                  currentPath.startsWith('$oldPath/')) {
+                ref
+                    .read(currentGroupPathProvider.notifier)
+                    .state = currentPath == oldPath
+                    ? newPath
+                    : currentPath.replaceFirst('$oldPath/', '$newPath/');
               }
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
@@ -553,7 +563,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     final l10n = AppLocalizations.of(context)!;
     final isSaving = ref.read(isSavingProvider.notifier);
     isSaving.state = true;
-    
+
     try {
       final success = await ref.read(databaseProvider.notifier).save();
       if (!context.mounted) return;
@@ -1000,6 +1010,24 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       return;
     }
 
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.csvPlaintextWarningTitle),
+        content: Text(l10n.csvPlaintextWarningBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
     final csvService = ref.read(csvServiceProvider);
     final csvContent = csvService.exportToCsv(entries);
 

@@ -1,6 +1,14 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'logger.dart';
 
+class SecureStorageWriteException implements Exception {
+  final String key;
+  final Object cause;
+  const SecureStorageWriteException(this.key, this.cause);
+
+  @override
+  String toString() => 'SecureStorageWriteException(key: $key, cause: $cause)';
+}
 /// A wrapper around [FlutterSecureStorage] that gracefully handles
 /// Windows DPAPI corruption errors (CryptUnprotectData failure).
 ///
@@ -34,8 +42,11 @@ class SecureStorageHelper {
         await _storage.delete(key: key);
         await _storage.write(key: key, value: value);
       } catch (e2) {
-        log.e('SecureStorage retry write also failed for key: $key',
-            error: e2);
+        log.e(
+          'SecureStorage retry write also failed for key: $key',
+          error: e2,
+        );
+        throw SecureStorageWriteException(key, e2);
       }
     }
   }
@@ -57,3 +68,4 @@ class SecureStorageHelper {
     }
   }
 }
+

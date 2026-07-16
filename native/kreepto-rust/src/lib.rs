@@ -53,7 +53,7 @@ pub extern "C" fn aes256_encrypt_cbc(data: *mut u8, data_len: u32, key: *const u
     }
 
     let data_len = data_len as usize;
-    if data_len % AES_BLOCK_SIZE != 0 {
+    if !data_len.is_multiple_of(AES_BLOCK_SIZE) {
         return;
     }
 
@@ -82,7 +82,7 @@ pub extern "C" fn aes256_decrypt_cbc(data: *mut u8, data_len: u32, key: *const u
     }
 
     let data_len = data_len as usize;
-    if data_len % AES_BLOCK_SIZE != 0 {
+    if !data_len.is_multiple_of(AES_BLOCK_SIZE) {
         return;
     }
 
@@ -197,5 +197,71 @@ pub extern "C" fn argon2_hash(
     match argon2.hash_password_into(password, salt, output) {
         Ok(_) => 0,
         Err(_) => -1,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn aes_cbc_round_trip() {
+        let mut data = [0x42_u8; AES_BLOCK_SIZE * 2];
+        let original = data;
+        let key = [0x11_u8; AES_KEY_SIZE];
+        let iv = [0x22_u8; AES_BLOCK_SIZE];
+        aes256_encrypt_cbc(
+            data.as_mut_ptr(),
+            data.len() as u32,
+            key.as_ptr(),
+            iv.as_ptr(),
+        );
+        assert_ne!(data, original);
+        aes256_decrypt_cbc(
+            data.as_mut_ptr(),
+            data.len() as u32,
+            key.as_ptr(),
+            iv.as_ptr(),
+        );
+        assert_eq!(data, original);
+    }
+
+    #[test]
+    fn stream_ciphers_round_trip() {
+        let key = [0x33_u8; CHACHA20_KEY_SIZE];
+        let nonce = [0x44_u8; CHACHA20_NONCE_SIZE];
+        let mut data = [0x55_u8; 128];
+        let original = data;
+        chacha20_transform(
+            data.as_mut_ptr(),
+            data.len() as u32,
+            key.as_ptr(),
+            nonce.as_ptr(),
+            0,
+        );
+        assert_ne!(data, original);
+        chacha20_transform(
+            data.as_mut_ptr(),
+            data.len() as u32,
+            key.as_ptr(),
+            nonce.as_ptr(),
+            0,
+        );
+        assert_eq!(data, original);
+    }
+
+    #[test]
+    fn invalid_cbc_length_is_rejected_without_mutation() {
+        let mut data = [0x66_u8; AES_BLOCK_SIZE + 1];
+        let original = data;
+        let key = [0x77_u8; AES_KEY_SIZE];
+        let iv = [0x88_u8; AES_BLOCK_SIZE];
+        aes256_encrypt_cbc(
+            data.as_mut_ptr(),
+            data.len() as u32,
+            key.as_ptr(),
+            iv.as_ptr(),
+        );
+        assert_eq!(data, original);
     }
 }

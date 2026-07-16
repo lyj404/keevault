@@ -10,6 +10,7 @@ import '../../../core/providers/biometric_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../backup/data/backup_service.dart';
+import '../data/atomic_file_store.dart';
 import '../data/database_service.dart';
 import '../providers/database_provider.dart';
 
@@ -430,7 +431,28 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
           return;
         }
         final backupBytes = await File(backupPath).readAsBytes();
-        await File(widget.filePath).writeAsBytes(backupBytes);
+        // Validate the selected backup with the credentials entered on this
+        // screen before replacing the current database.
+        await DatabaseService.validateBytes(
+          backupBytes,
+          _passwordController.text,
+          keyData: _keyData,
+        );
+        await const AtomicFileStore().commit(
+          widget.filePath,
+          backupBytes,
+          backup: () async {
+            if (!await File(widget.filePath).exists()) return;
+            final currentBackup = await backupService.createBackup(
+              widget.filePath,
+            );
+            if (currentBackup == null) {
+              throw const FileSystemException(
+                'Unable to back up current database',
+              );
+            }
+          },
+        );
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -448,3 +470,5 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     }
   }
 }
+
+

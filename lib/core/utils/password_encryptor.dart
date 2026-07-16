@@ -11,6 +11,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// - `ENC:` prefix — old XOR scheme (cryptographically weak, decrypt-only)
 /// - no prefix — plaintext
 /// Both are transparently migrated to `ENC2:` when re-encrypted.
+class PasswordDecryptionException implements Exception {
+  final String format;
+  final Object? cause;
+
+  const PasswordDecryptionException(this.format, [this.cause]);
+
+  @override
+  String toString() => 'PasswordDecryptionException($format)';
+}
+
 class PasswordEncryptor {
   static const _keyStorageName = 'webdav_enc_key';
   static const _legacyIvLength = 16;
@@ -78,7 +88,8 @@ class PasswordEncryptor {
 
   /// Decrypts an encrypted password string. Supports the current AES-GCM
   /// format, the legacy XOR format, and plaintext (returned as-is).
-  /// Returns '' if decryption fails (e.g. tampered data or wrong key).
+  /// Throws [PasswordDecryptionException] if encrypted data is malformed,
+  /// tampered with, or cannot be decrypted using the device key.
   Future<String> decrypt(String encryptedPassword) async {
     if (encryptedPassword.isEmpty) return '';
     if (isEncrypted(encryptedPassword)) {
@@ -103,8 +114,8 @@ class PasswordEncryptor {
       );
       final clear = await _aesGcm.decrypt(secretBox, secretKey: SecretKey(key));
       return utf8.decode(clear);
-    } catch (_) {
-      return '';
+    } catch (error) {
+      throw PasswordDecryptionException('aes-gcm', error);
     }
   }
 
@@ -115,7 +126,9 @@ class PasswordEncryptor {
       final key = await _getOrCreateKey();
       final data = base64Url.decode(base64Data);
 
-      if (data.length <= _legacyIvLength) return '';
+      if (data.length <= _legacyIvLength) {
+        throw const PasswordDecryptionException('legacy-xor');
+      }
 
       final iv = data.sublist(0, _legacyIvLength);
       final ciphertext = data.sublist(_legacyIvLength);
@@ -126,8 +139,10 @@ class PasswordEncryptor {
         decrypted[i] = ciphertext[i] ^ k;
       }
       return utf8.decode(decrypted);
-    } catch (_) {
-      return '';
+    } on PasswordDecryptionException {
+      rethrow;
+    } catch (error) {
+      throw PasswordDecryptionException('legacy-xor', error);
     }
   }
 }

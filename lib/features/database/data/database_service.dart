@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/crypto/crypto_service.dart';
 import '../../../core/utils/fnv_hash.dart';
+import 'atomic_file_store.dart';
 import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
 import '../../../core/utils/fuzzy_match.dart';
@@ -136,6 +137,8 @@ class _SearchRecord {
 
 class DatabaseService {
   final _backupService = BackupService();
+  final _atomicFileStore = const AtomicFileStore();
+  Future<void> _saveQueue = Future<void>.value();
   KdbxDatabase? _db;
   String? _filePath;
   String? _password;
@@ -274,6 +277,14 @@ class DatabaseService {
     });
   }
 
+  /// Validates serialized KDBX bytes without mutating the active service.
+  static Future<void> validateBytes(
+    Uint8List bytes,
+    String password, {
+    Uint8List? keyData,
+  }) async {
+    await _loadDatabase(bytes, password, keyData: keyData);
+  }
   Future<KdbxDatabase> openFile(
     String filePath,
     String password, {
@@ -347,7 +358,19 @@ class DatabaseService {
   /// Saves the database to disk and returns the serialized bytes.
   /// The serialization+encryption runs in a background isolate to avoid blocking the UI.
   /// Returns the serialized bytes so callers can reuse them (e.g. for cloud upload).
-  Future<Uint8List> save() async {
+  Future<Uint8List> save() {
+    final completer = Completer<Uint8List>();
+    _saveQueue = _saveQueue.then((_) async {
+      try {
+        completer.complete(await _saveOnce());
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    return completer.future;
+  }
+
+  Future<Uint8List> _saveOnce() async {
     if (_db == null || _filePath == null) return Uint8List(0);
     log.i('Saving database: $_filePath');
     final db = _db!;
@@ -358,20 +381,22 @@ class DatabaseService {
         return db.save();
       }),
     );
-    if (await _backupService.isAutoBackupEnabled()) {
-      unawaited(
-        _backupService.createBackup(_filePath!).catchError((e) {
-          log.e('Auto-backup failed', error: e);
-          return null;
-        }),
-      );
-    }
-    await File(_filePath!).writeAsBytes(bytes);
+    await validateBytes(bytes, _password!, keyData: _keyData);
+    final path = _filePath!;
+    await _atomicFileStore.commit(
+      path,
+      bytes,
+      backup: () async {
+        if (await _backupService.isAutoBackupEnabled()) {
+          final backup = await _backupService.createBackup(path);
+          if (backup == null) {
+            throw const FileSystemException('Unable to create database backup');
+          }
+        }
+      },
+    );
     _lastSavedBytes = bytes;
     _lastSavedHash = _computeBytesHash(bytes);
-    // Only clear the dirty flag if no mutations happened while the
-    // serialization isolate was running; otherwise those changes would be
-    // silently lost (never auto-saved, never saved on close).
     if (_mutationCount == mutationCountAtStart) {
       markClean();
     } else {
@@ -407,8 +432,14 @@ class DatabaseService {
   }
 
   Future<void> saveAs(String newPath) async {
+    final previousPath = _filePath;
     _filePath = newPath;
-    await save();
+    try {
+      await save();
+    } catch (_) {
+      _filePath = previousPath;
+      rethrow;
+    }
   }
 
   KdbxGroup createGroup(KdbxGroup parent, String name) {
@@ -696,3 +727,6 @@ class DatabaseService {
     _lastSavedHash = null;
   }
 }
+
+
+

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cryptography/cryptography.dart';
 import '../../../core/utils/secure_storage_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../core/utils/logger.dart';
@@ -81,8 +82,17 @@ class BackupService {
         backupFile = File('${dir.path}/$filename');
         counter++;
       }
-      await backupFile.writeAsBytes(bytes);
-      await _writeMetadata(filename, sourcePath: filePath);
+      await backupFile.writeAsBytes(bytes, flush: true);
+      final digest = await Sha256().hash(bytes);
+      final sha256 = digest.bytes
+          .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+          .join();
+      await _writeMetadata(
+        filename,
+        sourcePath: filePath,
+        sha256: sha256,
+        sizeBytes: bytes.length,
+      );
       log.i('Backup created: $filename (${bytes.length} bytes)');
       await _cleanupOldBackups(filePath);
       return BackupInfo(
@@ -167,14 +177,21 @@ class BackupService {
   Future<void> _writeMetadata(
     String filename, {
     required String sourcePath,
+    required String sha256,
+    required int sizeBytes,
   }) async {
     final metaFile = await _metadataFile(filename);
     await metaFile.writeAsString(
-      jsonEncode({'sourcePath': sourcePath}),
+      jsonEncode({
+        'version': 2,
+        'sourcePath': sourcePath,
+        'sha256': sha256,
+        'sizeBytes': sizeBytes,
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
+      }),
       flush: true,
     );
   }
-
   Future<String?> _readSourcePath(String filename) async {
     final metaFile = await _metadataFile(filename);
     if (!await metaFile.exists()) return null;
@@ -201,3 +218,5 @@ class BackupService {
     return File('${dir.path}/$filename.meta.json');
   }
 }
+
+

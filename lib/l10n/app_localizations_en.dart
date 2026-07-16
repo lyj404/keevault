@@ -1175,4 +1175,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get strengthStrong => 'Strong';
+
+  @override
+  String get csvPlaintextWarningTitle => 'Export plaintext passwords';
+
+  @override
+  String get csvPlaintextWarningBody =>
+      'CSV files are not encrypted and contain every password in plaintext. Anyone with access to the file can read them. Prefer exporting KDBX. Continue anyway?';
+
+  @override
+  String get webDavInvalidUrl =>
+      'The server address must be a valid HTTP or HTTPS URL';
+
+  @override
+  String get webDavInsecureHttpTitle => 'Insecure WebDAV connection';
+
+  @override
+  String get webDavInsecureHttpBody =>
+      'This server uses unencrypted HTTP. Your credentials and database may be intercepted by others on the network. HTTPS is recommended. Continue anyway?';
+
+  @override
+  String get privacyProtection => 'Privacy protection';
+
+  @override
+  String get blockScreenshots => 'Block screenshots';
+
+  @override
+  String get blockScreenshotsDescription =>
+      'Prevent screenshots and recent-app previews on Android.';
+
+  @override
+  String get hideInBackground => 'Hide content in background';
+
+  @override
+  String get hideInBackgroundDescription =>
+      'Cover the vault while the app is inactive or in the background.';
 }

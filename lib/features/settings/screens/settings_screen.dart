@@ -12,6 +12,7 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/auto_save_provider.dart';
+import '../../../core/providers/privacy_provider.dart';
 import '../../../core/providers/close_behavior_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../../core/providers/biometric_provider.dart';
@@ -369,6 +370,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 16),
+
+                  // Privacy protection card
+                  _SectionCard(
+                    brightness: brightness,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.privacy_tip_outlined,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.privacyProtection,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.blockScreenshots),
+                          subtitle: Text(l10n.blockScreenshotsDescription),
+                          value: ref.watch(privacyProvider).blockScreenshots,
+                          onChanged: (value) => ref
+                              .read(privacyProvider.notifier)
+                              .setBlockScreenshots(value),
+                        ),
+                        SwitchListTile.adaptive(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.hideInBackground),
+                          subtitle: Text(l10n.hideInBackgroundDescription),
+                          value: ref.watch(privacyProvider).hideInBackground,
+                          onChanged: (value) => ref
+                              .read(privacyProvider.notifier)
+                              .setHideInBackground(value),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   const SizedBox(height: 16),
 
@@ -875,9 +921,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               hintText: l10n.serverAddressHint,
                               helperText: l10n.serverAddressHelper,
                             ),
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? l10n.pleaseEnterServerAddress
-                                : null,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return l10n.pleaseEnterServerAddress;
+                              }
+                              final uri = Uri.tryParse(v.trim());
+                              if (uri == null ||
+                                  !uri.hasAuthority ||
+                                  (uri.scheme != 'http' &&
+                                      uri.scheme != 'https')) {
+                                return l10n.webDavInvalidUrl;
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -1037,8 +1093,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Future<bool> _confirmInsecureHttp() async {
+    final uri = Uri.tryParse(_urlController.text.trim());
+    if (uri?.scheme != 'http') return true;
+    final l10n = AppLocalizations.of(context)!;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.webDavInsecureHttpTitle),
+            content: Text(l10n.webDavInsecureHttpBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.confirm),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!await _confirmInsecureHttp() || !mounted) return;
     setState(() {
       _testing = true;
       _connectionOk = null;
@@ -1054,8 +1135,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         remotePath: _pathController.text.trim(),
         remoteFilename: _filenameController.text.trim(),
       );
-      final errorKey =
-          await ref.read(syncServiceProvider).testConnection(config);
+      final errorKey = await ref
+          .read(syncServiceProvider)
+          .testConnection(config);
       if (mounted) {
         setState(() {
           _testing = false;
@@ -1093,6 +1175,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!await _confirmInsecureHttp() || !mounted) return;
     try {
       final profileId = _selectedProfileId ?? _generateProfileId();
       final config = WebDavConfig(
@@ -1106,9 +1189,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         enabled: _enabled,
       );
       await ref.read(webDavSettingsServiceProvider).saveConfig(config);
-      await ref
-          .read(webDavSettingsServiceProvider)
-          .setActiveProfile(profileId);
+      await ref.read(webDavSettingsServiceProvider).setActiveProfile(profileId);
       _selectedProfileId = profileId;
       await _loadConfig();
       ref.invalidate(webDavConfigProvider);
@@ -1193,8 +1274,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _deleteCurrentProfile() async {
     final l10n = AppLocalizations.of(context)!;
-    final profile =
-        _profiles.where((p) => p.id == _selectedProfileId).firstOrNull;
+    final profile = _profiles
+        .where((p) => p.id == _selectedProfileId)
+        .firstOrNull;
     if (profile == null) return;
     if (_profiles.length <= 1) {
       showToast(context, l10n.cannotDeleteLastProfile, isError: true);
@@ -1219,9 +1301,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (confirmed != true) return;
     try {
-      await ref
-          .read(webDavSettingsServiceProvider)
-          .deleteProfile(profile.id);
+      await ref.read(webDavSettingsServiceProvider).deleteProfile(profile.id);
       await _loadConfig();
       ref.invalidate(webDavConfigProvider);
       ref.invalidate(webDavProfilesStateProvider);
@@ -1340,8 +1420,6 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SectionCard(
-      children: [child],
-    );
+    return SectionCard(children: [child]);
   }
 }

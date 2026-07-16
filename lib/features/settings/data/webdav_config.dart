@@ -23,6 +23,20 @@ class WebDavConfig {
 
   /// Builds the full remote file path for WebDAV operations.
   /// If remotePath is empty, only the filename is used (relative to server URL).
+  /// Validates and normalizes the configured endpoint. Only WebDAV over HTTP
+  /// or HTTPS is supported. Callers should warn before using insecure HTTP.
+  Uri get serverUri {
+    final uri = Uri.tryParse(serverUrl.trim());
+    if (uri == null ||
+        !uri.hasScheme ||
+        !uri.hasAuthority ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      throw const FormatException('WebDAV URL must use http or https');
+    }
+    return uri;
+  }
+
+  bool get usesInsecureHttp => serverUri.scheme == 'http';
   String get remoteFilePath {
     final path = remotePath.trim();
     final name = remoteFilename.trim();
@@ -150,3 +164,4 @@ class WebDavProfilesState {
   factory WebDavProfilesState.decode(String source) =>
       WebDavProfilesState.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }
+

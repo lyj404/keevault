@@ -103,7 +103,11 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     } on TimeoutException {
       log.w('Save before app exit timed out; local save may have completed.');
     } catch (e, st) {
-      log.e('Failed to save database before app exit', error: e, stackTrace: st);
+      log.e(
+        'Failed to save database before app exit',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -167,19 +171,28 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              title: Text(l10n?.close ?? 'Close', style: theme.textTheme.titleLarge),
+              title: Text(
+                l10n?.close ?? 'Close',
+                style: theme.textTheme.titleLarge,
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n?.closeWindowMessage ?? 'What would you like to do?', style: bodyStyle),
+                  Text(
+                    l10n?.closeWindowMessage ?? 'What would you like to do?',
+                    style: bodyStyle,
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(ctx).pop(false),
-                          child: Text(l10n?.minimize ?? 'Minimize', style: labelStyle),
+                          child: Text(
+                            l10n?.minimize ?? 'Minimize',
+                            style: labelStyle,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -196,10 +209,14 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
                     children: [
                       Checkbox(
                         value: remember,
-                        onChanged: (v) => setDialogState(() => remember = v ?? false),
+                        onChanged: (v) =>
+                            setDialogState(() => remember = v ?? false),
                       ),
                       Flexible(
-                        child: Text(l10n?.rememberChoice ?? 'Remember my choice', style: bodyStyle),
+                        child: Text(
+                          l10n?.rememberChoice ?? 'Remember my choice',
+                          style: bodyStyle,
+                        ),
                       ),
                     ],
                   ),
@@ -215,7 +232,9 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
 
     if (result == true) {
       if (remember) {
-        await ref.read(closeBehaviorProvider.notifier).setCloseBehavior(CloseBehavior.exit);
+        await ref
+            .read(closeBehaviorProvider.notifier)
+            .setCloseBehavior(CloseBehavior.exit);
       }
       await _persistDirtyDatabase();
       await clearClipboardIfCopied();
@@ -223,7 +242,9 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       await windowManager.close();
     } else {
       if (remember) {
-        await ref.read(closeBehaviorProvider.notifier).setCloseBehavior(CloseBehavior.minimizeToTray);
+        await ref
+            .read(closeBehaviorProvider.notifier)
+            .setCloseBehavior(CloseBehavior.minimizeToTray);
       }
       if (_trayInitialized) {
         await windowManager.hide();

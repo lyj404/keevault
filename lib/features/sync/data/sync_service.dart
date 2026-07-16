@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import '../../../core/utils/fnv_hash.dart';
@@ -14,7 +15,15 @@ class RemoteFileInfo {
 }
 
 /// Classification of sync errors for user-friendly messaging.
-enum SyncErrorType { network, auth, notFound, timeout, serverError, unknown }
+enum SyncErrorType {
+  network,
+  auth,
+  notFound,
+  timeout,
+  conflict,
+  serverError,
+  unknown,
+}
 
 class SyncException implements Exception {
   final SyncErrorType type;
@@ -32,34 +41,36 @@ class SyncService {
   static const _maxRetries = 3;
   static const _baseDelayMs = 1000;
 
-  /// Classifies an exception into a [SyncErrorType] for user-friendly messaging.
-  SyncErrorType _classifyError(Object e) {
-    final msg = e.toString().toLowerCase();
-    if (msg.contains('401') ||
-        msg.contains('403') ||
-        msg.contains('unauthorized')) {
+  /// Classifies transport failures using typed Dio metadata whenever it is
+  /// available. String matching is retained only for third-party WebDAV
+  /// exceptions that do not expose a status code.
+  SyncErrorType _classifyError(Object error) {
+    if (error is SyncException) return error.type;
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      if (status == 401 || status == 403) return SyncErrorType.auth;
+      if (status == 404) return SyncErrorType.notFound;
+      if (status == 409 || status == 412) return SyncErrorType.conflict;
+      if (status != null && status >= 500) return SyncErrorType.serverError;
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return SyncErrorType.timeout;
+      }
+      if (error.type == DioExceptionType.connectionError) {
+        return SyncErrorType.network;
+      }
+    }
+    if (error is SocketException) return SyncErrorType.network;
+    final message = error.toString().toLowerCase();
+    if (message.contains('401') || message.contains('403')) {
       return SyncErrorType.auth;
     }
-    if (msg.contains('404') || msg.contains('not found')) {
-      return SyncErrorType.notFound;
+    if (message.contains('404')) return SyncErrorType.notFound;
+    if (message.contains('409') || message.contains('412')) {
+      return SyncErrorType.conflict;
     }
-    if (msg.contains('socketexception') ||
-        msg.contains('connection refused') ||
-        msg.contains('network') ||
-        msg.contains('host') ||
-        msg.contains('connection reset') ||
-        msg.contains('broken pipe')) {
-      return SyncErrorType.network;
-    }
-    if (msg.contains('timeout') || msg.contains('timed out')) {
-      return SyncErrorType.timeout;
-    }
-    if (msg.contains('500') ||
-        msg.contains('502') ||
-        msg.contains('503') ||
-        msg.contains('504')) {
-      return SyncErrorType.serverError;
-    }
+    if (message.contains('timeout')) return SyncErrorType.timeout;
     return SyncErrorType.unknown;
   }
 
@@ -131,7 +142,7 @@ class SyncService {
   Future<String?> testConnection(WebDavConfig config) async {
     log.i('Testing WebDAV connection: ${config.serverUrl}');
     try {
-      final client = _buildClient(config, debug: true);
+      final client = _buildClient(config);
       final remotePath = config.remotePath.isEmpty ? '/' : config.remotePath;
       try {
         await client.readDir(remotePath);
@@ -204,42 +215,116 @@ class SyncService {
     }
   }
 
-  /// Downloads database bytes along with remote file metadata.
+  /// Downloads bytes and revision metadata from the same HTTP GET response,
+  /// avoiding a read/readProps race where the reported ETag could belong to a
+  /// newer version than the downloaded bytes.
   Future<({Uint8List bytes, RemoteFileInfo info})?> downloadWithInfo(
     WebDavConfig config,
   ) async {
-    log.i('Downloading with metadata from: ${config.remoteFilePath}');
+    log.i('Downloading database with revision metadata');
     final client = _buildClient(config);
     try {
-      final bytes = await _withRetry(
+      final response = await _withRetry(
         'Download',
-        () => client.read(config.remoteFilePath),
+        () => client.c.req<List<int>>(
+          client,
+          'GET',
+          config.remoteFilePath,
+          optionsHandler: (options) =>
+              options.responseType = ResponseType.bytes,
+        ),
       );
-      // Read props after download to get the eTag of the version we actually received.
-      final file = await client.readProps(config.remoteFilePath);
-      log.i('Downloaded ${bytes.length} bytes, eTag: ${file.eTag}');
-      return (
-        bytes: Uint8List.fromList(bytes),
-        info: RemoteFileInfo(eTag: file.eTag, mTime: file.mTime),
+      final status = response.statusCode;
+      if (status != 200) throw _httpException(status, response.statusMessage);
+      final data = response.data;
+      if (data == null) {
+        throw SyncException(SyncErrorType.serverError, 'Empty WebDAV response');
+      }
+      final info = RemoteFileInfo(
+        eTag: response.headers.value('etag'),
+        mTime: _parseHttpDate(response.headers.value('last-modified')),
       );
-    } catch (e) {
-      log.e('Download with info failed', error: e);
-      return null;
+      log.i('Downloaded ${data.length} bytes with a revision token');
+      return (bytes: Uint8List.fromList(data), info: info);
+    } catch (error) {
+      final typed = _asSyncException(error);
+      log.e('Download with info failed', error: typed);
+      if (typed.type == SyncErrorType.notFound) return null;
+      throw typed;
     }
   }
 
-  Future<void> uploadDatabase(WebDavConfig config, Uint8List bytes) async {
-    log.i('Uploading ${bytes.length} bytes to: ${config.remoteFilePath}');
+  /// Atomically uploads only if the remote revision still matches
+  /// [expected]. New files use If-None-Match so an unexpectedly created file
+  /// cannot be overwritten. Conditional PUT is deliberately never retried:
+  /// after an ambiguous network failure the caller must fetch remote state.
+  Future<RemoteFileInfo> uploadDatabase(
+    WebDavConfig config,
+    Uint8List bytes, {
+    RemoteFileInfo? expected,
+    bool force = false,
+  }) async {
+    log.i('Uploading ${bytes.length} bytes with conflict protection');
     final client = _buildClient(config);
     try {
-      await _withRetry(
-        'Upload',
-        () => client.write(config.remoteFilePath, bytes),
+      final response = await client.c.req<void>(
+        client,
+        'PUT',
+        config.remoteFilePath,
+        data: Stream<List<int>>.value(bytes),
+        optionsHandler: (options) {
+          options.headers?['content-length'] = bytes.length;
+          if (!force) {
+            final eTag = expected?.eTag;
+            options.headers?[eTag == null ? 'if-none-match' : 'if-match'] =
+                eTag ?? '*';
+          }
+        },
       );
+      final status = response.statusCode;
+      if (status != 200 && status != 201 && status != 204) {
+        throw _httpException(status, response.statusMessage);
+      }
       log.i('Upload complete');
-    } catch (e) {
-      log.e('Upload failed', error: e);
-      rethrow;
+      final responseETag = response.headers.value('etag');
+      final responseMTime = _parseHttpDate(
+        response.headers.value('last-modified'),
+      );
+      if (responseETag != null || responseMTime != null) {
+        return RemoteFileInfo(eTag: responseETag, mTime: responseMTime);
+      }
+      return await getRemoteFileInfo(config) ?? const RemoteFileInfo();
+    } catch (error) {
+      final typed = _asSyncException(error);
+      log.e('Upload failed', error: typed);
+      throw typed;
+    }
+  }
+
+  SyncException _httpException(int? status, String? message) {
+    final type = switch (status) {
+      401 || 403 => SyncErrorType.auth,
+      404 => SyncErrorType.notFound,
+      409 || 412 => SyncErrorType.conflict,
+      int value when value >= 500 => SyncErrorType.serverError,
+      _ => SyncErrorType.unknown,
+    };
+    return SyncException(
+      type,
+      'WebDAV HTTP ${status ?? 'unknown'}: ${message ?? ''}',
+    );
+  }
+
+  SyncException _asSyncException(Object error) => error is SyncException
+      ? error
+      : SyncException(_classifyError(error), 'WebDAV operation failed', error);
+
+  DateTime? _parseHttpDate(String? value) {
+    if (value == null) return null;
+    try {
+      return HttpDate.parse(value);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -262,7 +347,7 @@ class SyncService {
       await cacheDir.create(recursive: true);
     }
     final file = File('${cacheDir.path}/${_cacheFileNameFor(config)}');
-    await file.writeAsBytes(bytes);
+    await file.writeAsBytes(bytes, flush: true);
     return file.path;
   }
 

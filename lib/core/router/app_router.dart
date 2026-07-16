@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/database/providers/database_provider.dart';
 import '../../features/database/screens/welcome_screen.dart';
 import '../../features/database/screens/unlock_screen.dart';
 import '../../features/database/screens/create_database_screen.dart';
@@ -15,9 +17,31 @@ import '../../features/about/screens/about_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final appRouter = GoRouter(
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final router = createAppRouter(ref);
+  ref.onDispose(router.dispose);
+  return router;
+});
+
+GoRouter createAppRouter(Ref ref) => GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/welcome',
+  redirect: (context, state) {
+    const protectedPrefixes = [
+      '/explorer',
+      '/entry/',
+      '/group/',
+      '/search',
+      '/backup',
+    ];
+    final protected = protectedPrefixes.any(
+      (prefix) => state.uri.path.startsWith(prefix),
+    );
+    if (protected && !ref.read(databaseServiceProvider).isOpen) {
+      return '/welcome';
+    }
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/welcome',

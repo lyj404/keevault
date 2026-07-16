@@ -1,7 +1,6 @@
 # Claude Code
 .claude/
 CLAUDE.md
-.metadata
 
 # Miscellaneous
 *.class
@@ -46,7 +45,6 @@ captures/
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
 
 # Symbolication related
 app.*.symbols
@@ -115,3 +113,5 @@ coverage/
 
 # Codex agents skills
 .agents/
+
+.vfox/

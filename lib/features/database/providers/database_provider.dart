@@ -13,7 +13,8 @@ import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../backup/providers/backup_provider.dart';
 import '../../settings/providers/settings_provider.dart';
-import '../../sync/data/sync_service.dart' show RemoteFileInfo;
+import '../../sync/data/sync_service.dart'
+    show RemoteFileInfo, SyncErrorType, SyncException;
 import '../../sync/providers/sync_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
@@ -196,16 +197,14 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           return true;
         }
         await syncService.ensureRemoteDirectory(config);
-        await syncService.uploadDatabase(config, bytes);
-        // Store the remote metadata after successful upload.
-        // NOTE: webdav_client has no If-Match support, so the check-then-put
-        // above is not atomic; if another device writes between our upload and
-        // this readProps, we may record their eTag as ours. Window is small
-        // but cannot be fully closed with this library.
-        final newInfo = await syncService.getRemoteFileInfo(config);
+        final newInfo = await syncService.uploadDatabase(
+          config,
+          bytes,
+          expected: lastInfo,
+        );
         _service.setLastSyncedRemoteInfo(newInfo);
         // Persist the eTag so next startup can skip redundant download
-        if (newInfo?.eTag != null && _service.filePath != null) {
+        if (newInfo.eTag != null && _service.filePath != null) {
           final recentSvc = _ref.read(recentFilesServiceProvider);
           final existing = await recentSvc.getRecentFiles();
           final wasCloud = existing.any(
@@ -217,7 +216,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
               isCloud: wasCloud,
               remotePath: config.remoteFilePath,
               webDavProfileId: _currentWebDavProfileId,
-              lastSyncedETag: newInfo!.eTag,
+              lastSyncedETag: newInfo.eTag,
               lastSyncedMTime: newInfo.mTime,
             ),
             recentSvc.setLastOpenedFile(
@@ -233,7 +232,12 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         _ref.read(syncStateProvider.notifier).state = SyncState.success;
       } catch (e) {
         log.e('Sync failed', error: e);
-        _ref.read(syncStateProvider.notifier).state = SyncState.error;
+        if (e is SyncException && e.type == SyncErrorType.conflict) {
+          _lastSyncAuditReport = await inspectCloudDiff();
+          _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
+        } else {
+          _ref.read(syncStateProvider.notifier).state = SyncState.error;
+        }
         _lastSyncError = e;
         return false;
       }
@@ -256,10 +260,13 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       final syncService = _ref.read(syncServiceProvider);
       await syncService.ensureRemoteDirectory(config);
       final bytes = await _service.saveToBytes();
-      await syncService.uploadDatabase(config, bytes);
-      final newInfo = await syncService.getRemoteFileInfo(config);
+      final newInfo = await syncService.uploadDatabase(
+        config,
+        bytes,
+        force: true,
+      );
       _service.setLastSyncedRemoteInfo(newInfo);
-      if (newInfo?.eTag != null && _service.filePath != null) {
+      if (newInfo.eTag != null && _service.filePath != null) {
         final recentSvc = _ref.read(recentFilesServiceProvider);
         await Future.wait([
           recentSvc.addRecentFile(
@@ -267,7 +274,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             isCloud: true,
             remotePath: config.remoteFilePath,
             webDavProfileId: _currentWebDavProfileId,
-            lastSyncedETag: newInfo!.eTag,
+            lastSyncedETag: newInfo.eTag,
             lastSyncedMTime: newInfo.mTime,
           ),
           recentSvc.setLastOpenedFile(

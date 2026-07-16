@@ -61,6 +61,7 @@ dependencies:
   logger: ^2.5.0
 
   webdav_client: ^1.2.2
+  dio: ^5.9.0
   image_picker: ^1.2.3
 
   # AES-GCM encryption for stored WebDAV passwords

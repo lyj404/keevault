@@ -11,6 +11,7 @@ import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/providers/privacy_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/utils/clipboard_utils.dart';
 import 'features/database/providers/database_provider.dart';
@@ -25,8 +26,10 @@ class KeeVaultApp extends ConsumerStatefulWidget {
   ConsumerState<KeeVaultApp> createState() => _KeeVaultAppState();
 }
 
-class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingObserver {
+class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
+    with WidgetsBindingObserver {
   final _focusNode = FocusNode();
+  bool _backgroundPrivacyVisible = false;
 
   @override
   void initState() {
@@ -47,11 +50,18 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final hideInBackground = ref.read(privacyProvider).hideInBackground;
     if (state == AppLifecycleState.resumed) {
+      if (mounted) setState(() => _backgroundPrivacyVisible = false);
       final db = ref.read(databaseProvider).valueOrNull;
       if (db != null) {
         ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
       }
+    } else if (hideInBackground &&
+        (state == AppLifecycleState.inactive ||
+            state == AppLifecycleState.paused ||
+            state == AppLifecycleState.hidden)) {
+      if (mounted) setState(() => _backgroundPrivacyVisible = true);
     }
   }
 
@@ -122,7 +132,9 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
           backgroundColor: const Color(0xFF0D9488),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return KeyEventResult.handled;
@@ -130,7 +142,10 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
     return KeyEventResult.ignored;
   }
 
-  Future<void> _saveDatabase(BuildContext navCtx, AppLocalizations? l10n) async {
+  Future<void> _saveDatabase(
+    BuildContext navCtx,
+    AppLocalizations? l10n,
+  ) async {
     final dbState = ref.read(databaseProvider);
     if (!dbState.hasValue || dbState.value == null) return;
 
@@ -139,13 +154,17 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
       ScaffoldMessenger.of(navCtx).showSnackBar(
         SnackBar(
           content: Text(
-            success ? (l10n?.saved ?? 'Saved') : (l10n?.syncFailed ?? 'Save failed'),
+            success
+                ? (l10n?.saved ?? 'Saved')
+                : (l10n?.syncFailed ?? 'Save failed'),
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: success ? const Color(0xFF0D9488) : Colors.red,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -161,6 +180,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final router = ref.watch(appRouterProvider);
     // Auto-save: schedule save when database becomes dirty.
     ref.listen(isDirtyProvider, (prev, next) {
       if (next) {
@@ -174,28 +194,50 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp> with WidgetsBindingOb
       onKeyEvent: _handleKeyEvent,
       child: Listener(
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
-        onPointerHover: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
-        onPointerSignal: (_) { ref.read(autoLockProvider.notifier).resetTimer(); ref.read(autoSaveProvider.notifier).resetTimer(); },
-        child: MaterialApp.router(
-        title: 'KeeVault',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: themeMode,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
-        locale: locale,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [
-          Locale('zh'),
-          Locale('en'),
-        ],
-      ),
+        onPointerDown: (_) {
+          ref.read(autoLockProvider.notifier).resetTimer();
+          ref.read(autoSaveProvider.notifier).resetTimer();
+        },
+        onPointerHover: (_) {
+          ref.read(autoLockProvider.notifier).resetTimer();
+          ref.read(autoSaveProvider.notifier).resetTimer();
+        },
+        onPointerSignal: (_) {
+          ref.read(autoLockProvider.notifier).resetTimer();
+          ref.read(autoSaveProvider.notifier).resetTimer();
+        },
+        child: Stack(
+          textDirection: TextDirection.ltr,
+          children: [
+            MaterialApp.router(
+              title: 'KeeVault',
+              theme: AppTheme.light(),
+              darkTheme: AppTheme.dark(),
+              themeMode: themeMode,
+              routerConfig: router,
+              debugShowCheckedModeBanner: false,
+              locale: locale,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('zh'), Locale('en')],
+            ),
+            if (_backgroundPrivacyVisible)
+              const ColoredBox(
+                color: Color(0xFF111827),
+                child: Center(
+                  child: Icon(
+                    Icons.lock_rounded,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
