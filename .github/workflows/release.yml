@@ -61,13 +61,22 @@ jobs:
           $sourceDir = "${{ github.workspace }}\build\windows\x64\runner\Release"
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAPP_VERSION=$version" "/DSOURCE_DIR=$sourceDir" windows/inno_setup/keevault.iss
 
+      - name: Verify Windows packages
+        shell: pwsh
+        run: |
+          $zip = @(Get-ChildItem -Path "KeeVault-*.zip" -File)
+          $installer = @(Get-ChildItem -Path "build/windows/installer" -Filter "KeeVault-*-setup.exe" -File)
+          if ($zip.Count -eq 0) { throw "Windows ZIP was not generated." }
+          if ($installer.Count -eq 0) { throw "Windows installer was not generated." }
+          $zip | ForEach-Object { Write-Host "Found ZIP: $($_.FullName)" }
+          $installer | ForEach-Object { Write-Host "Found installer: $($_.FullName)" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows
           path: |
             KeeVault-*.zip
             build/windows/installer/KeeVault-*-setup.exe
-
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -278,9 +287,25 @@ jobs:
         with:
           merge-multiple: true
 
-      - name: Generate checksums
-        run: find . -maxdepth 3 -type f \( -name 'KeeVault-*' -o -name 'keevault_*' \) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - name: Flatten downloaded artifacts
+        shell: bash
+        run: |
+          find . -mindepth 2 -type f \
+            \( -name 'KeeVault-*' -o -name 'keevault_*.deb' \) \
+            -exec cp -f {} . \;
 
+          echo "Downloaded release files:"
+          find . -maxdepth 1 -type f -print | sort
+
+          installer_count=$(find . -maxdepth 1 -type f -name 'KeeVault-*-setup.exe' | wc -l)
+          if [ "$installer_count" -eq 0 ]; then
+            echo "Windows installer is missing after artifact download." >&2
+            find . -maxdepth 4 -type f -print | sort
+            exit 1
+          fi
+
+      - name: Generate checksums
+        run: find . -maxdepth 1 -type f \( -name 'KeeVault-*' -o -name 'keevault_*' \) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
