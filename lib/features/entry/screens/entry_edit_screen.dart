@@ -533,7 +533,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final result = await showTotpEditSheet(context, initial: _totpConfig);
+                    final result = await showTotpEditSheet(
+                      context,
+                      initial: _totpConfig,
+                      initialTitle: _titleCtrl.text,
+                    );
                     if (result != null) setState(() => _totpConfig = result.config);
                   },
                   child: Text(l10n.edit),

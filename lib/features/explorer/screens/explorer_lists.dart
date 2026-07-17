@@ -457,11 +457,9 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
     service.markDirty();
     refreshExplorerLists(ref);
 
-    if (context.mounted) {
-      context.push(
-        '/entry/edit?uuid=${entry.uuid}&groupPath=${Uri.encodeComponent(groupPath)}',
-      );
-    }
+    // The TOTP tab already shows the new item. Avoid pushing another route
+    // after the scanner and bottom sheet close; this caused a grey page on
+    // some Android devices.
   }
 
   @override

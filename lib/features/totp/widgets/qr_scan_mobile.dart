@@ -102,7 +102,24 @@ class _QrScanScreenState extends State<QrScanScreen> {
       ),
       body: Stack(
         children: [
-          MobileScanner(controller: _scannerCtrl, onDetect: _onDetectBarcode),
+          Positioned.fill(
+            child: MobileScanner(
+              controller: _scannerCtrl,
+              onDetect: _onDetectBarcode,
+              errorBuilder: (context, error, child) {
+                return ColoredBox(
+                  color: Colors.black,
+                  child: Center(
+                    child: Text(
+                      error.errorDetails?.message ?? 'Camera unavailable',
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           Positioned(
             bottom: 48,
             left: 0,

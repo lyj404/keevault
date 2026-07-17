@@ -14,17 +14,22 @@ class TotpEditResult {
 Future<TotpEditResult?> showTotpEditSheet(
   BuildContext context, {
   TotpConfig? initial,
+  String? initialTitle,
 }) {
   return showModalBottomSheet<TotpEditResult>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _TotpEditSheet(initial: initial),
+    builder: (_) => _TotpEditSheet(
+      initial: initial,
+      initialTitle: initialTitle,
+    ),
   );
 }
 
 class _TotpEditSheet extends StatefulWidget {
   final TotpConfig? initial;
-  const _TotpEditSheet({this.initial});
+  final String? initialTitle;
+  const _TotpEditSheet({this.initial, this.initialTitle});
 
   @override
   State<_TotpEditSheet> createState() => _TotpEditSheetState();
@@ -42,9 +47,14 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTitle != null) {
+      _titleCtrl.text = widget.initialTitle!;
+    }
     if (widget.initial != null) {
       _secretCtrl.text = widget.initial!.secret;
-      _titleCtrl.text = widget.initial!.accountName ?? '';
+      if (_titleCtrl.text.isEmpty) {
+        _titleCtrl.text = widget.initial!.accountName ?? '';
+      }
       _period = widget.initial!.period;
       _digits = widget.initial!.digits;
       _algorithm = widget.initial!.algorithm;
@@ -94,7 +104,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
   void _submit() {
     final secret = _secretCtrl.text.trim().replaceAll(' ', '');
     final title = _titleCtrl.text.trim();
-    if (secret.isEmpty || (widget.initial == null && title.isEmpty)) return;
+    if (secret.isEmpty || title.isEmpty) return;
     Navigator.pop(
       context,
       TotpEditResult(
@@ -162,7 +172,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
               ),
             ),
           ] else ...[
-            if (widget.initial == null) ...[
+            ...[
               TextField(
                 controller: _titleCtrl,
                 decoration: InputDecoration(
@@ -272,8 +282,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
                   child: FilledButton(
                     onPressed:
                         _secretCtrl.text.trim().isEmpty ||
-                            (widget.initial == null &&
-                                _titleCtrl.text.trim().isEmpty)
+                            _titleCtrl.text.trim().isEmpty
                         ? null
                         : _submit,
                     child: Text(l10n.confirm),
