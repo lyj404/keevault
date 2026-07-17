@@ -50,12 +50,12 @@ class AutoLockNotifier extends StateNotifier<int> {
     final hasDb = dbState.valueOrNull != null;
     if (!hasDb) return;
 
-    await dbNotifier.close();
-
+    final lockFuture = dbNotifier.lock();
     final context = rootNavigatorKey.currentContext;
     if (context != null && context.mounted) {
       context.go('/welcome');
     }
+    await lockFuture;
   }
 
   @override

@@ -1350,6 +1350,12 @@ abstract class AppLocalizations {
   ///
   /// In zh, this message translates to:
   /// **'备份文件不存在'**
+  String get backupIntegrityFailed;
+
+  String get pendingUploadFailed;
+
+  String get pendingUploadConflict;
+
   String get backupNotFound;
 
   /// No description provided for @deleteBackup.

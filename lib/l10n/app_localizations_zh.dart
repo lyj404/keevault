@@ -652,6 +652,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupRestoreFailed => '恢复失败';
 
   @override
+  @override
+  String get backupIntegrityFailed => '备份完整性校验失败';
+
+  @override
+  String get pendingUploadFailed => '待同步的云端更改上传失败，已保留本地加密副本。';
+
+  @override
+  String get pendingUploadConflict => '云端数据已发生变化，待同步的本地更改未覆盖远端。';
+
   String get backupNotFound => '备份文件不存在';
 
   @override

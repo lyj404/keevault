@@ -13,7 +13,7 @@ class QrScanScreen extends StatefulWidget {
 class _QrScanScreenState extends State<QrScanScreen> {
   final _scannerCtrl = MobileScannerController();
   final _picker = ImagePicker();
-  bool _detected = false;
+  bool _closing = false;
 
   @override
   void dispose() {
@@ -21,14 +21,24 @@ class _QrScanScreenState extends State<QrScanScreen> {
     super.dispose();
   }
 
+  Future<void> _finish(String value) async {
+    if (_closing || !mounted) return;
+    _closing = true;
+    try {
+      await _scannerCtrl.stop();
+    } catch (_) {
+      // The camera may already have stopped while this route is closing.
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(value);
+  }
+
   void _onDetectBarcode(BarcodeCapture capture) {
-    if (_detected) return;
+    if (_closing) return;
     for (final barcode in capture.barcodes) {
       final value = barcode.rawValue;
-      if (value == null) continue;
-      if (value.startsWith('otpauth://')) {
-        _detected = true;
-        Navigator.pop(context, value);
+      if (value != null && value.startsWith('otpauth://')) {
+        _finish(value);
         return;
       }
     }
@@ -37,14 +47,14 @@ class _QrScanScreenState extends State<QrScanScreen> {
   Future<void> _pickFromGallery() async {
     final l10n = AppLocalizations.of(context)!;
     final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
 
     try {
       final result = await _scannerCtrl.analyzeImage(picked.path);
       for (final barcode in result?.barcodes ?? []) {
         final value = barcode.rawValue;
         if (value != null && value.startsWith('otpauth://')) {
-          if (mounted) Navigator.pop(context, value);
+          await _finish(value);
           return;
         }
       }
@@ -75,32 +85,34 @@ class _QrScanScreenState extends State<QrScanScreen> {
             builder: (context, state, child) {
               final isOn = state.torchState == TorchState.on;
               return IconButton(
-                icon: Icon(isOn ? Icons.flash_on_rounded : Icons.flash_off_rounded),
+                icon: Icon(
+                  isOn ? Icons.flash_on_rounded : Icons.flash_off_rounded,
+                ),
                 tooltip: l10n.toggleFlashlight,
-                onPressed: () => _scannerCtrl.toggleTorch(),
+                onPressed: _closing ? null : () => _scannerCtrl.toggleTorch(),
               );
             },
           ),
           IconButton(
             icon: const Icon(Icons.cameraswitch_rounded),
             tooltip: l10n.switchCamera,
-            onPressed: () => _scannerCtrl.switchCamera(),
+            onPressed: _closing ? null : () => _scannerCtrl.switchCamera(),
           ),
         ],
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _scannerCtrl,
-            onDetect: _onDetectBarcode,
-          ),
+          MobileScanner(controller: _scannerCtrl, onDetect: _onDetectBarcode),
           Positioned(
             bottom: 48,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(12),
@@ -117,8 +129,11 @@ class _QrScanScreenState extends State<QrScanScreen> {
             right: 16,
             child: FloatingActionButton.small(
               backgroundColor: Colors.black54,
-              onPressed: _pickFromGallery,
-              child: const Icon(Icons.photo_library_rounded, color: Colors.white),
+              onPressed: _closing ? null : _pickFromGallery,
+              child: const Icon(
+                Icons.photo_library_rounded,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -128,8 +143,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
 }
 
 Future<String?> openQrScanner(BuildContext context) {
-  return Navigator.push<String>(
-    context,
+  return Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(builder: (_) => const QrScanScreen()),
   );
 }

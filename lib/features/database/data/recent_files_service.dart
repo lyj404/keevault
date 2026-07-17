@@ -9,6 +9,7 @@ class RecentFile {
   final String? webDavProfileId;
   final String? lastSyncedETag;
   final DateTime? lastSyncedMTime;
+  final bool pendingUpload;
 
   const RecentFile({
     required this.path,
@@ -17,6 +18,7 @@ class RecentFile {
     this.webDavProfileId,
     this.lastSyncedETag,
     this.lastSyncedMTime,
+    this.pendingUpload = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,6 +29,7 @@ class RecentFile {
     if (lastSyncedETag != null) 'lastSyncedETag': lastSyncedETag,
     if (lastSyncedMTime != null)
       'lastSyncedMTime': lastSyncedMTime!.toIso8601String(),
+    if (pendingUpload) 'pendingUpload': true,
   };
 
   factory RecentFile.fromJson(Map<String, dynamic> json) => RecentFile(
@@ -38,6 +41,7 @@ class RecentFile {
     lastSyncedMTime: json['lastSyncedMTime'] is String
         ? DateTime.tryParse(json['lastSyncedMTime'] as String)
         : null,
+    pendingUpload: json['pendingUpload'] == true,
   );
 }
 
@@ -67,6 +71,7 @@ class RecentFilesService {
     String? webDavProfileId,
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
+    bool pendingUpload = false,
   }) async {
     final files = await getRecentFiles();
     files.removeWhere((f) => f.path == filePath);
@@ -79,6 +84,7 @@ class RecentFilesService {
         webDavProfileId: webDavProfileId,
         lastSyncedETag: lastSyncedETag,
         lastSyncedMTime: lastSyncedMTime,
+        pendingUpload: pendingUpload,
       ),
     );
     if (files.length > AppConstants.maxRecentFiles) {
@@ -116,6 +122,7 @@ class RecentFilesService {
     String? webDavProfileId,
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
+    bool pendingUpload = false,
   }) async {
     await _storage.write(
       key: _lastOpenedKey,
@@ -127,6 +134,7 @@ class RecentFilesService {
           webDavProfileId: webDavProfileId,
           lastSyncedETag: lastSyncedETag,
           lastSyncedMTime: lastSyncedMTime,
+          pendingUpload: pendingUpload,
         ).toJson(),
       ),
     );

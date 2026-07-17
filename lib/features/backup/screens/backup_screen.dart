@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -291,22 +290,29 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
     final service = ref.read(databaseServiceProvider);
     final notifier = ref.read(databaseProvider.notifier);
-    final backupPath = await ref
+
+    final verification = await ref
         .read(backupServiceProvider)
-        .getBackupPath(filename);
+        .verifyAndReadBackup(filename);
     if (!mounted) return;
-    if (backupPath == null) {
-      showToast(context, l10n.backupNotFound);
+    if (!verification.canRestore || verification.bytes == null) {
+      final message = switch (verification.status) {
+        BackupIntegrityStatus.missing => l10n.backupNotFound,
+        BackupIntegrityStatus.corrupted => l10n.backupIntegrityFailed,
+        BackupIntegrityStatus.invalid => l10n.backupIntegrityFailed,
+        _ => l10n.backupRestoreFailed,
+      };
+      showToast(context, message, isError: true);
       return;
     }
+    final bytes = verification.bytes!;
 
-    // Backup current file before restoring
+    // Only create a safety backup after the selected backup passed integrity
+    // validation, so corrupt input cannot trigger any restore side effects.
     if (service.filePath != null) {
       await ref.read(backupServiceProvider).createBackup(service.filePath!);
       if (!mounted) return;
     }
-
-    final bytes = await File(backupPath).readAsBytes();
     try {
       final restored = await notifier.restoreBackupBytes(bytes);
       if (!mounted) return;

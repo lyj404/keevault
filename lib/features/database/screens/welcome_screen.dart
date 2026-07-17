@@ -36,7 +36,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (files.length != 1) return;
     if (!mounted) return;
 
-    final file = files.first;
+    var file = files.first;
+    if (file.pendingUpload) {
+      final resumed = await ref
+          .read(databaseProvider.notifier)
+          .resumePendingUpload(file);
+      if (!mounted) return;
+      if (!resumed) {
+        final error = ref.read(lastPendingUploadErrorProvider);
+        final l10n = AppLocalizations.of(context)!;
+        final message =
+            error is SyncException && error.type == SyncErrorType.conflict
+            ? l10n.pendingUploadConflict
+            : l10n.pendingUploadFailed;
+        await _showSimpleErrorDialog(context, message);
+        if (!mounted) return;
+      } else {
+        final refreshed = await ref
+            .read(recentFilesServiceProvider)
+            .getRecentFiles();
+        final matching = refreshed.where((item) => item.path == file.path);
+        if (matching.isNotEmpty) file = matching.first;
+      }
+    }
     final localFile = File(file.path);
     final exists = await localFile.exists();
     if (!mounted) return;
@@ -521,6 +543,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   bool _isCachedCopyCurrent(RecentFile file, RemoteFileInfo remoteInfo) {
+    if (file.pendingUpload) return false;
     if (file.lastSyncedETag != null && remoteInfo.eTag != null) {
       return file.lastSyncedETag == remoteInfo.eTag;
     }
@@ -547,6 +570,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
     return query.toString();
   }
+
+  Future<void> _showSimpleErrorDialog(BuildContext context, String message) =>
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(message),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(AppLocalizations.of(ctx)!.confirm),
+            ),
+          ],
+        ),
+      );
 
   void _showErrorDialog(BuildContext context, String message) {
     final l10n = AppLocalizations.of(context)!;

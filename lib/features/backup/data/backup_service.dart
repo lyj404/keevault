@@ -1,9 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import '../../../core/utils/secure_storage_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../core/utils/logger.dart';
+
+enum BackupIntegrityStatus { valid, legacy, missing, invalid, corrupted }
+
+class BackupVerificationResult {
+  final BackupIntegrityStatus status;
+  final Uint8List? bytes;
+  const BackupVerificationResult(this.status, this.bytes);
+
+  bool get canRestore =>
+      status == BackupIntegrityStatus.valid ||
+      status == BackupIntegrityStatus.legacy;
+}
 
 class BackupInfo {
   final String filename;
@@ -24,6 +37,9 @@ class BackupService {
   static const _autoBackupKey = 'backup_auto_enabled';
   static const _defaultRetention = 5;
   final _storage = const SecureStorageHelper();
+  final Directory? _backupDirectory;
+
+  BackupService({this._backupDirectory});
 
   Future<bool> isAutoBackupEnabled() async {
     final val = await _storage.read(key: _autoBackupKey);
@@ -35,8 +51,10 @@ class BackupService {
   }
 
   Future<Directory> _backupDir() async {
-    final appDir = await getApplicationSupportDirectory();
-    final dir = Directory('${appDir.path}/backups');
+    final appDir = _backupDirectory == null
+        ? await getApplicationSupportDirectory()
+        : null;
+    final dir = _backupDirectory ?? Directory('${appDir!.path}/backups');
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
@@ -147,6 +165,75 @@ class BackupService {
     return await file.exists() ? file.path : null;
   }
 
+  Future<BackupVerificationResult> verifyAndReadBackup(String filename) async {
+    try {
+      final path = await getBackupPath(filename);
+      if (path == null) {
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.missing,
+          null,
+        );
+      }
+      final bytes = await File(path).readAsBytes();
+      final metaFile = await _metadataFile(filename);
+      if (!await metaFile.exists()) {
+        return BackupVerificationResult(BackupIntegrityStatus.legacy, bytes);
+      }
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(await metaFile.readAsString());
+      } on FormatException {
+        log.e('Backup metadata is not valid JSON');
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.invalid,
+          null,
+        );
+      }
+      if (decoded is! Map<String, dynamic>) {
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.invalid,
+          null,
+        );
+      }
+      final expectedSize = decoded['sizeBytes'];
+      final expectedHash = decoded['sha256'];
+      if (expectedSize == null || expectedHash == null) {
+        return BackupVerificationResult(BackupIntegrityStatus.legacy, bytes);
+      }
+      if (expectedSize is! int ||
+          expectedHash is! String ||
+          expectedHash.length != 64) {
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.invalid,
+          null,
+        );
+      }
+      if (bytes.length != expectedSize) {
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.corrupted,
+          null,
+        );
+      }
+      final digest = await Sha256().hash(bytes);
+      final actualHash = digest.bytes
+          .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+          .join();
+      if (actualHash.toLowerCase() != expectedHash.toLowerCase()) {
+        return const BackupVerificationResult(
+          BackupIntegrityStatus.corrupted,
+          null,
+        );
+      }
+      return BackupVerificationResult(BackupIntegrityStatus.valid, bytes);
+    } catch (e, st) {
+      log.e('Backup verification failed', error: e, stackTrace: st);
+      return const BackupVerificationResult(
+        BackupIntegrityStatus.invalid,
+        null,
+      );
+    }
+  }
+
   Future<bool> deleteBackup(String filename) async {
     try {
       final dir = await _backupDir();
@@ -192,6 +279,7 @@ class BackupService {
       flush: true,
     );
   }
+
   Future<String?> _readSourcePath(String filename) async {
     final metaFile = await _metadataFile(filename);
     if (!await metaFile.exists()) return null;
@@ -218,5 +306,3 @@ class BackupService {
     return File('${dir.path}/$filename.meta.json');
   }
 }
-
-

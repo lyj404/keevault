@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
@@ -12,6 +13,7 @@ import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
 import '../../backup/providers/backup_provider.dart';
+import '../../settings/data/webdav_config.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/data/sync_service.dart'
     show RemoteFileInfo, SyncErrorType, SyncException;
@@ -40,6 +42,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   String? _currentWebDavProfileId;
   SyncAuditReport? _lastSyncAuditReport;
   Future<bool>? _saveInFlight;
+  int _session = 0;
 
   DatabaseNotifier(this._ref) : super(const AsyncValue.data(null)) {
     _service.onDirtyChanged = (isDirty) {
@@ -164,18 +167,26 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Future<bool> save() {
     final inFlight = _saveInFlight;
     if (inFlight != null) return inFlight;
-    final future = _doSave().whenComplete(() => _saveInFlight = null);
+    final session = _session;
+    late Future<bool> future;
+    future = _doSave(session).whenComplete(() {
+      if (identical(_saveInFlight, future)) _saveInFlight = null;
+    });
     _saveInFlight = future;
     return future;
   }
 
-  Future<bool> _doSave() async {
+  Future<bool> _doSave(int session) async {
+    if (session != _session || !_service.isOpen) return false;
+
     final wasDirty = _service.isDirty;
     final bytes = await _service.save();
+    if (session != _session || !_service.isOpen) return false;
     final config = await _ref
         .read(webDavSettingsServiceProvider)
         .getConfigById(_currentWebDavProfileId);
     // Only sync to cloud if the current database was opened from or created as a cloud database
+    if (session != _session || !_service.isOpen) return false;
     if (config != null &&
         config.enabled &&
         _ref.read(openedFromCloudProvider)) {
@@ -184,6 +195,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         final syncService = _ref.read(syncServiceProvider);
         // Conflict detection: check if remote changed since last sync
         final remoteInfo = await syncService.getRemoteFileInfo(config);
+        if (session != _session || !_service.isOpen) return false;
         final lastInfo = _service.lastSyncedRemoteInfo;
         if (_hasRemoteChanged(remoteInfo, lastInfo)) {
           _lastSyncAuditReport = await inspectCloudDiff();
@@ -197,6 +209,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           return true;
         }
         await syncService.ensureRemoteDirectory(config);
+        if (session != _session || !_service.isOpen) return false;
         final newInfo = await syncService.uploadDatabase(
           config,
           bytes,
@@ -218,6 +231,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
               webDavProfileId: _currentWebDavProfileId,
               lastSyncedETag: newInfo.eTag,
               lastSyncedMTime: newInfo.mTime,
+              pendingUpload: false,
             ),
             recentSvc.setLastOpenedFile(
               _service.filePath!,
@@ -226,6 +240,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
               webDavProfileId: _currentWebDavProfileId,
               lastSyncedETag: newInfo.eTag,
               lastSyncedMTime: newInfo.mTime,
+              pendingUpload: false,
             ),
           ]);
         }
@@ -327,12 +342,178 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         log.e('Failed to save database before close', error: e, stackTrace: st);
       }
     }
+    _finishClose();
+  }
 
+  /// Locks immediately from the UI's perspective, then persists locally.
+  /// Cloud upload continues from encrypted bytes and never delays the lock.
+  Future<void> lock() async {
+    if (!_service.isOpen) return;
+    final lockSession = ++_session;
+    final wasDirty = _service.isDirty;
+    final path = _service.filePath;
+    final isCloud = _ref.read(openedFromCloudProvider);
+    final profileId = _currentWebDavProfileId;
+    final lastInfo = _service.lastSyncedRemoteInfo;
+
+    // Publish the locked state before the first await. Protected pages can no
+    // longer read the database while local persistence finishes.
+    state = const AsyncValue.data(null);
+    _ref.read(isDirtyProvider.notifier).state = false;
+    _ref.read(autoLockProvider.notifier).cancelTimer();
+    _ref.read(autoSaveProvider.notifier).cancelTimer();
+
+    Uint8List bytes = Uint8List(0);
+    Object? localSaveError;
+    try {
+      if (wasDirty) bytes = await _service.save();
+    } catch (e, st) {
+      localSaveError = e;
+      log.e('Failed to save database before lock', error: e, stackTrace: st);
+    }
+
+    if (lockSession != _session) return;
+    WebDavConfig? config;
+    if (isCloud && path != null && bytes.isNotEmpty) {
+      config = await _ref
+          .read(webDavSettingsServiceProvider)
+          .getConfigById(profileId);
+      if (lockSession != _session) return;
+      if (config != null && config.enabled) {
+        await _markPendingUpload(
+          path,
+          config.remoteFilePath,
+          profileId,
+          lastInfo,
+        );
+      }
+    }
+
+    _finishClose(clearLastOpened: false);
+    if (config != null && config.enabled && path != null && bytes.isNotEmpty) {
+      unawaited(
+        _uploadEncryptedBytes(
+          bytes: bytes,
+          config: config,
+          path: path,
+          profileId: profileId,
+          expected: lastInfo,
+        ),
+      );
+    }
+    if (localSaveError != null) {
+      _ref.read(lastLockErrorProvider.notifier).state = localSaveError;
+    }
+  }
+
+  Future<bool> resumePendingUpload(RecentFile file) async {
+    _ref.read(lastPendingUploadErrorProvider.notifier).state = null;
+    if (!file.pendingUpload) return true;
+    try {
+      if (!file.isCloud || !await File(file.path).exists()) return false;
+      final config = await _ref
+          .read(webDavSettingsServiceProvider)
+          .getConfigById(file.webDavProfileId);
+      if (config == null || !config.enabled) return false;
+      final bytes = await File(file.path).readAsBytes();
+      return _uploadEncryptedBytes(
+        bytes: bytes,
+        config: config,
+        path: file.path,
+        profileId: file.webDavProfileId,
+        expected: RemoteFileInfo(
+          eTag: file.lastSyncedETag,
+          mTime: file.lastSyncedMTime,
+        ),
+      );
+    } catch (e, st) {
+      _ref.read(lastPendingUploadErrorProvider.notifier).state = e;
+      log.e('Unable to resume pending cloud upload', error: e, stackTrace: st);
+      return false;
+    }
+  }
+
+  Future<bool> _uploadEncryptedBytes({
+    required Uint8List bytes,
+    required WebDavConfig config,
+    required String path,
+    required String? profileId,
+    required RemoteFileInfo? expected,
+  }) async {
+    try {
+      final sync = _ref.read(syncServiceProvider);
+      await sync.ensureRemoteDirectory(config);
+      final info = await sync.uploadDatabase(config, bytes, expected: expected);
+      await _persistCloudRevision(
+        path: path,
+        remotePath: config.remoteFilePath,
+        profileId: profileId,
+        info: info,
+        pendingUpload: false,
+      );
+      _ref.read(lastPendingUploadErrorProvider.notifier).state = null;
+      _ref.invalidate(recentFilesProvider);
+      return true;
+    } catch (e, st) {
+      _ref.read(lastPendingUploadErrorProvider.notifier).state = e;
+      log.e('Pending cloud upload failed', error: e, stackTrace: st);
+      return false;
+    }
+  }
+
+  Future<void> _markPendingUpload(
+    String path,
+    String remotePath,
+    String? profileId,
+    RemoteFileInfo? info,
+  ) => _persistCloudRevision(
+    path: path,
+    remotePath: remotePath,
+    profileId: profileId,
+    info: info,
+    pendingUpload: true,
+  );
+
+  Future<void> _persistCloudRevision({
+    required String path,
+    required String remotePath,
+    required String? profileId,
+    required RemoteFileInfo? info,
+    required bool pendingUpload,
+  }) async {
+    final recent = _ref.read(recentFilesServiceProvider);
+    await Future.wait([
+      recent.addRecentFile(
+        path,
+        isCloud: true,
+        remotePath: remotePath,
+        webDavProfileId: profileId,
+        lastSyncedETag: info?.eTag,
+        lastSyncedMTime: info?.mTime,
+        pendingUpload: pendingUpload,
+      ),
+      recent.setLastOpenedFile(
+        path,
+        isCloud: true,
+        remotePath: remotePath,
+        webDavProfileId: profileId,
+        lastSyncedETag: info?.eTag,
+        lastSyncedMTime: info?.mTime,
+        pendingUpload: pendingUpload,
+      ),
+    ]);
+  }
+
+  void _finishClose({bool clearLastOpened = true}) {
+    ++_session;
+    _saveInFlight = null;
     _service.close();
     state = const AsyncValue.data(null);
     _currentWebDavProfileId = null;
     _ref.read(openedFromCloudProvider.notifier).state = false;
-    unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
+    if (clearLastOpened) {
+      unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
+    }
     _ref.read(autoLockProvider.notifier).cancelTimer();
     _ref.read(autoSaveProvider.notifier).cancelTimer();
     _ref.read(syncServiceProvider).clearCache();
@@ -454,3 +635,9 @@ final cloudOfflineReasonProvider = StateProvider<String?>((ref) => null);
 
 /// Whether the database has unsaved changes.
 final isDirtyProvider = StateProvider<bool>((ref) => false);
+
+/// Last local persistence error raised while security-locking.
+final lastLockErrorProvider = StateProvider<Object?>((ref) => null);
+
+/// Last error raised while resuming an encrypted pending cloud upload.
+final lastPendingUploadErrorProvider = StateProvider<Object?>((ref) => null);

@@ -441,16 +441,18 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
   }
 
   Future<void> addTotpEntry(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
     final result = await showTotpEditSheet(context);
     if (result == null || !context.mounted) return;
 
     final service = ref.read(databaseServiceProvider);
-    final groupPath = ref.read(currentGroupPathProvider);
-    final group = service.findGroupByPath(groupPath);
-    if (group == null) return;
+    const groupPath = 'TOTP';
+    final root = service.findGroupByPath('');
+    if (root == null) return;
+    final group =
+        service.findGroupByPath(groupPath) ??
+        service.createGroup(root, groupPath);
     final entry = service.createEntry(group);
-    entry.fields['Title'] = KdbxTextField.fromText(text: l10n.newEntry);
+    entry.fields['Title'] = KdbxTextField.fromText(text: result.title);
     widget.totpService.saveToEntry(entry, result.config);
     service.markDirty();
     refreshExplorerLists(ref);

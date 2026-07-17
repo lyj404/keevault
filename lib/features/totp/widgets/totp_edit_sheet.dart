@@ -7,7 +7,8 @@ import 'qr_scan.dart';
 
 class TotpEditResult {
   final TotpConfig config;
-  TotpEditResult(this.config);
+  final String title;
+  TotpEditResult(this.config, {required this.title});
 }
 
 Future<TotpEditResult?> showTotpEditSheet(
@@ -32,6 +33,7 @@ class _TotpEditSheet extends StatefulWidget {
 class _TotpEditSheetState extends State<_TotpEditSheet> {
   final _uriCtrl = TextEditingController();
   final _secretCtrl = TextEditingController();
+  final _titleCtrl = TextEditingController();
   int _period = 30;
   int _digits = 6;
   String _algorithm = 'SHA1';
@@ -42,6 +44,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
     super.initState();
     if (widget.initial != null) {
       _secretCtrl.text = widget.initial!.secret;
+      _titleCtrl.text = widget.initial!.accountName ?? '';
       _period = widget.initial!.period;
       _digits = widget.initial!.digits;
       _algorithm = widget.initial!.algorithm;
@@ -53,6 +56,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
   void dispose() {
     _uriCtrl.dispose();
     _secretCtrl.dispose();
+    _titleCtrl.dispose();
     super.dispose();
   }
 
@@ -62,6 +66,9 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
     if (config != null) {
       setState(() {
         _secretCtrl.text = config.secret;
+        if (_titleCtrl.text.trim().isEmpty) {
+          _titleCtrl.text = config.accountName ?? config.issuer ?? '';
+        }
         _period = config.period;
         _digits = config.digits;
         _algorithm = config.algorithm;
@@ -77,14 +84,17 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
 
   Future<void> _scanQrCode() async {
     final scanned = await openQrScanner(context);
-    if (scanned == null) return;
+    if (!mounted || scanned == null) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
     _uriCtrl.text = scanned;
     _parseUri();
   }
 
   void _submit() {
     final secret = _secretCtrl.text.trim().replaceAll(' ', '');
-    if (secret.isEmpty) return;
+    final title = _titleCtrl.text.trim();
+    if (secret.isEmpty || (widget.initial == null && title.isEmpty)) return;
     Navigator.pop(
       context,
       TotpEditResult(
@@ -94,6 +104,7 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
           digits: _digits,
           algorithm: _algorithm,
         ),
+        title: title,
       ),
     );
   }
@@ -151,6 +162,18 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
               ),
             ),
           ] else ...[
+            if (widget.initial == null) ...[
+              TextField(
+                controller: _titleCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.title,
+                  border: const OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _secretCtrl,
               decoration: InputDecoration(
@@ -247,7 +270,12 @@ class _TotpEditSheetState extends State<_TotpEditSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _secretCtrl.text.trim().isEmpty ? null : _submit,
+                    onPressed:
+                        _secretCtrl.text.trim().isEmpty ||
+                            (widget.initial == null &&
+                                _titleCtrl.text.trim().isEmpty)
+                        ? null
+                        : _submit,
                     child: Text(l10n.confirm),
                   ),
                 ),

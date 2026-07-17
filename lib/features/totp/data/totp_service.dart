@@ -130,7 +130,7 @@ class TotpService {
 
     final path = uri.path;
     if (path.isNotEmpty && path.startsWith('/')) {
-      final label = path.substring(1);
+      final label = Uri.decodeComponent(path.substring(1));
       final parts = label.split(':');
       if (parts.length >= 2) {
         issuer ??= parts[0];

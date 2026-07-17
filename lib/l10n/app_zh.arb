@@ -438,5 +438,8 @@
   "blockScreenshots": "禁止截屏",
   "blockScreenshotsDescription": "在 Android 上阻止截屏和最近任务预览。",
   "hideInBackground": "后台隐藏内容",
-  "hideInBackgroundDescription": "应用失去焦点或进入后台时遮挡密码库内容。"
+  "hideInBackgroundDescription": "应用失去焦点或进入后台时遮挡密码库内容。",
+  "backupIntegrityFailed": "备份完整性校验失败",
+  "pendingUploadFailed": "待同步的云端更改上传失败，已保留本地加密副本。",
+  "pendingUploadConflict": "云端数据已发生变化，待同步的本地更改未覆盖远端。"
 }
