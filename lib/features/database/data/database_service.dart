@@ -235,6 +235,19 @@ class DatabaseService {
     return recycleBinUuid != null && group.uuid == recycleBinUuid;
   }
 
+  /// Returns true if an item is inside the recycle bin or one of its groups.
+  bool isInRecycleBin(KdbxItem item) {
+    final recycleBinUuid = _db?.meta.recycleBinUuid;
+    if (recycleBinUuid == null) return false;
+
+    var group = item is KdbxGroup ? item : item.parent;
+    while (group != null) {
+      if (group.uuid == recycleBinUuid) return true;
+      group = group.parent;
+    }
+    return false;
+  }
+
   /// Returns the name of the recycle bin group, or null if no recycle bin exists.
   String? get recycleBinName {
     final recycleBinUuid = _db?.meta.recycleBinUuid;
@@ -727,6 +740,5 @@ class DatabaseService {
     _lastSavedHash = null;
   }
 }
-
 
 

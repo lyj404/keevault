@@ -462,14 +462,46 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
     // some Android devices.
   }
 
+  Future<void> _deleteTotpEntry(KdbxEntry entry) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteEntry),
+        content: Text(l10n.moveToRecycleBin),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    ref.read(databaseServiceProvider).deleteItem(entry);
+    refreshExplorerLists(ref);
+    if (mounted) showToast(context, l10n.movedToRecycleBin);
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.watch(explorerListRevisionProvider);
     final service = ref.read(databaseServiceProvider);
     final allEntries = service.allEntries;
     final l10n = AppLocalizations.of(context)!;
 
     final totpEntries = <_TotpEntryInfo>[];
     for (final entry in allEntries) {
+      if (service.isInRecycleBin(entry)) continue;
       final config = widget.totpService.loadFromEntry(entry);
       if (config == null) continue;
       if (_query.isNotEmpty) {
@@ -533,6 +565,7 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
                       config: info.config,
                       totpService: widget.totpService,
                       onTap: () => widget.onEntryOpen(info.entry),
+                      onDelete: () => _deleteTotpEntry(info.entry),
                     );
                   },
                 ),
@@ -553,12 +586,14 @@ class _TotpListTile extends StatefulWidget {
   final TotpConfig config;
   final TotpService totpService;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   const _TotpListTile({
     required this.entry,
     required this.config,
     required this.totpService,
     required this.onTap,
+    required this.onDelete,
   });
 
   @override
@@ -648,6 +683,15 @@ class _TotpListTileState extends State<_TotpListTile> {
                           color: colorScheme.onSurface,
                         ),
                       ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: colorScheme.error,
+                        size: 20,
+                      ),
+                      tooltip: l10n.deleteEntry,
+                      onPressed: widget.onDelete,
                     ),
                   ],
                 ),

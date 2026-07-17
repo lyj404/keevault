@@ -84,10 +84,15 @@ final selectedEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
 /// Updated by explorer, search, and detail screens.
 final activeEntryProvider = StateProvider<KdbxEntry?>((ref) => null);
 
-/// Call after any mutation (add/delete/edit) to refresh the entry list.
+/// Incremented after database mutations so views backed by DatabaseService caches
+/// (such as the mobile TOTP tab) rebuild as well.
+final explorerListRevisionProvider = StateProvider<int>((ref) => 0);
+
+/// Call after any mutation (add/delete/edit) to refresh explorer-backed lists.
 void refreshExplorerLists(WidgetRef ref) {
   ref.invalidate(entriesProvider);
   ref.read(selectedEntryProvider.notifier).state = null;
+  ref.read(explorerListRevisionProvider.notifier).state++;
 }
 
 final breadcrumbProvider = Provider<List<String>>((ref) {

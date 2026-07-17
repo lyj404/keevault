@@ -13,7 +13,7 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
-  static const String _version = '0.7.0';
+  static const String _version = '0.7.1';
   static const String _buildNumber = '6';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
