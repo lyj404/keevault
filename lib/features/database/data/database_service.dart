@@ -304,7 +304,20 @@ class DatabaseService {
     Uint8List? keyData,
   }) async {
     log.i('Opening database: $filePath');
-    final bytes = _preloadedBytes ?? await File(filePath).readAsBytes();
+    // Recover any interrupted atomic write before reading the target path.
+    final recovered = await _recoverInterruptedWrite(
+      filePath,
+      password,
+      keyData: keyData,
+    );
+    // Preload is only safe when it matches this path and recovery did not
+    // rewrite the file underneath.
+    final canUsePreload =
+        !recovered &&
+        _preloadedBytes != null &&
+        _preloadedFilePath == filePath;
+    final bytes =
+        canUsePreload ? _preloadedBytes! : await File(filePath).readAsBytes();
     _preloadedBytes = null;
     _preloadedFilePath = null;
     try {
@@ -324,6 +337,58 @@ class DatabaseService {
     _rebuildEntryCache();
     log.i('Database opened, entries: ${_allEntriesCache!.length}');
     return _db!;
+  }
+
+  /// Best-effort recovery for an interrupted [AtomicFileStore.commit].
+  /// Returns true if the target file was replaced from a recovery candidate.
+  Future<bool> _recoverInterruptedWrite(
+    String filePath,
+    String password, {
+    Uint8List? keyData,
+  }) async {
+    final pending = await _atomicFileStore.readPending(filePath);
+    if (pending == null) return false;
+
+    log.w(
+      'Interrupted write detected for $filePath (stage=${pending.stage}); '
+      'attempting recovery',
+    );
+
+    final candidates = await _atomicFileStore.candidates(filePath);
+    // Prefer target, then rollback (previous good), then temp (new write).
+    AtomicRecoveryCandidate? pick(String path) =>
+        candidates.where((c) => c.path == path).firstOrNull;
+    final ordered = <AtomicRecoveryCandidate>[
+      if (pick(pending.target) case final c?) c,
+      if (pick(pending.rollback) case final c?) c,
+      if (pick(pending.temp) case final c?) c,
+    ];
+
+    for (final candidate in ordered) {
+      try {
+        final bytes = await File(candidate.path).readAsBytes();
+        await validateBytes(bytes, password, keyData: keyData);
+        var rewritten = false;
+        if (candidate.path != filePath) {
+          await File(candidate.path).copy(filePath);
+          rewritten = true;
+          log.i('Recovered database from ${candidate.path}');
+        } else {
+          log.i('Target file already valid after interrupted write');
+        }
+        await _atomicFileStore.discardPending(filePath);
+        return rewritten;
+      } catch (e) {
+        log.w('Recovery candidate failed: ${candidate.path}', error: e);
+      }
+    }
+
+    log.e(
+      'Unable to recover a valid database from interrupted write artifacts '
+      'for $filePath',
+    );
+    // Leave artifacts in place for manual recovery / backup restore.
+    return false;
   }
 
   Future<KdbxDatabase> createDatabase(
@@ -475,6 +540,14 @@ class DatabaseService {
     _db!.remove(item);
     _allEntriesCache = null;
     markDirty();
+  }
+
+  /// Permanently discards an item (no recycle bin). Used when abandoning a
+  /// never-saved draft entry so it does not pollute the recycle bin.
+  void discardItem(KdbxItem item) {
+    if (_db == null) return;
+    _db!.move(item: item, target: null);
+    _allEntriesCache = null;
   }
 
   /// Restores an item from the recycle bin to its previous parent group.

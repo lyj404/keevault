@@ -12,7 +12,6 @@ export '../data/csv_service.dart' show CsvEntry;
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
-import '../../backup/providers/backup_provider.dart';
 import '../../settings/data/webdav_config.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/data/sync_service.dart'
@@ -273,27 +272,26 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   }
 
   /// Force upload, ignoring conflict detection (used after user chooses to overwrite).
+  /// Always persists locally first so disk and cloud stay aligned.
   Future<void> forceUpload() async {
     final config = await _ref
         .read(webDavSettingsServiceProvider)
         .getConfigById(_currentWebDavProfileId);
     if (config == null || !config.enabled) return;
-    final backupSvc = _ref.read(backupServiceProvider);
-    if (_service.filePath != null && await backupSvc.isAutoBackupEnabled()) {
-      await backupSvc.createBackup(_service.filePath!);
-    }
     _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
     try {
+      // Persist to disk (and optional auto-backup) before upload so a crash
+      // after overwrite cannot leave local cache behind cloud.
+      final bytes = await _service.save();
       final syncService = _ref.read(syncServiceProvider);
       await syncService.ensureRemoteDirectory(config);
-      final bytes = await _service.saveToBytes();
       final newInfo = await syncService.uploadDatabase(
         config,
         bytes,
         force: true,
       );
       _service.setLastSyncedRemoteInfo(newInfo);
-      if (newInfo.eTag != null && _service.filePath != null) {
+      if (_service.filePath != null) {
         final recentSvc = _ref.read(recentFilesServiceProvider);
         await Future.wait([
           recentSvc.addRecentFile(
@@ -303,6 +301,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             webDavProfileId: _currentWebDavProfileId,
             lastSyncedETag: newInfo.eTag,
             lastSyncedMTime: newInfo.mTime,
+            pendingUpload: false,
           ),
           recentSvc.setLastOpenedFile(
             _service.filePath!,
@@ -311,6 +310,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             webDavProfileId: _currentWebDavProfileId,
             lastSyncedETag: newInfo.eTag,
             lastSyncedMTime: newInfo.mTime,
+            pendingUpload: false,
           ),
         ]);
       }
@@ -543,6 +543,8 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     final result = await syncService.downloadWithInfo(config);
     if (result == null) throw Exception('cloud_database_not_exist');
     final db = await _service.reloadFromBytes(result.bytes);
+    // Persist downloaded bytes so local cache matches what is now open in memory.
+    await _service.save();
     _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
     _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
@@ -560,6 +562,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: result.info.eTag,
           lastSyncedMTime: result.info.mTime,
+          pendingUpload: false,
         ),
         recentSvc.setLastOpenedFile(
           _service.filePath!,
@@ -568,6 +571,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           webDavProfileId: _currentWebDavProfileId,
           lastSyncedETag: result.info.eTag,
           lastSyncedMTime: result.info.mTime,
+          pendingUpload: false,
         ),
       ]);
     }

@@ -338,17 +338,22 @@ class SyncService {
     }
   }
 
-  Future<String> downloadToLocal(WebDavConfig config) async {
-    final bytes = await downloadDatabase(config);
-    if (bytes == null) throw Exception('remote_database_not_exist');
+  /// Downloads remote database and writes it to the local cloud cache.
+  /// Returns path + revision metadata from the same GET response so callers
+  /// never persist a stale ETag against newer bytes.
+  Future<({String path, RemoteFileInfo info})> downloadToLocal(
+    WebDavConfig config,
+  ) async {
+    final result = await downloadWithInfo(config);
+    if (result == null) throw Exception('remote_database_not_exist');
     final dir = await getApplicationDocumentsDirectory();
     final cacheDir = Directory('${dir.path}/keevault_cloud_cache');
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
     final file = File('${cacheDir.path}/${_cacheFileNameFor(config)}');
-    await file.writeAsBytes(bytes, flush: true);
-    return file.path;
+    await file.writeAsBytes(result.bytes, flush: true);
+    return (path: file.path, info: result.info);
   }
 
   String _cacheFileNameFor(WebDavConfig config) {

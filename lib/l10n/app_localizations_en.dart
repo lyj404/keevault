@@ -666,17 +666,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupRestoreFailed => 'Restore failed';
 
   @override
-  @override
-  String get backupIntegrityFailed => 'Backup integrity verification failed';
-
-  @override
-  String get pendingUploadFailed =>
-      'Pending cloud changes could not be uploaded. The local encrypted copy was kept.';
-
-  @override
-  String get pendingUploadConflict =>
-      'Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten.';
-
   String get backupNotFound => 'Backup file not found';
 
   @override
@@ -1224,4 +1213,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get hideInBackgroundDescription =>
       'Cover the vault while the app is inactive or in the background.';
+
+  @override
+  String get backupIntegrityFailed => 'Backup integrity verification failed';
+
+  @override
+  String get pendingUploadFailed =>
+      'Pending cloud changes could not be uploaded. The local encrypted copy was kept.';
+
+  @override
+  String get pendingUploadConflict =>
+      'Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten.';
 }

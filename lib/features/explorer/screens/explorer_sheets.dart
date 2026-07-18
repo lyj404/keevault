@@ -31,14 +31,15 @@ class _AddEntrySheetState extends ConsumerState<_AddEntrySheet> {
   @override
   void dispose() {
     if (!_saved && _entry != null) {
-      widget.group.entries.remove(_entry);
       final service = ref.read(databaseServiceProvider);
-      service.rebuildEntryCache();
+      // Permanent discard (not recycle-bin) for abandoned draft entries.
+      service.discardItem(_entry!);
       // Restore dirty state: if database was clean before createEntry,
       // revert to clean since we're discarding the only change.
       if (!_wasDirtyBeforeCreate) {
         service.markClean();
       }
+      service.rebuildEntryCache();
     }
     _titleCtrl.dispose();
     _usernameCtrl.dispose();

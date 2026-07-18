@@ -466,8 +466,8 @@ abstract class AppLocalizations {
 
   /// No description provided for @saveFailed.
   ///
-  /// In en, this message translates to:
-  /// **'Save failed'**
+  /// In zh, this message translates to:
+  /// **'保存失败'**
   String get saveFailed;
 
   /// No description provided for @syncConflict.
@@ -1356,12 +1356,6 @@ abstract class AppLocalizations {
   ///
   /// In zh, this message translates to:
   /// **'备份文件不存在'**
-  String get backupIntegrityFailed;
-
-  String get pendingUploadFailed;
-
-  String get pendingUploadConflict;
-
   String get backupNotFound;
 
   /// No description provided for @deleteBackup.
@@ -2371,6 +2365,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'应用失去焦点或进入后台时遮挡密码库内容。'**
   String get hideInBackgroundDescription;
+
+  /// No description provided for @backupIntegrityFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份完整性校验失败'**
+  String get backupIntegrityFailed;
+
+  /// No description provided for @pendingUploadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'待同步的云端更改上传失败，已保留本地加密副本。'**
+  String get pendingUploadFailed;
+
+  /// No description provided for @pendingUploadConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'云端数据已发生变化，待同步的本地更改未覆盖远端。'**
+  String get pendingUploadConflict;
 }
 
 class _AppLocalizationsDelegate

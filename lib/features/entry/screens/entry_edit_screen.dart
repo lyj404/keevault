@@ -138,10 +138,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
   @override
   void dispose() {
-    // If creating a new entry was abandoned, clean up (Bug #2 fix).
+    // If creating a new entry was abandoned, permanently discard the draft
+    // (do not soft-delete into recycle bin).
     if (!_saved && !_isEdit && _entry != null) {
       final service = ref.read(databaseServiceProvider);
-      service.deleteItem(_entry!);
+      service.discardItem(_entry!);
       if (!_wasDirtyBeforeCreate) {
         service.markClean();
       }

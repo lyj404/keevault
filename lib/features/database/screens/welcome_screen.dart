@@ -115,6 +115,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         barrierDismissible: false,
         builder: (_) => _SyncLoadingDialog(message: l10n.syncingCloudDatabase),
       );
+      var loadingVisible = true;
+      void dismissLoading() {
+        if (!loadingVisible || !mounted) return;
+        loadingVisible = false;
+        Navigator.of(context).pop();
+      }
+
       try {
         if (exists) {
           final action = await _resolveCloudOpenAction(
@@ -125,7 +132,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           );
           if (!mounted) return;
           if (action == _CloudOpenAction.useCache) {
-            _setCloudOfflineMode(l10n.downloadingFromCloud);
+            dismissLoading();
+            _setCloudOfflineMode(l10n.openLocalDatabase);
             ref.read(openedFromCloudProvider.notifier).state = true;
             context.push(
               _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
@@ -133,38 +141,47 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             return;
           }
           if (action != _CloudOpenAction.downloadLatest) {
+            dismissLoading();
             return;
           }
         }
-        final localPath = await syncService.downloadToLocal(config);
+        final downloaded = await syncService.downloadToLocal(config);
+        final localPath = downloaded.path;
+        final downloadedInfo = downloaded.info;
         final recentService = ref.read(recentFilesServiceProvider);
         await recentService.addRecentFile(
           localPath,
           isCloud: true,
           remotePath: config.remoteFilePath,
           webDavProfileId: config.id,
-          lastSyncedETag: remoteInfo.eTag,
-          lastSyncedMTime: remoteInfo.mTime,
+          lastSyncedETag: downloadedInfo.eTag ?? remoteInfo.eTag,
+          lastSyncedMTime: downloadedInfo.mTime ?? remoteInfo.mTime,
         );
         await recentService.setLastOpenedFile(
           localPath,
           isCloud: true,
           remotePath: config.remoteFilePath,
           webDavProfileId: config.id,
-          lastSyncedETag: remoteInfo.eTag,
-          lastSyncedMTime: remoteInfo.mTime,
+          lastSyncedETag: downloadedInfo.eTag ?? remoteInfo.eTag,
+          lastSyncedMTime: downloadedInfo.mTime ?? remoteInfo.mTime,
         );
         _setCloudOnlineMode();
-        if (mounted) Navigator.of(context).pop();
+        dismissLoading();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
           context.push(
-            _buildCloudUnlockQuery(localPath, remoteInfo, config.id),
+            _buildCloudUnlockQuery(
+              localPath,
+              downloadedInfo.eTag != null || downloadedInfo.mTime != null
+                  ? downloadedInfo
+                  : remoteInfo,
+              config.id,
+            ),
           );
         }
       } catch (e) {
         _autoOpened = false;
-        if (mounted) Navigator.of(context).pop();
+        dismissLoading();
         if (mounted && exists) {
           _setCloudOfflineMode(_translateDownloadError(e, l10n));
           ref.read(openedFromCloudProvider.notifier).state = true;
@@ -463,6 +480,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       barrierDismissible: false,
       builder: (ctx) => _SyncLoadingDialog(message: l10n.downloadingFromCloud),
     );
+    var loadingVisible = true;
+    void dismissLoading() {
+      if (!loadingVisible || !context.mounted) return;
+      loadingVisible = false;
+      Navigator.of(context).pop();
+    }
+
     try {
       final cachedExists = cachedFile != null
           ? await File(cachedFile.path).exists()
@@ -477,7 +501,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         );
         if (!mounted) return;
         if (action == _CloudOpenAction.useCache) {
-          _setCloudOfflineMode(l10n.downloadingFromCloud);
+          dismissLoading();
+          _setCloudOfflineMode(l10n.openLocalDatabase);
           ref.read(openedFromCloudProvider.notifier).state = true;
           this.context.push(
             _buildCloudUnlockQuery(
@@ -489,37 +514,48 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           return;
         }
         if (action != _CloudOpenAction.downloadLatest) {
+          dismissLoading();
           return;
         }
       }
-      final localPath = await syncService.downloadToLocal(config);
+      final downloaded = await syncService.downloadToLocal(config);
+      final localPath = downloaded.path;
+      final downloadedInfo = downloaded.info;
       final recentService = ref.read(recentFilesServiceProvider);
       await recentService.addRecentFile(
         localPath,
         isCloud: true,
         remotePath: config.remoteFilePath,
         webDavProfileId: config.id,
-        lastSyncedETag: remoteInfo.eTag,
-        lastSyncedMTime: remoteInfo.mTime,
+        lastSyncedETag: downloadedInfo.eTag ?? remoteInfo.eTag,
+        lastSyncedMTime: downloadedInfo.mTime ?? remoteInfo.mTime,
       );
       await recentService.setLastOpenedFile(
         localPath,
         isCloud: true,
         remotePath: config.remoteFilePath,
         webDavProfileId: config.id,
-        lastSyncedETag: remoteInfo.eTag,
-        lastSyncedMTime: remoteInfo.mTime,
+        lastSyncedETag: downloadedInfo.eTag ?? remoteInfo.eTag,
+        lastSyncedMTime: downloadedInfo.mTime ?? remoteInfo.mTime,
       );
       _setCloudOnlineMode();
       ref.invalidate(recentFilesProvider);
+      dismissLoading();
       if (context.mounted) {
-        Navigator.of(context).pop();
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push(_buildCloudUnlockQuery(localPath, remoteInfo, config.id));
+        context.push(
+          _buildCloudUnlockQuery(
+            localPath,
+            downloadedInfo.eTag != null || downloadedInfo.mTime != null
+                ? downloadedInfo
+                : remoteInfo,
+            config.id,
+          ),
+        );
       }
     } catch (e) {
+      dismissLoading();
       if (!context.mounted) return;
-      Navigator.of(context).pop();
       if (cachedFile != null) {
         final cachedLocalFile = File(cachedFile.path);
         final cachedExists = await cachedLocalFile.exists();

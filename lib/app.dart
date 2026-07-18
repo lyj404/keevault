@@ -16,6 +16,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/utils/clipboard_utils.dart';
 import 'features/database/providers/database_provider.dart';
 import 'features/explorer/providers/explorer_provider.dart';
+import 'features/sync/providers/sync_provider.dart';
 import 'features/totp/data/totp_service.dart';
 import 'l10n/app_localizations.dart';
 
@@ -149,25 +150,36 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
     final dbState = ref.read(databaseProvider);
     if (!dbState.hasValue || dbState.value == null) return;
 
-    final success = await ref.read(databaseProvider.notifier).save();
-    if (navCtx.mounted) {
-      ScaffoldMessenger.of(navCtx).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? (l10n?.saved ?? 'Saved')
-                : (l10n?.syncFailed ?? 'Save failed'),
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: success ? const Color(0xFF0D9488) : Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
+    final notifier = ref.read(databaseProvider.notifier);
+    final success = await notifier.save();
+    if (!navCtx.mounted) return;
+
+    // Local save may succeed while cloud sync reports conflict/error.
+    final String message;
+    final Color background;
+    if (success) {
+      message = l10n?.saved ?? 'Saved';
+      background = const Color(0xFF0D9488);
+    } else {
+      final syncState = ref.read(syncStateProvider);
+      if (syncState == SyncState.conflict) {
+        message = l10n?.syncConflict ?? 'Sync conflict';
+      } else if (syncState == SyncState.error) {
+        message = l10n?.syncFailed ?? 'Sync failed';
+      } else {
+        message = l10n?.saveFailed ?? 'Save failed';
+      }
+      background = Colors.red;
     }
+    ScaffoldMessenger.of(navCtx).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: background,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   String? _getTotpCode(dynamic entry) {

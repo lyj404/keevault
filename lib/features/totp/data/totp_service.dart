@@ -168,4 +168,12 @@ class TotpService {
         return 'HMAC-SHA-1';
     }
   }
+
+  /// Maps KeePass / otpauth algorithm names to the standard otpauth form.
+  static String toOtpAuthAlgorithm(String algo) {
+    final upper = algo.toUpperCase();
+    if (upper == 'SHA256' || upper == 'HMAC-SHA-256') return 'SHA256';
+    if (upper == 'SHA512' || upper == 'HMAC-SHA-512') return 'SHA512';
+    return 'SHA1';
+  }
 }

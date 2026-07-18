@@ -319,11 +319,7 @@ class CsvService {
       String totp = '';
       final totpConfig = totpService.loadFromEntry(entry);
       if (totpConfig != null) {
-        final algo = totpConfig.algorithm == 'SHA1'
-            ? 'SHA1'
-            : totpConfig.algorithm == 'SHA256'
-            ? 'SHA256'
-            : 'SHA512';
+        final algo = TotpService.toOtpAuthAlgorithm(totpConfig.algorithm);
         totp =
             'otpauth://totp/${Uri.encodeComponent(title)}'
             '?secret=${totpConfig.secret}'
