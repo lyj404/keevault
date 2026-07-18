@@ -13,13 +13,13 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
-  static const String _version = '0.7.2';
-  static const String _buildNumber = '7';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
   static const String _licenseUrl = 'https://github.com/lyj404/keevault/blob/main/LICENSE';
   static const String _releasesApiUrl = 'https://api.github.com/repos/lyj404/keevault/releases/latest';
 
+  String _version = '';
+  String _buildNumber = '';
   String? _latestVersion;
   bool _isChecking = false;
   bool _hasChecked = false;
@@ -27,7 +27,19 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   void initState() {
     super.initState();
+    _loadVersion();
     _checkForUpdates();
+  }
+
+  Future<void> _loadVersion() async {
+    final yaml = await rootBundle.loadString('pubspec.yaml');
+    final match = RegExp(r'version:\s*(\d+\.\d+\.\d+)\+(\d+)').firstMatch(yaml);
+    if (match != null && mounted) {
+      setState(() {
+        _version = match.group(1)!;
+        _buildNumber = match.group(2)!;
+      });
+    }
   }
 
   Future<void> _checkForUpdates() async {

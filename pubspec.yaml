@@ -78,6 +78,7 @@ flutter:
   generate: true
 
   assets:
+    - pubspec.yaml
     - assets/icons/
 
   fonts:
