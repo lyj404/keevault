@@ -69,6 +69,7 @@
   "renameGroup": "Rename Group",
   "groupName": "Group Name",
   "saved": "Saved",
+  "saveFailed": "Save failed",
   "syncConflict": "Sync Conflict",
   "syncConflictMessage": "Cloud database has been modified by another device. You can overwrite the cloud version (use local), or download the cloud version first.",
   "syncAuditLocalOnly": "Local Only",

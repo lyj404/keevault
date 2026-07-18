@@ -202,6 +202,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get saved => '已保存';
 
   @override
+  String get saveFailed => '保存失败';
+
+  @override
   String get syncConflict => '同步冲突';
 
   @override

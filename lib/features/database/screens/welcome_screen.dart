@@ -667,19 +667,28 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               : l10n.downloadingFromCloud,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(_CloudOpenAction.cancel),
-            child: Text(l10n.cancel),
-          ),
-          if (hasLocalCache)
-            OutlinedButton(
-              onPressed: () => Navigator.of(ctx).pop(_CloudOpenAction.useCache),
-              child: Text(l10n.openLocalDatabase),
-            ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(ctx).pop(_CloudOpenAction.downloadLatest),
-            child: Text(l10n.downloadFromCloud),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: () =>
+                    Navigator.of(ctx).pop(_CloudOpenAction.downloadLatest),
+                child: Text(l10n.downloadFromCloud),
+              ),
+              const SizedBox(height: 8),
+              if (hasLocalCache)
+                OutlinedButton(
+                  onPressed: () =>
+                      Navigator.of(ctx).pop(_CloudOpenAction.useCache),
+                  child: Text(l10n.openLocalDatabase),
+                ),
+              if (hasLocalCache) const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(_CloudOpenAction.cancel),
+                child: Text(l10n.cancel),
+              ),
+            ],
           ),
         ],
       ),

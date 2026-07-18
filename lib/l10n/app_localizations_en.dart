@@ -207,6 +207,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saved => 'Saved';
 
   @override
+  String get saveFailed => 'Save failed';
+
+  @override
   String get syncConflict => 'Sync Conflict';
 
   @override

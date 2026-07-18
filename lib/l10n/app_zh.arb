@@ -74,6 +74,7 @@
   "renameGroup": "重命名分组",
   "groupName": "分组名称",
   "saved": "已保存",
+  "saveFailed": "保存失败",
   "syncConflict": "同步冲突",
   "syncConflictMessage": "云端数据库已被其他设备修改。你可以选择覆盖云端版本（以本地为准），或先下载云端版本再编辑。",
   "syncAuditLocalOnly": "仅本地存在",

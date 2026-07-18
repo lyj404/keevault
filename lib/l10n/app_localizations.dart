@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'已保存'**
   String get saved;
 
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed'**
+  String get saveFailed;
+
   /// No description provided for @syncConflict.
   ///
   /// In zh, this message translates to:

@@ -180,11 +180,23 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     if (session != _session || !_service.isOpen) return false;
 
     final wasDirty = _service.isDirty;
-    final bytes = await _service.save();
+    final Uint8List bytes;
+    try {
+      bytes = await _service.save();
+    } catch (e) {
+      log.e('Local save failed', error: e);
+      return false;
+    }
     if (session != _session || !_service.isOpen) return false;
-    final config = await _ref
-        .read(webDavSettingsServiceProvider)
-        .getConfigById(_currentWebDavProfileId);
+    final WebDavConfig? config;
+    try {
+      config = await _ref
+          .read(webDavSettingsServiceProvider)
+          .getConfigById(_currentWebDavProfileId);
+    } catch (e) {
+      log.e('Failed to read WebDAV config', error: e);
+      return false;
+    }
     // Only sync to cloud if the current database was opened from or created as a cloud database
     if (session != _session || !_service.isOpen) return false;
     if (config != null &&

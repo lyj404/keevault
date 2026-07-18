@@ -110,23 +110,31 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
         title: Text(l10n.cloudNewVersion),
         content: Text(l10n.cloudModifiedSyncLatest),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.ignore),
-          ),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _showSyncAuditDialog(context, ref);
-            },
-            child: Text(l10n.more),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _syncFromCloud(context);
-            },
-            child: Text(l10n.sync),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _syncFromCloud(context);
+                },
+                child: Text(l10n.sync),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _showSyncAuditDialog(context, ref);
+                },
+                child: Text(l10n.more),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.ignore),
+              ),
+            ],
           ),
         ],
       ),
@@ -571,6 +579,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
         showToast(context, l10n.saved);
       } else {
         _showConflictDialog(context, ref);
+      }
+    } catch (e) {
+      log.e('Save failed', error: e);
+      if (context.mounted) {
+        showToast(context, l10n.saveFailed, isError: true);
       }
     } finally {
       isSaving.state = false;

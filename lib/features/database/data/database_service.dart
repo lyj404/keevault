@@ -373,7 +373,9 @@ class DatabaseService {
   /// Returns the serialized bytes so callers can reuse them (e.g. for cloud upload).
   Future<Uint8List> save() {
     final completer = Completer<Uint8List>();
-    _saveQueue = _saveQueue.then((_) async {
+    _saveQueue = _saveQueue
+        .then((_) => null, onError: (_) => null)
+        .then((_) async {
       try {
         completer.complete(await _saveOnce());
       } catch (error, stackTrace) {
