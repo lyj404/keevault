@@ -58,17 +58,14 @@ class _EntryListTileState extends State<EntryListTile> {
     return EntryListTile._totpService.generateCode(config);
   }
 
-  Widget _highlightedTitle(String text, ColorScheme colorScheme) {
+  Widget _highlightedTitle(String text, ColorScheme colorScheme, TextTheme textTheme) {
+    final titleStyle = textTheme.titleSmall;
     if (widget.query == null || widget.query!.isEmpty) {
       return Text(
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          color: colorScheme.onSurface,
-        ),
+        style: titleStyle,
       );
     }
     final match = fuzzyMatch(text, widget.query!);
@@ -77,22 +74,12 @@ class _EntryListTileState extends State<EntryListTile> {
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-          color: colorScheme.onSurface,
-        ),
+        style: titleStyle,
       );
     }
     final positions = match.positions.toSet();
-    final normalStyle = TextStyle(
-      fontWeight: FontWeight.w600,
-      fontSize: 14,
-      color: colorScheme.onSurface,
-    );
-    final highlightStyle = TextStyle(
-      fontWeight: FontWeight.w600,
-      fontSize: 14,
+    final normalStyle = titleStyle;
+    final highlightStyle = titleStyle?.copyWith(
       color: colorScheme.primary,
       backgroundColor: colorScheme.primaryContainer,
     );
@@ -256,8 +243,10 @@ class _EntryListTileState extends State<EntryListTile> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final brightness = Theme.of(context).brightness;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final brightness = theme.brightness;
     final l10n = AppLocalizations.of(context)!;
     final displayTitle = _title.isEmpty ? l10n.untitled : _title;
     final dense = ClayLayout.isDesktopPlatform(context);
@@ -351,17 +340,14 @@ class _EntryListTileState extends State<EntryListTile> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _highlightedTitle(displayTitle, colorScheme),
+                          _highlightedTitle(displayTitle, colorScheme, textTheme),
                           if (_username.isNotEmpty) ...[
                             const SizedBox(height: 2),
                             Text(
                               _username,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                              style: textTheme.bodySmall,
                             ),
                           ],
                           if (widget.entry.tags != null &&
@@ -384,7 +370,7 @@ class _EntryListTileState extends State<EntryListTile> {
                                     ),
                                     child: Text(
                                       tag,
-                                      style: TextStyle(
+                                      style: textTheme.labelSmall?.copyWith(
                                         fontSize: 10,
                                         color: colorScheme.onPrimaryContainer,
                                       ),
@@ -415,14 +401,13 @@ class _EntryListTileState extends State<EntryListTile> {
                               color: colorScheme.error,
                             ),
                             const SizedBox(width: 3),
-                            Text(
-                              l10n.expired,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.error,
+                              Text(
+                                l10n.expired,
+                                style: textTheme.labelSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.error,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -483,11 +468,7 @@ class _EntryListTileState extends State<EntryListTile> {
                   displayTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
             ],

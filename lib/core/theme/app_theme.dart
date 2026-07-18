@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Layout tokens (spacing, radius, density). Colors stay in [ClayColors].
@@ -314,52 +315,123 @@ class ClayDecoration {
 }
 
 class AppTheme {
-  // Cached theme instances — built once, reused on every rebuild.
-  static ThemeData? _light;
-  static ThemeData? _dark;
+  // Cache by resolved system font (platform + language).
+  static final _lightCache = <String?, ThemeData>{};
+  static final _darkCache = <String?, ThemeData>{};
 
-  // Cross-platform CJK font fallback
-  static const _fontFallback = <String>[
-    'Microsoft YaHei', // Windows
-    'PingFang SC', // macOS
-    'Noto Sans CJK SC', // Linux
-    'sans-serif',
-  ];
+  /// Shared type scale — screens should prefer textTheme over ad-hoc sizes.
+  static TextTheme _textTheme({
+    required TextTheme base,
+    required Color onSurface,
+    required Color onSurfaceVariant,
+    String? fontFamily,
+  }) {
+    // Fresh TextStyles so Material's baked-in "Roboto" does not override
+    // ThemeData.fontFamily / platform system UI fonts.
+    TextStyle style({
+      required double size,
+      required FontWeight weight,
+      required Color color,
+      double? letterSpacing,
+    }) {
+      return TextStyle(
+        fontFamily: fontFamily,
+        fontSize: size,
+        fontWeight: weight,
+        color: color,
+        letterSpacing: letterSpacing,
+      );
+    }
 
-  static TextStyle _withFallback(TextStyle? base) {
-    return (base ?? const TextStyle()).copyWith(
-      fontFamily: 'Noto Sans SC',
-      fontFamilyFallback: _fontFallback,
+    return base.copyWith(
+      headlineSmall: style(
+        size: 24,
+        weight: FontWeight.w700,
+        color: onSurface,
+        letterSpacing: -0.5,
+      ),
+      titleLarge: style(
+        size: 18,
+        weight: FontWeight.w700,
+        color: onSurface,
+        letterSpacing: -0.3,
+      ),
+      titleMedium: style(
+        size: 15,
+        weight: FontWeight.w700,
+        color: onSurface,
+      ),
+      titleSmall: style(
+        size: 14,
+        weight: FontWeight.w600,
+        color: onSurface,
+      ),
+      bodyLarge: style(
+        size: 15,
+        weight: FontWeight.w400,
+        color: onSurface,
+      ),
+      bodyMedium: style(
+        size: 14,
+        weight: FontWeight.w400,
+        color: onSurface,
+      ),
+      bodySmall: style(
+        size: 12,
+        weight: FontWeight.w400,
+        color: onSurfaceVariant,
+      ),
+      labelLarge: style(
+        size: 14,
+        weight: FontWeight.w600,
+        color: onSurface,
+      ),
+      labelMedium: style(
+        size: 12,
+        weight: FontWeight.w600,
+        color: onSurfaceVariant,
+      ),
+      labelSmall: style(
+        size: 11,
+        weight: FontWeight.w500,
+        color: onSurfaceVariant,
+      ),
     );
   }
 
-  static TextTheme _applyFallback(TextTheme theme) {
-    return theme.copyWith(
-      displayLarge: _withFallback(theme.displayLarge),
-      displayMedium: _withFallback(theme.displayMedium),
-      displaySmall: _withFallback(theme.displaySmall),
-      headlineLarge: _withFallback(theme.headlineLarge),
-      headlineMedium: _withFallback(theme.headlineMedium),
-      headlineSmall: _withFallback(theme.headlineSmall),
-      titleLarge: _withFallback(theme.titleLarge),
-      titleMedium: _withFallback(theme.titleMedium),
-      titleSmall: _withFallback(theme.titleSmall),
-      bodyLarge: _withFallback(theme.bodyLarge),
-      bodyMedium: _withFallback(theme.bodyMedium),
-      bodySmall: _withFallback(theme.bodySmall),
-      labelLarge: _withFallback(theme.labelLarge),
-      labelMedium: _withFallback(theme.labelMedium),
-      labelSmall: _withFallback(theme.labelSmall),
-    );
+  /// System UI font for en/zh (no bundled fonts). Android/iOS/macOS use default.
+  static String? resolveFontFamily(Locale? locale) {
+    final isZh = locale?.languageCode == 'zh';
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.windows:
+        return isZh ? 'Microsoft YaHei UI' : 'Segoe UI Variable Display';
+      case TargetPlatform.linux:
+        return isZh ? 'Noto Sans CJK SC' : 'Noto Sans';
+      default:
+        return null;
+    }
   }
 
-  static ThemeData light() => _light ??= _buildLight();
-  static ThemeData dark() => _dark ??= _buildDark();
+  static ThemeData light({Locale? locale}) {
+    final fontFamily = resolveFontFamily(locale);
+    return _lightCache[fontFamily] ??= _buildLight(fontFamily);
+  }
 
-  static ThemeData _buildLight() {
+  static ThemeData dark({Locale? locale}) {
+    final fontFamily = resolveFontFamily(locale);
+    return _darkCache[fontFamily] ??= _buildDark(fontFamily);
+  }
+
+  static ThemeData _buildLight(String? fontFamily) {
+    final textTheme = _textTheme(
+      base: ThemeData.light().textTheme,
+      onSurface: ClayColors.onSurfaceLight,
+      onSurfaceVariant: ClayColors.onSurfaceVariantLight,
+      fontFamily: fontFamily,
+    );
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Noto Sans SC',
+      fontFamily: fontFamily,
       brightness: Brightness.light,
       colorScheme: ColorScheme(
         brightness: Brightness.light,
@@ -397,12 +469,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: ClayColors.onSurfaceLight,
-          letterSpacing: -0.3,
-        ),
+        titleTextStyle: textTheme.titleLarge,
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
@@ -447,6 +514,8 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         minVerticalPadding: 10,
+        titleTextStyle: textTheme.titleMedium,
+        subtitleTextStyle: textTheme.bodySmall,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusMd),
         ),
@@ -464,11 +533,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+          textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
           elevation: 0,
         ),
       ),
@@ -479,11 +544,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: ClayColors.onSurfaceLight,
-          ),
+          textStyle: textTheme.titleMedium,
           side: BorderSide.none,
           backgroundColor: ClayColors.surfaceContainerLight,
         ),
@@ -491,13 +552,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentTextStyle: const TextStyle(
-          color: Colors.white,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-        ),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         backgroundColor: ClayColors.onSurfaceLight,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -511,19 +566,8 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: ClayColors.onSurfaceLight,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-        ),
-        contentTextStyle: TextStyle(
-          fontSize: 14,
-          color: ClayColors.onSurfaceLight,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-        ),
+        titleTextStyle: textTheme.titleLarge,
+        contentTextStyle: textTheme.bodyMedium,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         shape: RoundedRectangleBorder(
@@ -542,10 +586,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceLight,
-          textStyle: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: ClayColors.onSurfaceLight,
-          ),
+          textStyle: textTheme.titleMedium,
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -560,20 +601,21 @@ class AppTheme {
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),
-      textTheme: _applyFallback(ThemeData.light().textTheme),
-      primaryTextTheme: _applyFallback(ThemeData.light().primaryTextTheme),
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
     );
   }
 
-  static ThemeData _buildDark() {
-    final baseText = _applyFallback(ThemeData.dark().textTheme);
-    final darkText = baseText.apply(
-      bodyColor: ClayColors.onSurfaceDark,
-      displayColor: ClayColors.onSurfaceDark,
+  static ThemeData _buildDark(String? fontFamily) {
+    final textTheme = _textTheme(
+      base: ThemeData.dark().textTheme,
+      onSurface: ClayColors.onSurfaceDark,
+      onSurfaceVariant: ClayColors.onSurfaceVariantDark,
+      fontFamily: fontFamily,
     );
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Noto Sans SC',
+      fontFamily: fontFamily,
       brightness: Brightness.dark,
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
@@ -614,14 +656,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         iconTheme: const IconThemeData(color: ClayColors.onSurfaceDark),
         actionsIconTheme: const IconThemeData(color: ClayColors.onSurfaceDark),
-        titleTextStyle: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: ClayColors.onSurfaceDark,
-          letterSpacing: -0.3,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-        ),
+        titleTextStyle: textTheme.titleLarge,
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
@@ -679,6 +714,8 @@ class AppTheme {
         minVerticalPadding: 10,
         iconColor: ClayColors.onSurfaceVariantDark,
         textColor: ClayColors.onSurfaceDark,
+        titleTextStyle: textTheme.titleMedium,
+        subtitleTextStyle: textTheme.bodySmall,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusMd),
         ),
@@ -699,11 +736,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+          textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
           elevation: 0,
         ),
       ),
@@ -714,11 +747,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: ClayColors.onSurfaceDark,
-          ),
+          textStyle: textTheme.titleMedium,
           side: BorderSide(color: ClayColors.outlineDark.withValues(alpha: 0.45)),
           backgroundColor: ClayColors.surfaceContainerDark,
         ),
@@ -726,12 +755,8 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentTextStyle: const TextStyle(
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: ClayColors.onSurfaceDark,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
         ),
         backgroundColor: const Color(0xFF2C433F),
         actionTextColor: ClayColors.primaryMuted,
@@ -748,18 +773,9 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: ClayColors.onSurfaceDark,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
-        ),
-        contentTextStyle: TextStyle(
-          fontSize: 14,
+        titleTextStyle: textTheme.titleLarge,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: ClayColors.onSurfaceVariantDark,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
@@ -778,15 +794,12 @@ class AppTheme {
         textStyle: const TextStyle(
           color: ClayColors.onSurfaceDark,
           fontSize: 14,
-          fontFamily: 'Noto Sans SC',
-          fontFamilyFallback: _fontFallback,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: ClayColors.primaryMuted,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
+          textStyle: textTheme.titleMedium?.copyWith(
             color: ClayColors.primaryMuted,
           ),
         ),
@@ -812,8 +825,8 @@ class AppTheme {
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),
-      textTheme: darkText,
-      primaryTextTheme: darkText,
+      textTheme: textTheme,
+      primaryTextTheme: textTheme,
     );
   }
 }

@@ -1,7 +1,7 @@
 name: keevault
 description: "A KeePass-compatible password manager built with Flutter."
 publish_to: 'none'
-version: 0.7.3+8
+version: 0.7.4+9
 environment:
   sdk: ^3.12.0
 
@@ -80,11 +80,3 @@ flutter:
   assets:
     - pubspec.yaml
     - assets/icons/
-
-  fonts:
-    - family: Noto Sans SC
-      fonts:
-        - asset: assets/fonts/NotoSansSC-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/NotoSansSC-Bold.ttf
-          weight: 700

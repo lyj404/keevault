@@ -233,18 +233,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   children: [
                     Text(
                       AppConstants.appName,
-                      style: textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
+                      style: textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 6),
                     Text(
                       l10n.appSubtitle,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
+                      style: textTheme.bodySmall,
                     ),
                     const SizedBox(height: 44),
 
@@ -313,7 +307,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   Text(
                                     l10n.recentOpened,
                                     style: textTheme.labelLarge?.copyWith(
-                                      fontWeight: FontWeight.w700,
                                       color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -740,7 +733,6 @@ class _SyncLoadingDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -753,10 +745,7 @@ class _SyncLoadingDialog extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             ),
             const SizedBox(height: 16),
-            Text(
-              message,
-              style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
-            ),
+            Text(message, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
@@ -779,6 +768,7 @@ class _RecentFileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = recentFile.path.split(Platform.pathSeparator).last;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final brightness = Theme.of(context).brightness;
     final l10n = AppLocalizations.of(context)!;
 
@@ -822,11 +812,7 @@ class _RecentFileTile extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: colorScheme.onSurface,
-                          ),
+                          style: textTheme.titleSmall,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -835,10 +821,7 @@ class _RecentFileTile extends StatelessWidget {
                               : recentFile.path,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: textTheme.labelSmall,
                         ),
                       ],
                     ),

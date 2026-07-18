@@ -119,11 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.language,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ],
                           ),
@@ -185,11 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Expanded(
                               child: Text(
                                 l10n.webdavProfiles,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
                             IconButton(
@@ -266,11 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.theme,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ],
                           ),
@@ -332,11 +320,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               children: [
                                 Text(
                                   l10n.closeBehavior,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: colorScheme.onSurface,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium,
                                 ),
                               ],
                             ),
@@ -388,9 +372,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(width: 12),
                             Text(
                               l10n.privacyProtection,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ],
                         ),
@@ -442,18 +424,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.autoLock,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
                                 l10n.autoLockDescription,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
@@ -516,18 +491,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.autoSave,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
                                 l10n.autoSaveDescription,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
@@ -597,18 +565,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.expirationReminder,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
                                 l10n.expirationReminderDescription,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
@@ -683,11 +644,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Expanded(
                                 child: Text(
                                   l10n.unlockMethod,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: colorScheme.onSurface,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium,
                                 ),
                               ),
                             ],
@@ -750,11 +707,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.changeMasterPassword,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ],
                           ),
@@ -810,11 +763,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.databaseBackup,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ],
                           ),
@@ -870,18 +819,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               Text(
                                 l10n.webdavSync,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Text(
                                 l10n.autoSyncOnSave,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
                           ),
@@ -957,8 +899,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 4),
                           Text(
                             l10n.appPasswordHelper,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: Theme.of(context).colorScheme.outline,
                             ),
                           ),
@@ -1046,8 +987,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     ? l10n.connectionSuccess
                                     : (_connectionError ??
                                           l10n.connectionFailed),
-                                style: TextStyle(
-                                  fontSize: 13,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                   color: _connectionOk!
                                       ? ClayColors.secondary
                                       : ClayColors.error,
@@ -1396,8 +1336,7 @@ class _UnlockMethodChip extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 13,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: selected
                       ? colorScheme.primary

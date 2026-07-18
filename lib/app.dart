@@ -191,6 +191,8 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
+    final effectiveLocale =
+        locale ?? WidgetsBinding.instance.platformDispatcher.locale;
     final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(appRouterProvider);
     // Auto-save: schedule save when database becomes dirty.
@@ -223,8 +225,8 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
           children: [
             MaterialApp.router(
               title: 'KeeVault',
-              theme: AppTheme.light(),
-              darkTheme: AppTheme.dark(),
+              theme: AppTheme.light(locale: effectiveLocale),
+              darkTheme: AppTheme.dark(locale: effectiveLocale),
               themeMode: themeMode,
               routerConfig: router,
               debugShowCheckedModeBanner: false,

@@ -18,20 +18,34 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final dense = ClayLayout.isDesktopPlatform(context);
+    final radius = BorderRadius.circular(ClayLayout.radiusLg);
+    final color = brightness == Brightness.dark
+        ? ClayColors.surfaceCardDark
+        : ClayColors.surfaceCardLight;
+
+    // Material owns the fill color so ListTile / SwitchListTile ink paints
+    // on this ancestor (avoids "ink splashes may be invisible" assert).
     return Container(
       margin: margin ?? const EdgeInsets.only(bottom: ClayLayout.space12),
-      padding: padding ??
-          EdgeInsets.symmetric(
-            horizontal: ClayLayout.space16,
-            vertical: dense ? ClayLayout.space12 : 14,
-          ),
-      decoration: ClayDecoration.card(
-        brightness: brightness,
-        radius: ClayLayout.radiusLg,
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: ClayDecoration.outerShadow(brightness),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
+      child: Material(
+        color: color,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: padding ??
+              EdgeInsets.symmetric(
+                horizontal: ClayLayout.space16,
+                vertical: dense ? ClayLayout.space12 : 14,
+              ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
       ),
     );
   }
