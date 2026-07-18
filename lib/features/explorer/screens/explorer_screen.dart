@@ -159,7 +159,7 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
     final currentGroup = ref.watch(currentGroupProvider);
     final entries = ref.watch(entriesProvider);
     final breadcrumbs = ref.watch(breadcrumbProvider);
-    final isWide = MediaQuery.sizeOf(context).width >= 700;
+    final isWide = ClayLayout.isWide(context);
     final service = ref.read(databaseServiceProvider);
     final isRecycleBin = ref.watch(isRecycleBinProvider);
     final isOpenedFromCloud = ref.watch(openedFromCloudProvider);

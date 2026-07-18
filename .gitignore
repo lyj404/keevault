@@ -113,5 +113,6 @@ coverage/
 
 # Codex agents skills
 .agents/
+.opencode/
 
 .vfox/

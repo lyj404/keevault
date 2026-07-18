@@ -17,11 +17,18 @@ class SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final dense = ClayLayout.isDesktopPlatform(context);
     return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: 12),
+      margin: margin ?? const EdgeInsets.only(bottom: ClayLayout.space12),
       padding: padding ??
-          const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
+          EdgeInsets.symmetric(
+            horizontal: ClayLayout.space16,
+            vertical: dense ? ClayLayout.space12 : 14,
+          ),
+      decoration: ClayDecoration.card(
+        brightness: brightness,
+        radius: ClayLayout.radiusLg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,

@@ -102,19 +102,12 @@ class _WideLayout extends StatelessWidget {
         children: [
           // Sidebar with clay feel
           Container(
-            width: 272,
+            width: ClayLayout.sidebarWidth,
             decoration: BoxDecoration(
               color: isDark
                   ? ClayColors.surfaceCardDark
                   : ClayColors.surfaceCardLight,
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.black : const Color(0xFF5EEAD4))
-                      .withValues(alpha: isDark ? 0.2 : 0.12),
-                  blurRadius: 16,
-                  offset: const Offset(2, 0),
-                ),
-              ],
+              boxShadow: ClayDecoration.sidebarShadow(brightness),
             ),
             child: Column(
               children: [
