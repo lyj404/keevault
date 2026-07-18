@@ -434,7 +434,8 @@ class DatabaseService {
   }
 
   /// Saves the database to disk and returns the serialized bytes.
-  /// The serialization+encryption runs in a background isolate to avoid blocking the UI.
+  /// Serialization runs on the calling isolate (see [_saveOnce]); concurrent
+  /// saves are serialized via [_saveQueue].
   /// Returns the serialized bytes so callers can reuse them (e.g. for cloud upload).
   Future<Uint8List> save() {
     final completer = Completer<Uint8List>();
@@ -455,12 +456,12 @@ class DatabaseService {
     log.i('Saving database: $_filePath');
     final db = _db!;
     final mutationCountAtStart = _mutationCount;
-    final bytes = Uint8List.fromList(
-      await Isolate.run(() {
-        CryptoService.initialize();
-        return db.save();
-      }),
-    );
+    // Serialize on the main isolate. KdbxDatabase graphs (and any enclosing
+    // service state captured by a closure) are not reliably sendable to a
+    // background isolate; Isolate.run previously failed with:
+    // "Illegal argument in isolate message: object is unsendable ... _Future".
+    // KDF/crypto inside kpasslib is already async, so the UI can still yield.
+    final bytes = Uint8List.fromList(await db.save());
     await validateBytes(bytes, _password!, keyData: _keyData);
     final path = _filePath!;
     await _atomicFileStore.commit(
@@ -498,17 +499,9 @@ class DatabaseService {
   }
 
   /// Serializes the database to bytes without writing to disk.
-  /// Runs in a background isolate to avoid blocking the UI.
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
-    final db = _db!;
-    final bytes = Uint8List.fromList(
-      await Isolate.run(() {
-        CryptoService.initialize();
-        return db.save();
-      }),
-    );
-    return bytes;
+    return Uint8List.fromList(await _db!.save());
   }
 
   Future<void> saveAs(String newPath) async {
