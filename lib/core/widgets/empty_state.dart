@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -19,31 +20,19 @@ class EmptyState extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primaryContainer,
-                  colorScheme.tertiaryContainer,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: brightness == Brightness.dark ? 0.15 : 0.08),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              color: brightness == Brightness.dark
+                  ? ClayColors.primaryContainerDark
+                  : colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+              boxShadow: ClayDecoration.outerShadow(brightness),
             ),
-            child: Icon(icon, size: 36, color: colorScheme.onSurfaceVariant),
+            child: Icon(icon, size: 36, color: colorScheme.primary),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: ClayLayout.space16),
           Text(
             message,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              fontSize: 14,
             ),
           ),
         ],

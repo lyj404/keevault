@@ -18,7 +18,7 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final dense = ClayLayout.isDesktopPlatform(context);
-    final radius = BorderRadius.circular(ClayLayout.radiusLg);
+    final radius = ClayLayout.borderRadius(ClayLayout.radiusLg);
     final color = brightness == Brightness.dark
         ? ClayColors.surfaceCardDark
         : ClayColors.surfaceCardLight;
@@ -39,7 +39,7 @@ class SectionCard extends StatelessWidget {
           padding: padding ??
               EdgeInsets.symmetric(
                 horizontal: ClayLayout.space16,
-                vertical: dense ? ClayLayout.space12 : 14,
+                vertical: dense ? ClayLayout.space12 : ClayLayout.space16,
               ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

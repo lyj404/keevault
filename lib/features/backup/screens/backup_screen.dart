@@ -43,7 +43,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     Container(
                       decoration: ClayDecoration.card(
                         brightness: brightness,
-                        radius: 18,
+                        radius: ClayLayout.radiusLg,
                       ),
                       padding: const EdgeInsets.all(18),
                       child: Row(
@@ -106,7 +106,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     Container(
                       decoration: ClayDecoration.card(
                         brightness: brightness,
-                        radius: 18,
+                        radius: ClayLayout.radiusLg,
                       ),
                       padding: const EdgeInsets.all(18),
                       child: Row(
@@ -447,7 +447,7 @@ class _BackupTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Container(
-        decoration: ClayDecoration.card(brightness: brightness, radius: 16),
+        decoration: ClayDecoration.card(brightness: brightness),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),

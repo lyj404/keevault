@@ -775,7 +775,7 @@ class _RecentFileTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
-        decoration: ClayDecoration.card(brightness: brightness, radius: 16),
+        decoration: ClayDecoration.card(brightness: brightness),
         child: Material(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),

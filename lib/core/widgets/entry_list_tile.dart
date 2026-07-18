@@ -274,9 +274,7 @@ class _EntryListTileState extends State<EntryListTile> {
         vertical: dense ? 2 : 3,
       ),
       child: AnimatedContainer(
-        duration: reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 160),
+        duration: reduceMotion ? Duration.zero : ClayLayout.motionFast,
         curve: Curves.easeOut,
         decoration: decoration,
         child: Material(

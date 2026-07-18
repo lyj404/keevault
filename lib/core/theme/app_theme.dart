@@ -1,7 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Layout tokens (spacing, radius, density). Colors stay in [ClayColors].
+/// Soft Clay layout tokens (spacing, radius, density).
+///
+/// Visual language (do not invent per-screen values):
+/// - Radius: sm chips/tools · md icons · lg buttons/inputs/list · xl dialogs/cards
+/// - Elevation: page bg < container < card; one soft shadow layer on raised surfaces
+/// - Lists: light border + listShadow (never full card outerShadow per row)
+/// - Motion: [motionFast]–[motionNormal]; respect MediaQuery.disableAnimations
 class ClayLayout {
   static const double space4 = 4;
   static const double space8 = 8;
@@ -10,10 +16,20 @@ class ClayLayout {
   static const double space20 = 20;
   static const double space24 = 24;
 
+  /// Chips, tool icons, dense controls.
   static const double radiusSm = 10;
-  static const double radiusMd = 14;
+
+  /// Icon containers, tree rows, small surfaces.
+  static const double radiusMd = 12;
+
+  /// Buttons, text fields, list tiles, section cards.
   static const double radiusLg = 16;
+
+  /// Dialogs, sheets, hero / empty-state panels.
   static const double radiusXl = 20;
+
+  static const Duration motionFast = Duration(milliseconds: 160);
+  static const Duration motionNormal = Duration(milliseconds: 220);
 
   /// Wide / desktop explorer layout breakpoint.
   static const double wideBreakpoint = 700;
@@ -24,6 +40,8 @@ class ClayLayout {
   static const double sidebarWidth = 280;
   static const double touchMin = 48;
   static const double iconButton = 36;
+
+  static BorderRadius borderRadius(double r) => BorderRadius.circular(r);
 
   static bool isWide(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= wideBreakpoint;
@@ -36,9 +54,8 @@ class ClayLayout {
   }
 }
 
-/// Claymorphism design system for KeeVault.
-/// Soft, rounded shapes with inner/outer shadows creating a clay-like 3D feel.
-/// Color scheme: Teal Green (matching logo)
+/// Soft Clay color system for KeeVault.
+/// Teal green brand (logo); surfaces and text optimized for light + dark.
 class ClayColors {
   // Primary palette – teal green
   static const primary = Color(0xFF0D9488);
@@ -91,13 +108,13 @@ class ClayColors {
   static const onErrorContainerDark = Color(0xFFFECACA);
 }
 
-/// Pre-built clay box decorations for reuse across the app.
+/// Soft Clay decorations — prefer these over ad-hoc BoxDecoration.
 class ClayDecoration {
   // Cached decorations to avoid per-build allocations.
   static final _cardCache = <(Brightness, double), BoxDecoration>{};
   static final _iconContainerCache = <(Brightness, double), BoxDecoration>{};
 
-  /// Outer shadow for the raised clay effect (softer, less color bloom).
+  /// Raised surface shadow (section cards, panels). Soft, low color bloom.
   static List<BoxShadow> outerShadow(Brightness brightness) {
     if (brightness == Brightness.dark) {
       return [
@@ -120,20 +137,20 @@ class ClayDecoration {
         offset: const Offset(0, 4),
       ),
       BoxShadow(
-        color: const Color(0xFF5EEAD4).withValues(alpha: 0.12),
+        color: ClayColors.primaryMuted.withValues(alpha: 0.10),
         blurRadius: 8,
         offset: const Offset(0, 3),
       ),
     ];
   }
 
-  /// Subtle list-row elevation (one layer only).
+  /// List-row elevation — single layer only (avoid stacking full card shadows).
   static List<BoxShadow> listShadow(Brightness brightness) {
     if (brightness == Brightness.dark) {
       return [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.18),
-          blurRadius: 6,
+          color: Colors.black.withValues(alpha: 0.16),
+          blurRadius: 5,
           offset: const Offset(0, 2),
         ),
       ];
@@ -141,7 +158,7 @@ class ClayDecoration {
     return [
       BoxShadow(
         color: Colors.black.withValues(alpha: 0.04),
-        blurRadius: 6,
+        blurRadius: 5,
         offset: const Offset(0, 2),
       ),
     ];
@@ -167,36 +184,31 @@ class ClayDecoration {
     ];
   }
 
-  /// Inner glow for the pressed/inset clay effect.
+  /// Inset / recessed field feel (inputs).
   static List<BoxShadow> innerShadow(Brightness brightness) {
     if (brightness == Brightness.dark) {
       return [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.35),
-          blurRadius: 5,
-          offset: const Offset(0, 2),
+          color: Colors.black.withValues(alpha: 0.32),
+          blurRadius: 4,
+          offset: const Offset(0, 1),
         ),
       ];
     }
     return [
       BoxShadow(
         color: Colors.black.withValues(alpha: 0.04),
-        blurRadius: 4,
+        blurRadius: 3,
         offset: const Offset(0, 1),
-      ),
-      BoxShadow(
-        color: const Color(0xFF6EE7B7).withValues(alpha: 0.18),
-        blurRadius: 6,
-        offset: const Offset(0, 2),
       ),
     ];
   }
 
-  /// Full clay container decoration (outer glow + background + radius).
+  /// Section / panel card (raised Soft Clay surface).
   static BoxDecoration card({
     required Brightness brightness,
     Color? color,
-    double radius = ClayLayout.radiusXl,
+    double radius = ClayLayout.radiusLg,
   }) {
     if (color != null) {
       return BoxDecoration(
@@ -215,7 +227,7 @@ class ClayDecoration {
     );
   }
 
-  /// Lightweight list-row surface (less shadow stacking in long lists).
+  /// Lightweight list-row surface (border + listShadow).
   static BoxDecoration listItem({
     required Brightness brightness,
     required ColorScheme colorScheme,
@@ -224,7 +236,7 @@ class ClayDecoration {
   }) {
     final isDark = brightness == Brightness.dark;
     if (selected) {
-      // Cannot combine non-uniform Border with borderRadius; use solid fill only.
+      // Uniform border only — non-uniform Border + borderRadius is illegal.
       return BoxDecoration(
         color: isDark
             ? ClayColors.primaryContainerDark
@@ -240,39 +252,40 @@ class ClayDecoration {
       color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: colorScheme.outline.withValues(alpha: isDark ? 0.28 : 0.22),
+        color: colorScheme.outline.withValues(alpha: isDark ? 0.28 : 0.20),
       ),
       boxShadow: listShadow(brightness),
     );
   }
 
-  /// Input field clay decoration.
+  /// Soft Clay input surface.
   static BoxDecoration input({
     required Brightness brightness,
     bool focused = false,
   }) {
     final isDark = brightness == Brightness.dark;
+    final focusColor = isDark ? ClayColors.primaryMuted : ClayColors.primary;
     return BoxDecoration(
       color: isDark
           ? ClayColors.surfaceContainerDark
           : ClayColors.surfaceContainerLight,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
       boxShadow: innerShadow(brightness),
       border: focused
-          ? Border.all(color: ClayColors.primary, width: 2)
+          ? Border.all(color: focusColor, width: 2)
           : Border.all(
               color: (isDark ? ClayColors.outlineDark : ClayColors.outlineLight)
-                  .withValues(alpha: 0.3),
+                  .withValues(alpha: 0.35),
               width: 1,
             ),
     );
   }
 
-  /// Icon container with clay feel.
+  /// Soft Clay icon well.
   static BoxDecoration iconContainer({
     required Brightness brightness,
     Color? color,
-    double radius = 14,
+    double radius = ClayLayout.radiusMd,
   }) {
     if (color != null) {
       final isDark = brightness == Brightness.dark;
@@ -281,9 +294,9 @@ class ClayDecoration {
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isDark ? 0.15 : 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       );
@@ -305,9 +318,9 @@ class ClayDecoration {
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
+          color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
+          blurRadius: 4,
+          offset: const Offset(0, 1),
         ),
       ],
     );
@@ -473,19 +486,19 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(color: ClayColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(color: ClayColors.error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -506,7 +519,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         ),
         color: Colors.transparent,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -517,7 +530,7 @@ class AppTheme {
         titleTextStyle: textTheme.titleMedium,
         subtitleTextStyle: textTheme.bodySmall,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ClayLayout.radiusMd),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -530,7 +543,7 @@ class AppTheme {
           backgroundColor: ClayColors.primary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
@@ -541,7 +554,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceLight,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium,
@@ -551,34 +564,38 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         backgroundColor: ClayColors.onSurfaceLight,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
         ),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+        ),
         backgroundColor: Colors.white,
         titleTextStyle: textTheme.titleLarge,
         contentTextStyle: textTheme.bodyMedium,
       ),
-      bottomSheetTheme: const BottomSheetThemeData(
+      bottomSheetTheme: BottomSheetThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(ClayLayout.radiusXl),
+          ),
         ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
       ),
-      popupMenuTheme: const PopupMenuThemeData(
+      popupMenuTheme: PopupMenuThemeData(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         ),
         elevation: 4,
         color: Colors.white,
@@ -660,24 +677,24 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: BorderSide(
             color: ClayColors.outlineDark.withValues(alpha: 0.35),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(
             color: ClayColors.primaryMuted,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(
             color: ClayColors.errorOnDark,
             width: 1.5,
@@ -704,7 +721,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         ),
         color: Colors.transparent,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -717,7 +734,7 @@ class AppTheme {
         titleTextStyle: textTheme.titleMedium,
         subtitleTextStyle: textTheme.bodySmall,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ClayLayout.radiusMd),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -733,7 +750,7 @@ class AppTheme {
           disabledBackgroundColor: ClayColors.primary.withValues(alpha: 0.35),
           disabledForegroundColor: Colors.white.withValues(alpha: 0.55),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
@@ -744,7 +761,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: ClayColors.onSurfaceDark,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium,
@@ -754,23 +771,25 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
         contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: ClayColors.onSurfaceDark,
         ),
         backgroundColor: const Color(0xFF2C433F),
         actionTextColor: ClayColors.primaryMuted,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: ClayColors.primary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
         ),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+        ),
         backgroundColor: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge,
@@ -779,15 +798,17 @@ class AppTheme {
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(ClayLayout.radiusXl),
+          ),
         ),
         backgroundColor: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
         dragHandleColor: ClayColors.outlineDark.withValues(alpha: 0.6),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
         elevation: 6,
         color: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,

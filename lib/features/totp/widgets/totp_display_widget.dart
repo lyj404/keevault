@@ -72,7 +72,7 @@ class _TotpDisplayWidgetState extends ConsumerState<TotpDisplayWidget> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: ClayDecoration.card(brightness: brightness, radius: 18),
+      decoration: ClayDecoration.card(brightness: brightness),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

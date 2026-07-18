@@ -999,7 +999,7 @@ class _ToolsSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Container(
-          decoration: ClayDecoration.card(brightness: brightness, radius: 16),
+          decoration: ClayDecoration.card(brightness: brightness),
           child: Column(
             children: [
               for (int i = 0; i < children.length; i++) ...[
