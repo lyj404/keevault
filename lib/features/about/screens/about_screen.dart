@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/services/external_url_service.dart';
 import '../../../l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -15,8 +17,10 @@ class _AboutScreenState extends State<AboutScreen> {
   static const String _appName = 'KeeVault';
   static const String _githubUrl = 'https://github.com/lyj404/keevault';
   static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
-  static const String _licenseUrl = 'https://github.com/lyj404/keevault/blob/main/LICENSE';
-  static const String _releasesApiUrl = 'https://api.github.com/repos/lyj404/keevault/releases/latest';
+  static const String _licenseUrl =
+      'https://github.com/lyj404/keevault/blob/main/LICENSE';
+  static const String _releasesApiUrl =
+      'https://api.github.com/repos/lyj404/keevault/releases/latest';
 
   String _version = '';
   String _buildNumber = '';
@@ -61,7 +65,9 @@ class _AboutScreenState extends State<AboutScreen> {
         );
         final tagName = data['tag_name'] as String?;
         if (tagName != null && mounted) {
-          final version = tagName.startsWith('v') ? tagName.substring(1) : tagName;
+          final version = tagName.startsWith('v')
+              ? tagName.substring(1)
+              : tagName;
           setState(() {
             _latestVersion = version;
             _hasChecked = true;
@@ -99,13 +105,8 @@ class _AboutScreenState extends State<AboutScreen> {
 
   Future<void> _openUrl(BuildContext context, String url) async {
     final l10n = AppLocalizations.of(context)!;
-    if (Platform.isLinux) {
-      await Process.run('xdg-open', [url]);
-    } else if (Platform.isMacOS) {
-      await Process.run('open', [url]);
-    } else if (Platform.isWindows) {
-      await Process.run('cmd', ['/c', 'start', url]);
-    } else {
+    final opened = await ExternalUrlService.openUrl(Uri.tryParse(url) ?? Uri());
+    if (!opened) {
       await Clipboard.setData(ClipboardData(text: url));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,9 +127,7 @@ class _AboutScreenState extends State<AboutScreen> {
     final hasUpdate = _isNewVersionAvailable();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.about),
-      ),
+      appBar: AppBar(title: Text(l10n.about)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -181,7 +180,10 @@ class _AboutScreenState extends State<AboutScreen> {
                   const CircularProgressIndicator()
                 else if (hasUpdate) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(20),
@@ -195,18 +197,25 @@ class _AboutScreenState extends State<AboutScreen> {
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
-                    onPressed: () => _openUrl(context, '$_githubUrl/releases/latest'),
+                    onPressed: () =>
+                        _openUrl(context, '$_githubUrl/releases/latest'),
                     icon: const Icon(Icons.system_update_rounded, size: 18),
                     label: Text(l10n.update),
                     style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
                 ] else if (_hasChecked)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(20),
