@@ -21,12 +21,14 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchCtrl = TextEditingController();
+  final _keyboardFocusNode = FocusNode();
   Timer? _debounce;
   KdbxEntry? _selectedEntry;
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _keyboardFocusNode.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -65,7 +67,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           : results.isEmpty
               ? EmptyState(icon: Icons.search_off_rounded, message: l10n.noResults)
               : KeyboardListener(
-                  focusNode: FocusNode(),
+                  focusNode: _keyboardFocusNode,
                   autofocus: true,
                   onKeyEvent: (event) {
                     if (event is! KeyDownEvent) return;

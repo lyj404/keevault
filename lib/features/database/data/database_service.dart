@@ -4,7 +4,6 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/crypto/crypto_service.dart';
-import '../../../core/utils/fnv_hash.dart';
 import 'atomic_file_store.dart';
 import '../../../core/utils/logger.dart';
 import '../../backup/data/backup_service.dart';
@@ -153,8 +152,6 @@ class DatabaseService {
   Map<String, KdbxEntry>? _entryByUuid;
   Set<String>? _tagsCache;
   List<_SearchRecord>? _searchIndex;
-  Uint8List? _lastSavedBytes;
-  int? _lastSavedHash;
 
   /// Last known remote file metadata, used for conflict detection.
   RemoteFileInfo? _lastSyncedRemoteInfo;
@@ -476,8 +473,6 @@ class DatabaseService {
         }
       },
     );
-    _lastSavedBytes = bytes;
-    _lastSavedHash = _computeBytesHash(bytes);
     if (_mutationCount == mutationCountAtStart) {
       markClean();
     } else {
@@ -485,17 +480,6 @@ class DatabaseService {
     }
     log.i('Database saved (${bytes.length} bytes)');
     return bytes;
-  }
-
-  /// FNV-1a 64-bit hash for fast byte comparison.
-  static int _computeBytesHash(Uint8List bytes) => FnvHash.hashBytes(bytes);
-
-  /// Returns true if the given bytes are identical to the last saved bytes.
-  /// Uses hash comparison for O(1) lookup with length pre-check (Bug #6 fix).
-  bool isSameAsLastSaved(Uint8List bytes) {
-    if (_lastSavedBytes == null) return false;
-    if (_lastSavedBytes!.length != bytes.length) return false;
-    return _computeBytesHash(bytes) == _lastSavedHash;
   }
 
   /// Serializes the database to bytes without writing to disk.
@@ -804,9 +788,6 @@ class DatabaseService {
     _entryByUuid = null;
     _tagsCache = null;
     _searchIndex = null;
-    _lastSavedBytes = null;
-    _lastSavedHash = null;
   }
 }
-
 
