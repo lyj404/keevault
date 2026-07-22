@@ -15,6 +15,8 @@
   "uploadingToCloud": "正在同步到云端...",
   "downloadingFromCloudShort": "正在从云端下载...",
   "pleaseConfigureWebDAV": "请先在设置中配置 WebDAV",
+  "cloudSyncDisabled": "WebDAV 已配置但未启用同步，请在设置中开启云端同步开关",
+  "webdavSaveFailedStorage": "保存失败，可能是系统密钥环（GNOME Keyring / KWallet）未解锁或不可用",
   "cloudNoDatabaseCreateFirst": "云端还没有数据库，请先在本地创建并保存后同步",
   "cloudNoDatabaseSaveFirst": "云端还没有数据库，请先保存本地数据库后同步",
   "downloadFailed": "下载失败: {error}",

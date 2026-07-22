@@ -170,6 +170,18 @@ abstract class AppLocalizations {
   /// **'请先在设置中配置 WebDAV'**
   String get pleaseConfigureWebDAV;
 
+  /// No description provided for @cloudSyncDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'WebDAV 已配置但未启用同步，请在设置中开启云端同步开关'**
+  String get cloudSyncDisabled;
+
+  /// No description provided for @webdavSaveFailedStorage.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败，可能是系统密钥环（GNOME Keyring / KWallet）未解锁或不可用'**
+  String get webdavSaveFailedStorage;
+
   /// No description provided for @cloudNoDatabaseCreateFirst.
   ///
   /// In zh, this message translates to:

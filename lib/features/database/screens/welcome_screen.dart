@@ -423,9 +423,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final config = await ref
         .read(webDavSettingsServiceProvider)
         .getConfigById(recentFile?.webDavProfileId);
-    if (config == null || !config.enabled) {
+    if (config == null) {
       if (context.mounted) {
         _showErrorDialog(context, l10n.pleaseConfigureWebDAV);
+      }
+      return;
+    }
+    if (!config.enabled) {
+      if (context.mounted) {
+        _showCloudDisabledDialog(context, l10n);
       }
       return;
     }
@@ -434,7 +440,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final remoteInfo = await syncService.getRemoteFileInfo(config);
     if (remoteInfo == null) {
       if (context.mounted) {
-        _showErrorDialog(context, l10n.cloudNoDatabaseCreateFirst);
+        _showCloudNoDatabaseDialog(context, l10n);
       }
       return;
     }
@@ -640,6 +646,68 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               ),
             ),
             child: Text(l10n.goToSettings),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCloudDisabledDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.cloudSyncDisabled),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(l10n.cancel),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.push('/settings');
+            },
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(l10n.goToSettings),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCloudNoDatabaseDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.cloudNoDatabaseCreateFirst),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(l10n.cancel),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.push('/create');
+            },
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(l10n.createNewDatabase),
           ),
         ],
       ),

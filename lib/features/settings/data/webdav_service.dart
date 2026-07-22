@@ -48,9 +48,13 @@ class WebDavSettingsService {
       profiles: [legacyConfig],
       activeProfileId: legacyConfig.id,
     );
-    await saveConfig(legacyConfig);
+    // Persist the migrated state directly. Calling saveConfig here would call
+    // getProfilesState again while the legacy key still exists, causing an
+    // endless getProfilesState -> saveConfig recursion.
+    final decrypted = await _decryptProfilesState(migrated);
+    await _persistState(decrypted);
     await _storage.delete(key: _legacyConfigKey);
-    return migrated;
+    return decrypted;
   }
 
   Future<void> saveConfig(WebDavConfig config) async {
@@ -90,10 +94,7 @@ class WebDavSettingsService {
     final exists = state.profiles.any((profile) => profile.id == profileId);
     if (!exists) return;
     await _persistState(
-      WebDavProfilesState(
-        profiles: state.profiles,
-        activeProfileId: profileId,
-      ),
+      WebDavProfilesState(profiles: state.profiles, activeProfileId: profileId),
     );
   }
 

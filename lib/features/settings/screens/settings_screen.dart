@@ -208,9 +208,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             labelText: l10n.webdavProfile,
                             border: const OutlineInputBorder(),
                           ),
-                          validator: (_) => _profiles.isEmpty
-                              ? l10n.pleaseCreateWebDavProfile
-                              : null,
                           items: _profiles
                               .map(
                                 (profile) => DropdownMenuItem<String>(
@@ -320,7 +317,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               children: [
                                 Text(
                                   l10n.closeBehavior,
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ],
                             ),
@@ -644,7 +643,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Expanded(
                                 child: Text(
                                   l10n.unlockMethod,
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                             ],
@@ -899,9 +900,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 4),
                           Text(
                             l10n.appPasswordHelper,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
@@ -987,11 +989,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     ? l10n.connectionSuccess
                                     : (_connectionError ??
                                           l10n.connectionFailed),
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: _connectionOk!
-                                      ? ClayColors.secondary
-                                      : ClayColors.error,
-                                ),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      color: _connectionOk!
+                                          ? ClayColors.secondary
+                                          : ClayColors.error,
+                                    ),
                               ),
                             ),
                           ],
@@ -1114,9 +1117,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!await _confirmInsecureHttp() || !mounted) return;
+    log.i('[WebDAV] Save button clicked');
     try {
+      if (!_formKey.currentState!.validate()) {
+        log.w('[WebDAV] Save stopped: form validation failed');
+        return;
+      }
+      if (!await _confirmInsecureHttp() || !mounted) {
+        log.i('[WebDAV] Save cancelled before writing');
+        return;
+      }
       final profileId = _selectedProfileId ?? _generateProfileId();
       final config = WebDavConfig(
         id: profileId,
@@ -1134,13 +1144,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _loadConfig();
       ref.invalidate(webDavConfigProvider);
       ref.invalidate(webDavProfilesStateProvider);
-      if (mounted) {
+      if (!mounted) return;
+      log.i('[WebDAV] Save completed, profiles=${_profiles.length}');
+      if (_profiles.isEmpty) {
+        log.e(
+          'WebDAV profiles empty after save — secure storage may be '
+          'unavailable on this platform',
+        );
         final l10n = AppLocalizations.of(context)!;
-        showToast(context, l10n.saved);
-        context.pop();
+        showToast(context, l10n.webdavSaveFailedStorage, isError: true);
+        return;
       }
+      final l10n = AppLocalizations.of(context)!;
+      showToast(context, l10n.saved);
+      context.pop();
     } catch (e, st) {
-      log.e('Failed to save WebDAV config', error: e, stackTrace: st);
+      log.e('[WebDAV] Save failed', error: e, stackTrace: st);
       if (mounted) {
         showToast(context, e.toString(), isError: true);
       }

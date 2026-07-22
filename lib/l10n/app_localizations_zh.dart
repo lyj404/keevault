@@ -45,6 +45,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pleaseConfigureWebDAV => '请先在设置中配置 WebDAV';
 
   @override
+  String get cloudSyncDisabled => 'WebDAV 已配置但未启用同步，请在设置中开启云端同步开关';
+
+  @override
+  String get webdavSaveFailedStorage =>
+      '保存失败，可能是系统密钥环（GNOME Keyring / KWallet）未解锁或不可用';
+
+  @override
   String get cloudNoDatabaseCreateFirst => '云端还没有数据库，请先在本地创建并保存后同步';
 
   @override

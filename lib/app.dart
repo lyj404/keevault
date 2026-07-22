@@ -212,10 +212,6 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
           ref.read(autoLockProvider.notifier).resetTimer();
           ref.read(autoSaveProvider.notifier).resetTimer();
         },
-        onPointerHover: (_) {
-          ref.read(autoLockProvider.notifier).resetTimer();
-          ref.read(autoSaveProvider.notifier).resetTimer();
-        },
         onPointerSignal: (_) {
           ref.read(autoLockProvider.notifier).resetTimer();
           ref.read(autoSaveProvider.notifier).resetTimer();
@@ -240,13 +236,16 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
               supportedLocales: const [Locale('zh'), Locale('en')],
             ),
             if (_backgroundPrivacyVisible)
-              const ColoredBox(
-                color: Color(0xFF111827),
-                child: Center(
-                  child: Icon(
-                    Icons.lock_rounded,
-                    color: Colors.white,
-                    size: 64,
+              Directionality(
+                textDirection: TextDirection.ltr,
+                child: const ColoredBox(
+                  color: Color(0xFF111827),
+                  child: Center(
+                    child: Icon(
+                      Icons.lock_rounded,
+                      color: Colors.white,
+                      size: 64,
+                    ),
                   ),
                 ),
               ),

@@ -25,25 +25,27 @@ class SectionCard extends StatelessWidget {
 
     // Material owns the fill color so ListTile / SwitchListTile ink paints
     // on this ancestor (avoids "ink splashes may be invisible" assert).
-    return Container(
-      margin: margin ?? const EdgeInsets.only(bottom: ClayLayout.space12),
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        boxShadow: ClayDecoration.outerShadow(brightness),
-      ),
-      child: Material(
-        color: color,
-        borderRadius: radius,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: padding ??
-              EdgeInsets.symmetric(
-                horizontal: ClayLayout.space16,
-                vertical: dense ? ClayLayout.space12 : ClayLayout.space16,
-              ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
+    return RepaintBoundary(
+      child: Container(
+        margin: margin ?? const EdgeInsets.only(bottom: ClayLayout.space12),
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: ClayDecoration.outerShadow(brightness),
+        ),
+        child: Material(
+          color: color,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: padding ??
+                EdgeInsets.symmetric(
+                  horizontal: ClayLayout.space16,
+                  vertical: dense ? ClayLayout.space12 : ClayLayout.space16,
+                ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
           ),
         ),
       ),

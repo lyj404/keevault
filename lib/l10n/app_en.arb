@@ -15,6 +15,8 @@
   "uploadingToCloud": "Uploading to cloud...",
   "downloadingFromCloudShort": "Downloading from cloud...",
   "pleaseConfigureWebDAV": "Please configure WebDAV in settings first",
+  "cloudSyncDisabled": "WebDAV is configured but sync is disabled. Please enable cloud sync in settings.",
+  "webdavSaveFailedStorage": "Save failed — system keyring (GNOME Keyring / KWallet) may be locked or unavailable",
   "cloudNoDatabaseCreateFirst": "No cloud database found. Please create and save a local database first, then sync.",
   "cloudNoDatabaseSaveFirst": "No cloud database found. Please save a local database first, then sync.",
   "downloadFailed": "Download failed: {error}",

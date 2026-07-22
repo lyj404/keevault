@@ -46,6 +46,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please configure WebDAV in settings first';
 
   @override
+  String get cloudSyncDisabled =>
+      'WebDAV is configured but sync is disabled. Please enable cloud sync in settings.';
+
+  @override
+  String get webdavSaveFailedStorage =>
+      'Save failed — system keyring (GNOME Keyring / KWallet) may be locked or unavailable';
+
+  @override
   String get cloudNoDatabaseCreateFirst =>
       'No cloud database found. Please create and save a local database first, then sync.';
 

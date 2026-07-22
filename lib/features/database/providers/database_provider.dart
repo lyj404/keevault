@@ -147,11 +147,58 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         keyData: keyData,
       );
       final recentSvc = _ref.read(recentFilesServiceProvider);
+
+      // If WebDAV is enabled, link this new database to cloud so it syncs on save.
+      final config = await _ref.read(webDavSettingsServiceProvider).getConfig();
+      final bool isCloud = config != null && config.enabled;
+      String? remotePath;
+      String? eTag;
+      DateTime? remoteMTime;
+      if (isCloud) {
+        _currentWebDavProfileId = config.id;
+        remotePath = config.remoteFilePath;
+        _ref.read(openedFromCloudProvider.notifier).state = true;
+        // Upload the newly created database to the cloud immediately.
+        final syncService = _ref.read(syncServiceProvider);
+        try {
+          await syncService.ensureRemoteDirectory(config);
+          final bytes = await _service.save();
+          final newInfo = await syncService.uploadDatabase(
+            config,
+            bytes,
+            force: true,
+          );
+          _service.setLastSyncedRemoteInfo(newInfo);
+          eTag = newInfo.eTag;
+          remoteMTime = newInfo.mTime;
+          _ref.read(syncStateProvider.notifier).state = SyncState.success;
+        } catch (e) {
+          log.e('Initial cloud upload failed', error: e);
+          _ref.read(syncStateProvider.notifier).state = SyncState.error;
+        }
+      } else {
+        _currentWebDavProfileId = null;
+        _ref.read(openedFromCloudProvider.notifier).state = false;
+      }
+
       await Future.wait([
-        recentSvc.addRecentFile(filePath),
-        recentSvc.setLastOpenedFile(filePath),
+        recentSvc.addRecentFile(
+          filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          webDavProfileId: _currentWebDavProfileId,
+          lastSyncedETag: eTag,
+          lastSyncedMTime: remoteMTime,
+        ),
+        recentSvc.setLastOpenedFile(
+          filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          webDavProfileId: _currentWebDavProfileId,
+          lastSyncedETag: eTag,
+          lastSyncedMTime: remoteMTime,
+        ),
       ]);
-      _ref.read(openedFromCloudProvider.notifier).state = false;
       state = AsyncValue.data(db);
       _ref.read(autoLockProvider.notifier).resetTimer();
     } catch (e, st) {
