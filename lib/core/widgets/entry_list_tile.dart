@@ -58,7 +58,11 @@ class _EntryListTileState extends State<EntryListTile> {
     return EntryListTile._totpService.generateCode(config);
   }
 
-  Widget _highlightedTitle(String text, ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _highlightedTitle(
+    String text,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
     final titleStyle = textTheme.titleSmall;
     if (widget.query == null || widget.query!.isEmpty) {
       return Text(
@@ -85,10 +89,12 @@ class _EntryListTileState extends State<EntryListTile> {
     );
     final spans = <TextSpan>[];
     for (int i = 0; i < text.length; i++) {
-      spans.add(TextSpan(
-        text: text[i],
-        style: positions.contains(i) ? highlightStyle : normalStyle,
-      ));
+      spans.add(
+        TextSpan(
+          text: text[i],
+          style: positions.contains(i) ? highlightStyle : normalStyle,
+        ),
+      );
     }
     return RichText(
       text: TextSpan(children: spans),
@@ -131,66 +137,77 @@ class _EntryListTileState extends State<EntryListTile> {
     ];
     final url = widget.entry.fields['URL']?.text ?? '';
     if (url.isNotEmpty) {
-      items.add(PopupMenuItem(
-        value: 'copy_url',
-        child: ListTile(
-          leading: const Icon(Icons.link_rounded),
-          title: Text(l10n.copyUrl),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      items.add(
+        PopupMenuItem(
+          value: 'copy_url',
+          child: ListTile(
+            leading: const Icon(Icons.link_rounded),
+            title: Text(l10n.copyUrl),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
-      ));
+      );
     }
     final hasTotp =
         widget.entry.customData?.map['TimeOtp-Secret']?.value != null;
     if (hasTotp) {
-      items.add(PopupMenuItem(
-        value: 'copy_totp',
-        child: ListTile(
-          leading: const Icon(Icons.timer_rounded),
-          title: Text(l10n.copyTotp),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      items.add(
+        PopupMenuItem(
+          value: 'copy_totp',
+          child: ListTile(
+            leading: const Icon(Icons.timer_rounded),
+            title: Text(l10n.copyTotp),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
-      ));
+      );
     }
     if (widget.onMove != null) {
-      items.add(PopupMenuItem(
-        value: 'move',
-        child: ListTile(
-          leading: const Icon(Icons.drive_file_move_rounded),
-          title: Text(l10n.move),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      items.add(
+        PopupMenuItem(
+          value: 'move',
+          child: ListTile(
+            leading: const Icon(Icons.drive_file_move_rounded),
+            title: Text(l10n.move),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
-      ));
+      );
     }
     if (widget.onRestore != null) {
-      items.add(PopupMenuItem(
-        value: 'restore',
-        child: ListTile(
-          leading: const Icon(Icons.restore_rounded),
-          title: Text(l10n.restore),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      items.add(
+        PopupMenuItem(
+          value: 'restore',
+          child: ListTile(
+            leading: const Icon(Icons.restore_rounded),
+            title: Text(l10n.restore),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
-      ));
+      );
     }
     if (widget.onDelete != null) {
-      items.add(PopupMenuItem(
-        value: 'delete',
-        child: ListTile(
-          leading: const Icon(Icons.delete_outline_rounded),
-          title: Text(
-            widget.onRestore != null ? l10n.permanentDelete : l10n.delete,
+      items.add(
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            leading: const Icon(Icons.delete_outline_rounded),
+            title: Text(
+              widget.onRestore != null ? l10n.permanentDelete : l10n.delete,
+            ),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
           ),
-          dense: true,
-          contentPadding: EdgeInsets.zero,
         ),
-      ));
+      );
     }
-    showMenu<String>(context: context, position: position, items: items)
-        .then((value) {
+    showMenu<String>(context: context, position: position, items: items).then((
+      value,
+    ) {
       if (value == null || !context.mounted) return;
       switch (value) {
         case 'copy_password':
@@ -235,7 +252,11 @@ class _EntryListTileState extends State<EntryListTile> {
         child: InkWell(
           borderRadius: BorderRadius.circular(ClayLayout.radiusSm),
           onTap: onTap,
-          child: Icon(icon, size: iconSize, color: colorScheme.onSurfaceVariant),
+          child: Icon(
+            icon,
+            size: iconSize,
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -253,152 +274,170 @@ class _EntryListTileState extends State<EntryListTile> {
     final radius = ClayLayout.radiusLg;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
-    final baseDecoration = ClayDecoration.listItem(
-      brightness: brightness,
-      colorScheme: colorScheme,
-      selected: widget.isSelected,
-      radius: radius,
-    );
-    final decoration = !widget.isSelected && _hovered
-        ? baseDecoration.copyWith(
-            color: colorScheme.surfaceContainerLow,
-            border: Border.all(
-              color: colorScheme.outline.withValues(alpha: 0.35),
-            ),
-          )
-        : baseDecoration;
-
     final tile = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: dense ? ClayLayout.space12 : ClayLayout.space12,
         vertical: dense ? 2 : 3,
       ),
-      child: AnimatedContainer(
-        duration: reduceMotion ? Duration.zero : ClayLayout.motionFast,
-        curve: Curves.easeOut,
-        decoration: decoration,
-        child: Material(
-          color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(radius),
-          child: InkWell(
+          boxShadow: ClayDecoration.listShadow(brightness),
+        ),
+        child: AnimatedContainer(
+          duration: reduceMotion ? Duration.zero : ClayLayout.motionFast,
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? (brightness == Brightness.dark
+                      ? ClayColors.primaryContainerDark
+                      : colorScheme.primaryContainer)
+                : _hovered
+                ? colorScheme.surfaceContainerLow
+                : (brightness == Brightness.dark
+                      ? ClayColors.surfaceCardDark
+                      : ClayColors.surfaceCardLight),
             borderRadius: BorderRadius.circular(radius),
-            onTap: widget.onTap,
-            onHover: dense
-                ? (v) {
-                    if (_hovered != v) setState(() => _hovered = v);
-                  }
-                : null,
-            onSecondaryTapUp: (details) =>
-                _showContextMenu(context, details.globalPosition),
-            onLongPress: () {
-              final box = context.findRenderObject() as RenderBox?;
-              final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
-              final size = box?.size ?? Size.zero;
-              _showContextMenu(
-                context,
-                Offset(pos.dx + size.width / 2, pos.dy + size.height / 2),
-              );
-            },
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: dense ? 48 : ClayLayout.touchMin,
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: ClayLayout.space12,
-                  vertical: dense ? ClayLayout.space8 : ClayLayout.space12,
-                ),
-                child: Row(
-                  children: [
-                    if (widget.showCheckbox) ...[
-                      Checkbox(
-                        value: widget.isChecked,
-                        onChanged: widget.onTap != null
-                            ? (_) => widget.onTap!()
-                            : null,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const SizedBox(width: ClayLayout.space8),
-                    ],
-                    Container(
-                      width: dense ? 36 : 40,
-                      height: dense ? 36 : 40,
-                      decoration: ClayDecoration.iconContainer(
-                        brightness: brightness,
-                        radius: 12,
-                      ),
-                      child: Icon(
-                        _getIcon(widget.entry.icon),
-                        size: dense ? 18 : 20,
-                        color: colorScheme.primary,
-                      ),
+            border: widget.isSelected
+                ? Border.all(
+                    color: colorScheme.primary.withValues(
+                      alpha: brightness == Brightness.dark ? 0.55 : 0.35,
                     ),
-                    const SizedBox(width: ClayLayout.space12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _highlightedTitle(displayTitle, colorScheme, textTheme),
-                          if (_username.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              _username,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.bodySmall,
+                  )
+                : _hovered
+                ? Border.all(color: colorScheme.outline.withValues(alpha: 0.35))
+                : Border.all(
+                    color: colorScheme.outline.withValues(
+                      alpha: brightness == Brightness.dark ? 0.28 : 0.20,
+                    ),
+                  ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(radius),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(radius),
+              onTap: widget.onTap,
+              onHover: dense
+                  ? (v) {
+                      if (_hovered != v) setState(() => _hovered = v);
+                    }
+                  : null,
+              onSecondaryTapUp: (details) =>
+                  _showContextMenu(context, details.globalPosition),
+              onLongPress: () {
+                final box = context.findRenderObject() as RenderBox?;
+                final pos = box?.localToGlobal(Offset.zero) ?? Offset.zero;
+                final size = box?.size ?? Size.zero;
+                _showContextMenu(
+                  context,
+                  Offset(pos.dx + size.width / 2, pos.dy + size.height / 2),
+                );
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: dense ? 48 : ClayLayout.touchMin,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ClayLayout.space12,
+                    vertical: dense ? ClayLayout.space8 : ClayLayout.space12,
+                  ),
+                  child: Row(
+                    children: [
+                      if (widget.showCheckbox) ...[
+                        Checkbox(
+                          value: widget.isChecked,
+                          onChanged: widget.onTap != null
+                              ? (_) => widget.onTap!()
+                              : null,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        const SizedBox(width: ClayLayout.space8),
+                      ],
+                      Container(
+                        width: dense ? 36 : 40,
+                        height: dense ? 36 : 40,
+                        decoration: ClayDecoration.iconContainer(
+                          brightness: brightness,
+                          radius: 12,
+                        ),
+                        child: Icon(
+                          _getIcon(widget.entry.icon),
+                          size: dense ? 18 : 20,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: ClayLayout.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _highlightedTitle(
+                              displayTitle,
+                              colorScheme,
+                              textTheme,
                             ),
-                          ],
-                          if (widget.entry.tags != null &&
-                              widget.entry.tags!.isNotEmpty) ...[
-                            const SizedBox(height: ClayLayout.space4),
-                            Wrap(
-                              spacing: ClayLayout.space4,
-                              runSpacing: 2,
-                              children: [
-                                for (final tag in widget.entry.tags!)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.primaryContainer
-                                          .withValues(alpha: 0.5),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      tag,
-                                      style: textTheme.labelSmall?.copyWith(
-                                        fontSize: 10,
-                                        color: colorScheme.onPrimaryContainer,
+                            if (_username.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                _username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.bodySmall,
+                              ),
+                            ],
+                            if (widget.entry.tags != null &&
+                                widget.entry.tags!.isNotEmpty) ...[
+                              const SizedBox(height: ClayLayout.space4),
+                              Wrap(
+                                spacing: ClayLayout.space4,
+                                runSpacing: 2,
+                                children: [
+                                  for (final tag in widget.entry.tags!)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer
+                                            .withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        tag,
+                                        style: textTheme.labelSmall?.copyWith(
+                                          fontSize: 10,
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                    if (_isExpired) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.warning_rounded,
-                              size: 12,
-                              color: colorScheme.error,
-                            ),
-                            const SizedBox(width: 3),
+                      if (_isExpired) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.warning_rounded,
+                                size: 12,
+                                color: colorScheme.error,
+                              ),
+                              const SizedBox(width: 3),
                               Text(
                                 l10n.expired,
                                 style: textTheme.labelSmall?.copyWith(
@@ -406,29 +445,30 @@ class _EntryListTileState extends State<EntryListTile> {
                                   color: colorScheme.error,
                                 ),
                               ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: ClayLayout.space8),
+                      ],
+                      if (_password.isNotEmpty)
+                        _actionButton(
+                          colorScheme: colorScheme,
+                          icon: Icons.copy_rounded,
+                          iconSize: 16,
+                          onTap: () {
+                            copyToClipboardWithAutoClear(_password);
+                            showToast(context, l10n.copiedPassword);
+                          },
+                        ),
                       const SizedBox(width: ClayLayout.space8),
-                    ],
-                    if (_password.isNotEmpty)
                       _actionButton(
                         colorScheme: colorScheme,
-                        icon: Icons.copy_rounded,
-                        iconSize: 16,
-                        onTap: () {
-                          copyToClipboardWithAutoClear(_password);
-                          showToast(context, l10n.copiedPassword);
-                        },
+                        icon: Icons.chevron_right_rounded,
+                        iconSize: 20,
+                        onTap: widget.onOpen,
                       ),
-                    const SizedBox(width: ClayLayout.space8),
-                    _actionButton(
-                      colorScheme: colorScheme,
-                      icon: Icons.chevron_right_rounded,
-                      iconSize: 20,
-                      onTap: widget.onOpen,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -486,16 +526,14 @@ IconData _getIcon(KdbxIcon icon) {
     KdbxIcon.networkServer => Icons.dns_rounded,
     KdbxIcon.eMail ||
     KdbxIcon.eMailBox ||
-    KdbxIcon.eMailSearch =>
-      Icons.email_rounded,
+    KdbxIcon.eMailSearch => Icons.email_rounded,
     KdbxIcon.userCommunication || KdbxIcon.identity => Icons.person_rounded,
     KdbxIcon.homebanking || KdbxIcon.money => Icons.account_balance_rounded,
     KdbxIcon.certificate => Icons.verified_rounded,
     KdbxIcon.terminalEncrypted || KdbxIcon.console => Icons.terminal_rounded,
     KdbxIcon.drive ||
     KdbxIcon.driveWindows ||
-    KdbxIcon.disk =>
-      Icons.storage_rounded,
+    KdbxIcon.disk => Icons.storage_rounded,
     KdbxIcon.clipboardReady => Icons.content_paste_rounded,
     KdbxIcon.note || KdbxIcon.notepad => Icons.note_rounded,
     KdbxIcon.settings || KdbxIcon.configuration => Icons.settings_rounded,

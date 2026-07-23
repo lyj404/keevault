@@ -225,6 +225,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       );
                     }
                     return ListView.builder(
+                      addAutomaticKeepAlives: false,
+                      cacheExtent: 200,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 4,

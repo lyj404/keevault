@@ -92,6 +92,8 @@ class _EntryListBody extends StatelessWidget {
     }
 
     return ListView.builder(
+      addAutomaticKeepAlives: false,
+      cacheExtent: 200,
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: entries.length + 1,
       itemBuilder: (context, index) {
@@ -171,6 +173,8 @@ class _MobileEntryListBody extends StatelessWidget {
     }
 
     return ListView.builder(
+      addAutomaticKeepAlives: false,
+      cacheExtent: 200,
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: subGroups.length + entries.length + 1,
       itemBuilder: (context, index) {
@@ -556,6 +560,8 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
                   message: l10n.noTotpEntries,
                 )
               : ListView.builder(
+                  addAutomaticKeepAlives: false,
+                  cacheExtent: 200,
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   itemCount: totpEntries.length,
                   itemBuilder: (context, index) {
@@ -801,6 +807,8 @@ class _MobileSearchTab extends ConsumerWidget {
     }
 
     return ListView.builder(
+      addAutomaticKeepAlives: false,
+      cacheExtent: 200,
       padding: const EdgeInsets.symmetric(vertical: 4),
       itemCount: results.length,
       itemBuilder: (ctx, i) {

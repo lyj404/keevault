@@ -67,6 +67,13 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_show(GTK_WIDGET(window));
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
+
+  // Enable Impeller rendering engine for smooth animations on Linux.
+  fl_dart_project_set_engine_switches(project, (const gchar* const[]) {
+    "--enable-impeller",
+    nullptr,
+  });
+
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);

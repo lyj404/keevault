@@ -144,24 +144,24 @@ class ClayDecoration {
     ];
   }
 
+  static final _listShadowLight = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.04),
+      blurRadius: 5,
+      offset: const Offset(0, 2),
+    ),
+  ];
+  static final _listShadowDark = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.16),
+      blurRadius: 5,
+      offset: const Offset(0, 2),
+    ),
+  ];
+
   /// List-row elevation — single layer only (avoid stacking full card shadows).
   static List<BoxShadow> listShadow(Brightness brightness) {
-    if (brightness == Brightness.dark) {
-      return [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.16),
-          blurRadius: 5,
-          offset: const Offset(0, 2),
-        ),
-      ];
-    }
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.04),
-        blurRadius: 5,
-        offset: const Offset(0, 2),
-      ),
-    ];
+    return brightness == Brightness.dark ? _listShadowDark : _listShadowLight;
   }
 
   /// Sidebar edge shadow (wide layout).
@@ -369,36 +369,16 @@ class AppTheme {
         color: onSurface,
         letterSpacing: -0.3,
       ),
-      titleMedium: style(
-        size: 15,
-        weight: FontWeight.w700,
-        color: onSurface,
-      ),
-      titleSmall: style(
-        size: 14,
-        weight: FontWeight.w600,
-        color: onSurface,
-      ),
-      bodyLarge: style(
-        size: 15,
-        weight: FontWeight.w400,
-        color: onSurface,
-      ),
-      bodyMedium: style(
-        size: 14,
-        weight: FontWeight.w400,
-        color: onSurface,
-      ),
+      titleMedium: style(size: 15, weight: FontWeight.w700, color: onSurface),
+      titleSmall: style(size: 14, weight: FontWeight.w600, color: onSurface),
+      bodyLarge: style(size: 15, weight: FontWeight.w400, color: onSurface),
+      bodyMedium: style(size: 14, weight: FontWeight.w400, color: onSurface),
       bodySmall: style(
         size: 12,
         weight: FontWeight.w400,
         color: onSurfaceVariant,
       ),
-      labelLarge: style(
-        size: 14,
-        weight: FontWeight.w600,
-        color: onSurface,
-      ),
+      labelLarge: style(size: 14, weight: FontWeight.w600, color: onSurface),
       labelMedium: style(
         size: 12,
         weight: FontWeight.w600,
@@ -564,7 +544,9 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+        ),
         contentTextStyle: textTheme.bodyMedium?.copyWith(color: Colors.white),
         backgroundColor: ClayColors.onSurfaceLight,
       ),
@@ -765,13 +747,17 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium,
-          side: BorderSide(color: ClayColors.outlineDark.withValues(alpha: 0.45)),
+          side: BorderSide(
+            color: ClayColors.outlineDark.withValues(alpha: 0.45),
+          ),
           backgroundColor: ClayColors.surfaceContainerDark,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+        ),
         contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: ClayColors.onSurfaceDark,
         ),
@@ -808,7 +794,9 @@ class AppTheme {
         dragHandleColor: ClayColors.outlineDark.withValues(alpha: 0.6),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ClayLayout.radiusLg)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+        ),
         elevation: 6,
         color: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,

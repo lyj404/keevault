@@ -12,7 +12,11 @@ class EntryHistoryScreen extends ConsumerWidget {
   final String entryUuid;
   final String groupPath;
 
-  const EntryHistoryScreen({super.key, required this.entryUuid, required this.groupPath});
+  const EntryHistoryScreen({
+    super.key,
+    required this.entryUuid,
+    required this.groupPath,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,13 +28,19 @@ class EntryHistoryScreen extends ConsumerWidget {
     if (entryUuid.isNotEmpty) {
       final uuid = KdbxUuid.fromString(entryUuid);
       final group = service.findGroupByPath(groupPath);
-      log.d('[EntryHistory] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}');
+      log.d(
+        '[EntryHistory] lookup uuid=$entryUuid groupPath="$groupPath" group=${group?.name} groupEntries=${group?.entries.length}',
+      );
       entry = group?.entries.where((e) => e.uuid == uuid).firstOrNull;
       if (entry == null) {
-        log.w('[EntryHistory] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}');
+        log.w(
+          '[EntryHistory] not in group, trying findEntryByUuid cacheSize=${service.allEntries.length}',
+        );
         entry = service.findEntryByUuid(uuid);
         if (entry == null) {
-          log.e('[EntryHistory] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath"');
+          log.e(
+            '[EntryHistory] ENTRY NOT FOUND uuid=$entryUuid groupPath="$groupPath"',
+          );
         }
       }
     }
@@ -42,7 +52,11 @@ class EntryHistoryScreen extends ConsumerWidget {
     }
     final matchedEntry = entry;
     final history = List<KdbxEntry>.from(matchedEntry.history)
-      ..sort((a, b) => (b.times.modification.timeOrZero).compareTo(a.times.modification.timeOrZero));
+      ..sort(
+        (a, b) => (b.times.modification.timeOrZero).compareTo(
+          a.times.modification.timeOrZero,
+        ),
+      );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.history)),
@@ -51,27 +65,48 @@ class EntryHistoryScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.history_rounded, size: 48, color: Theme.of(context).colorScheme.outlineVariant),
+                  Icon(
+                    Icons.history_rounded,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                   const SizedBox(height: 12),
-                  Text(l10n.noHistory, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Text(
+                    l10n.noHistory,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             )
           : ListView.builder(
+              addAutomaticKeepAlives: false,
+              cacheExtent: 200,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: history.length,
               itemBuilder: (context, index) {
                 final historyEntry = history[index];
                 return _HistoryTile(
                   historyEntry: historyEntry,
-                  onTap: () => _showHistoryDetail(context, ref, matchedEntry, historyEntry),
+                  onTap: () => _showHistoryDetail(
+                    context,
+                    ref,
+                    matchedEntry,
+                    historyEntry,
+                  ),
                 );
               },
             ),
     );
   }
 
-  void _showHistoryDetail(BuildContext context, WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
+  void _showHistoryDetail(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry currentEntry,
+    KdbxEntry historyEntry,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final title = historyEntry.fields['Title']?.text ?? '';
@@ -80,7 +115,8 @@ class EntryHistoryScreen extends ConsumerWidget {
     final url = historyEntry.fields['URL']?.text ?? '';
     final notes = historyEntry.fields['Notes']?.text ?? '';
     final modTime = historyEntry.times.modification.timeOrZero;
-    final timeStr = '${modTime.year}-${modTime.month.toString().padLeft(2, '0')}-${modTime.day.toString().padLeft(2, '0')} '
+    final timeStr =
+        '${modTime.year}-${modTime.month.toString().padLeft(2, '0')}-${modTime.day.toString().padLeft(2, '0')} '
         '${modTime.hour.toString().padLeft(2, '0')}:${modTime.minute.toString().padLeft(2, '0')}';
 
     showModalBottomSheet(
@@ -117,23 +153,47 @@ class EntryHistoryScreen extends ConsumerWidget {
                           color: colorScheme.tertiaryContainer,
                           borderRadius: BorderRadius.circular(9),
                         ),
-                        child: Icon(Icons.history_rounded, size: 16, color: colorScheme.tertiary),
+                        child: Icon(
+                          Icons.history_rounded,
+                          size: 16,
+                          color: colorScheme.tertiary,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(timeStr, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
+                            Text(
+                              timeStr,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
                             if (title.isNotEmpty)
-                              Text(title, style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                           ],
                         ),
                       ),
                       TextButton.icon(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          _confirmRestore(context, ref, currentEntry, historyEntry);
+                          _confirmRestore(
+                            context,
+                            ref,
+                            currentEntry,
+                            historyEntry,
+                          );
                         },
                         icon: const Icon(Icons.restore_rounded, size: 16),
                         label: Text(l10n.restoreVersion),
@@ -141,28 +201,48 @@ class EntryHistoryScreen extends ConsumerWidget {
                       IconButton(
                         onPressed: () => Navigator.pop(ctx),
                         icon: const Icon(Icons.close_rounded, size: 20),
-                        style: IconButton.styleFrom(minimumSize: const Size(32, 32)),
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(32, 32),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            Divider(height: 1, color: colorScheme.outlineVariant.withValues(alpha: 0.15)),
+            Divider(
+              height: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.15),
+            ),
             // Fields
             Expanded(
               child: ListView(
                 controller: scrollCtrl,
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
                 children: [
-                  if (title.isNotEmpty) _DetailField(label: l10n.title, value: title),
-                  if (username.isNotEmpty) _DetailField(label: l10n.username, value: username),
-                  if (password.isNotEmpty) _DetailField(label: l10n.password, value: password, obscure: true),
+                  if (title.isNotEmpty)
+                    _DetailField(label: l10n.title, value: title),
+                  if (username.isNotEmpty)
+                    _DetailField(label: l10n.username, value: username),
+                  if (password.isNotEmpty)
+                    _DetailField(
+                      label: l10n.password,
+                      value: password,
+                      obscure: true,
+                    ),
                   if (url.isNotEmpty) _DetailField(label: l10n.url, value: url),
-                  if (notes.isNotEmpty) _DetailField(label: l10n.notes, value: notes),
+                  if (notes.isNotEmpty)
+                    _DetailField(label: l10n.notes, value: notes),
                   // Custom fields
                   for (final e in historyEntry.fields.entries)
-                    if (!['Title', 'UserName', 'Password', 'URL', 'Notes'].contains(e.key) && e.value.text.isNotEmpty)
+                    if (![
+                          'Title',
+                          'UserName',
+                          'Password',
+                          'URL',
+                          'Notes',
+                        ].contains(e.key) &&
+                        e.value.text.isNotEmpty)
                       _DetailField(label: e.key, value: e.value.text),
                 ],
               ),
@@ -173,7 +253,12 @@ class EntryHistoryScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmRestore(BuildContext context, WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
+  void _confirmRestore(
+    BuildContext context,
+    WidgetRef ref,
+    KdbxEntry currentEntry,
+    KdbxEntry historyEntry,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -181,7 +266,10 @@ class EntryHistoryScreen extends ConsumerWidget {
         title: Text(l10n.restoreVersion),
         content: Text(l10n.restoreVersionConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
           FilledButton(
             onPressed: () {
               _restoreVersion(ref, currentEntry, historyEntry);
@@ -198,7 +286,11 @@ class EntryHistoryScreen extends ConsumerWidget {
     );
   }
 
-  void _restoreVersion(WidgetRef ref, KdbxEntry currentEntry, KdbxEntry historyEntry) {
+  void _restoreVersion(
+    WidgetRef ref,
+    KdbxEntry currentEntry,
+    KdbxEntry historyEntry,
+  ) {
     // Save current state to history before restoring.
     currentEntry.times.touch();
     currentEntry.pushHistory();
@@ -266,7 +358,8 @@ class _HistoryTile extends StatelessWidget {
     final modTime = historyEntry.times.modification.timeOrZero;
     final title = historyEntry.fields['Title']?.text ?? '';
     final username = historyEntry.fields['UserName']?.text ?? '';
-    final timeStr = '${modTime.year}-${modTime.month.toString().padLeft(2, '0')}-${modTime.day.toString().padLeft(2, '0')} '
+    final timeStr =
+        '${modTime.year}-${modTime.month.toString().padLeft(2, '0')}-${modTime.day.toString().padLeft(2, '0')} '
         '${modTime.hour.toString().padLeft(2, '0')}:${modTime.minute.toString().padLeft(2, '0')}';
 
     return Padding(
@@ -286,8 +379,15 @@ class _HistoryTile extends StatelessWidget {
                   Container(
                     width: 38,
                     height: 38,
-                    decoration: ClayDecoration.iconContainer(brightness: brightness, radius: 12),
-                    child: Icon(Icons.history_rounded, size: 18, color: colorScheme.tertiary),
+                    decoration: ClayDecoration.iconContainer(
+                      brightness: brightness,
+                      radius: 12,
+                    ),
+                    child: Icon(
+                      Icons.history_rounded,
+                      size: 18,
+                      color: colorScheme.tertiary,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -296,19 +396,30 @@ class _HistoryTile extends StatelessWidget {
                       children: [
                         Text(
                           timeStr,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: colorScheme.onSurface),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           title.isNotEmpty ? title : username,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
             ),
@@ -324,7 +435,11 @@ class _DetailField extends StatelessWidget {
   final String value;
   final bool obscure;
 
-  const _DetailField({required this.label, required this.value, this.obscure = false});
+  const _DetailField({
+    required this.label,
+    required this.value,
+    this.obscure = false,
+  });
 
   @override
   Widget build(BuildContext context) {
