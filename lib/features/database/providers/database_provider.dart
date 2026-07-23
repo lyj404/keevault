@@ -104,24 +104,22 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       unawaited(
         (() async {
           final recentSvc = _ref.read(recentFilesServiceProvider);
-          await Future.wait([
-            recentSvc.addRecentFile(
-              filePath,
-              isCloud: isCloud,
-              remotePath: remotePath,
-              webDavProfileId: _currentWebDavProfileId,
-              lastSyncedETag: eTag,
-              lastSyncedMTime: remoteMTime,
-            ),
-            recentSvc.setLastOpenedFile(
-              filePath,
-              isCloud: isCloud,
-              remotePath: remotePath,
-              webDavProfileId: _currentWebDavProfileId,
-              lastSyncedETag: eTag,
-              lastSyncedMTime: remoteMTime,
-            ),
-          ]);
+          await recentSvc.addRecentFile(
+            filePath,
+            isCloud: isCloud,
+            remotePath: remotePath,
+            webDavProfileId: _currentWebDavProfileId,
+            lastSyncedETag: eTag,
+            lastSyncedMTime: remoteMTime,
+          );
+          await recentSvc.setLastOpenedFile(
+            filePath,
+            isCloud: isCloud,
+            remotePath: remotePath,
+            webDavProfileId: _currentWebDavProfileId,
+            lastSyncedETag: eTag,
+            lastSyncedMTime: remoteMTime,
+          );
         })().catchError((e, st) {
           log.w('Failed to update recent files after open: $e');
         }),
