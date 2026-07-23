@@ -15,8 +15,6 @@ import 'features/database/providers/database_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await fileLogOutput.init();
-  CryptoService.initialize();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
@@ -51,6 +49,10 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(fileLogOutput.init());
+      CryptoService.initialize();
+    });
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       windowManager.addListener(this);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
