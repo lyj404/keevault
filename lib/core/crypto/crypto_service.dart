@@ -33,7 +33,10 @@ class CryptoService {
     if (Platform.isLinux) {
       return _tryLoad('libkreepto.so');
     } else if (Platform.isMacOS) {
-      return _tryLoad('libkreepto.dylib');
+      // macOS: dylib is bundled into the app's Contents/Frameworks directory.
+      // A bare-name dlopen won't search @rpath, so resolve the full path
+      // relative to the executable and fall back to the bare name.
+      return _tryLoadMacos();
     } else if (Platform.isWindows) {
       // Windows: DLL is bundled next to the executable
       return _tryLoad('kreepto.dll');
@@ -56,5 +59,24 @@ class CryptoService {
     } catch (_) {
       return null;
     }
+  }
+
+  static DynamicLibrary? _tryLoadMacos() {
+    // Release: <App>.app/Contents/MacOS/exe -> ../Frameworks/libkreepto.dylib
+    final exePath = Platform.resolvedExecutable;
+    final sep = Platform.pathSeparator;
+    final exeDir = exePath.substring(0, exePath.lastIndexOf(sep));
+    final candidates = <String>[
+      '$exeDir/..${sep}Frameworks${sep}libkreepto.dylib',
+      // Debug/profile runs before bundling: dylib may sit next to the exe.
+      '$exeDir${sep}libkreepto.dylib',
+      // Bare name as a last resort (resolves via DYLD_FALLBACK_LIBRARY_PATH).
+      'libkreepto.dylib',
+    ];
+    for (final path in candidates) {
+      final lib = _tryLoad(path);
+      if (lib != null) return lib;
+    }
+    return null;
   }
 }

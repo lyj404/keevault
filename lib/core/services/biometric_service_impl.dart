@@ -1,5 +1,6 @@
 import 'package:local_auth_android/local_auth_android.dart'
     show AndroidAuthMessages;
+import 'package:local_auth_darwin/local_auth_darwin.dart' show IOSAuthMessages;
 import 'package:local_auth_platform_interface/local_auth_platform_interface.dart';
 
 import '../utils/logger.dart';
@@ -27,7 +28,10 @@ Future<bool> authenticate(String reason) async {
     log.d('Biometric: starting authenticate, reason=$reason');
     final result = await platform.authenticate(
       localizedReason: reason,
-      authMessages: const [AndroidAuthMessages()],
+      authMessages: const <AuthMessages>[
+        AndroidAuthMessages(),
+        IOSAuthMessages(),
+      ],
       options: const AuthenticationOptions(
         stickyAuth: true,
         biometricOnly: false,

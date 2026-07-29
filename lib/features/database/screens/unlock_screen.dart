@@ -75,7 +75,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       } else if (next.hasValue) {
         if (next.value != null) {
           // Store credentials only after successful manual unlock.
-          if (Platform.isAndroid &&
+          if ((Platform.isAndroid || Platform.isIOS) &&
               ref.read(biometricEnabledProvider) &&
               !_lastUnlockUsedBiometric &&
               _passwordController.text.isNotEmpty) {
@@ -279,7 +279,7 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
                                 child: Text(l10n.unlock),
                               ),
                             ),
-                            if (Platform.isAndroid &&
+                            if ((Platform.isAndroid || Platform.isIOS) &&
                                 ref.watch(biometricEnabledProvider)) ...[
                               const SizedBox(height: 12),
                               OutlinedButton.icon(
@@ -473,5 +473,3 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
     }
   }
 }
-
-

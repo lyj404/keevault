@@ -32,12 +32,23 @@ class NotificationService {
       );
       await _plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
     } else if (Platform.isMacOS) {
       await _plugin.initialize(
         const InitializationSettings(
           macOS: DarwinInitializationSettings(
+            requestAlertPermission: true,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          ),
+        ),
+      );
+    } else if (Platform.isIOS) {
+      await _plugin.initialize(
+        const InitializationSettings(
+          iOS: DarwinInitializationSettings(
             requestAlertPermission: true,
             requestBadgePermission: false,
             requestSoundPermission: false,
@@ -65,7 +76,7 @@ class NotificationService {
       return;
     }
 
-    if (Platform.isAndroid || Platform.isMacOS) {
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       await _plugin.show(
         0,
         title,
@@ -79,6 +90,13 @@ class NotificationService {
                       'Notifications for passwords that are about to expire',
                   importance: Importance.high,
                   priority: Priority.high,
+                )
+              : null,
+          iOS: Platform.isIOS
+              ? const DarwinNotificationDetails(
+                  presentAlert: true,
+                  presentBadge: false,
+                  presentSound: false,
                 )
               : null,
           macOS: Platform.isMacOS
@@ -101,9 +119,7 @@ class NotificationService {
         0,
         title,
         body,
-        const NotificationDetails(
-          linux: LinuxNotificationDetails(),
-        ),
+        const NotificationDetails(linux: LinuxNotificationDetails()),
       );
     } catch (_) {
       // Fallback to notify-send if plugin fails

@@ -50,5 +50,11 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to unlock your password vault.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to scan TOTP QR codes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to pick key file images.</string>
 </dict>
 </plist>

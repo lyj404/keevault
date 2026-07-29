@@ -423,8 +423,10 @@ class _WideLayout extends StatelessWidget {
                     isDraggable: !isRecycleBin,
                   ),
                 ),
-                // Shortcut hint bar (hidden on Android where keyboard shortcuts are unavailable)
-                if (selectedEntry != null && !Platform.isAndroid)
+                // Shortcut hint bar (hidden on mobile where keyboard shortcuts are unavailable)
+                if (selectedEntry != null &&
+                    !Platform.isAndroid &&
+                    !Platform.isIOS)
                   _ShortcutHintBar(entry: selectedEntry!),
               ],
             ),
@@ -472,16 +474,16 @@ class _ToolbarButton extends StatelessWidget {
                 ),
               )
             : showDot
-                ? Badge(
-                    smallSize: 6,
-                    backgroundColor: colorScheme.primary,
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
+            ? Badge(
+                smallSize: 6,
+                backgroundColor: colorScheme.primary,
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            : Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         tooltip: tooltip,
         onPressed: isLoading ? null : onPressed,
         style: IconButton.styleFrom(
@@ -933,12 +935,12 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
                   ),
                 )
               : widget.isDirty
-                  ? Badge(
-                      smallSize: 6,
-                      backgroundColor: colorScheme.primary,
-                      child: const Icon(Icons.save_outlined, size: 20),
-                    )
-                  : const Icon(Icons.save_outlined, size: 20),
+              ? Badge(
+                  smallSize: 6,
+                  backgroundColor: colorScheme.primary,
+                  child: const Icon(Icons.save_outlined, size: 20),
+                )
+              : const Icon(Icons.save_outlined, size: 20),
           tooltip: l10n.save,
           onPressed: widget.isSaving ? null : widget.onSave,
         ),
@@ -1127,7 +1129,9 @@ class _NarrowLayoutState extends ConsumerState<_NarrowLayout> {
             onToggleEntrySelection: widget.onToggleEntrySelection,
           ),
         ),
-        if (widget.selectedEntry != null && !Platform.isAndroid)
+        if (widget.selectedEntry != null &&
+            !Platform.isAndroid &&
+            !Platform.isIOS)
           _ShortcutHintBar(entry: widget.selectedEntry!),
       ],
     );

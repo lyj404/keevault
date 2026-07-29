@@ -24,9 +24,10 @@ class BiometricService {
 
   Future<bool> isBiometricAvailable() async {
     log.d(
-      'BiometricService: isBiometricAvailable called, isAndroid=${Platform.isAndroid}',
+      'BiometricService: isBiometricAvailable called, '
+      'isAndroid=${Platform.isAndroid}, isIOS=${Platform.isIOS}',
     );
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid && !Platform.isIOS) return false;
     try {
       final result = await biometric.isBiometricAvailable();
       log.d('BiometricService: isBiometricAvailable result=$result');
@@ -41,7 +42,7 @@ class BiometricService {
   }
 
   Future<List<dynamic>> getAvailableBiometrics() async {
-    if (!Platform.isAndroid) return [];
+    if (!Platform.isAndroid && !Platform.isIOS) return [];
     try {
       return await biometric.getAvailableBiometrics();
     } catch (e) {
@@ -52,9 +53,10 @@ class BiometricService {
 
   Future<bool> authenticate(String reason) async {
     log.d(
-      'BiometricService: authenticate called, isAndroid=${Platform.isAndroid}',
+      'BiometricService: authenticate called, '
+      'isAndroid=${Platform.isAndroid}, isIOS=${Platform.isIOS}',
     );
-    if (!Platform.isAndroid) return false;
+    if (!Platform.isAndroid && !Platform.isIOS) return false;
     try {
       final result = await biometric.authenticate(reason);
       log.d('BiometricService: authenticate result=$result');
