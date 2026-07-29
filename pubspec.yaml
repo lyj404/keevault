@@ -40,9 +40,8 @@ dependencies:
   flutter_secure_storage: ^9.2.4
 
   # Biometric authentication (Android + iOS)
-  local_auth: ^2.3.0
-  local_auth_android: ^1.0.56
-  local_auth_darwin: ^1.6.1
+  local_auth_android: ^2.0.9
+  local_auth_darwin: ^2.0.3
   local_auth_platform_interface: ^1.1.0
 
   # Local notifications (expiration reminders)
