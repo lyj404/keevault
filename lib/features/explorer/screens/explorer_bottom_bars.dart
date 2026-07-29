@@ -232,15 +232,16 @@ Future<void> _syncToCloud(BuildContext context) async {
   if (config == null || !config.enabled) {
     if (context.mounted) {
       showToast(context, l10n.pleaseConfigureWebDAV, isError: true);
-      context.push('/settings');
+      unawaited(context.push('/settings'));
     }
     return;
   }
   if (!context.mounted) return;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => Dialog(
+  unawaited(
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -262,6 +263,7 @@ Future<void> _syncToCloud(BuildContext context) async {
           ],
         ),
       ),
+    ),
     ),
   );
   try {
@@ -314,29 +316,31 @@ Future<void> _syncFromCloud(BuildContext context) async {
     return;
   }
   if (!context.mounted) return;
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.downloadingFromCloudShort,
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(ctx).colorScheme.onSurface,
+  unawaited(
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                l10n.downloadingFromCloudShort,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(ctx).colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),

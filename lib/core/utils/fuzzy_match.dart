@@ -1,3 +1,5 @@
+import 'package:kpasslib/kpasslib.dart';
+
 /// Fuzzy matching utility with match position tracking.
 class FuzzyMatchResult {
   final double score;
@@ -31,14 +33,14 @@ FuzzyMatchResult? fuzzyMatch(String text, String query) {
 }
 
 /// Returns all fields of an entry as (originalText, fieldName) pairs.
-List<(String, String)> entryFields(dynamic entry) {
+/// The Password field is intentionally excluded so secrets never influence
+/// search scoring or highlighting.
+List<(String, String)> entryFields(KdbxEntry entry) {
   final fields = <(String, String)>[];
-  final fieldMap = entry.fields;
-  if (fieldMap != null) {
-    for (final e in fieldMap.entries) {
-      final text = e.value?.text ?? '';
-      if (text.isNotEmpty) fields.add((text, e.key));
-    }
+  for (final e in entry.fields.entries) {
+    if (e.key == 'Password') continue;
+    final text = e.value.text;
+    if (text.isNotEmpty) fields.add((text, e.key));
   }
   final tags = entry.tags;
   if (tags != null) {
@@ -51,7 +53,7 @@ List<(String, String)> entryFields(dynamic entry) {
 
 /// Finds the best match across all entry fields.
 /// Returns (score, positionsInFieldText) for the best matching field.
-FuzzyMatchResult? fuzzyMatchEntry(dynamic entry, String query) {
+FuzzyMatchResult? fuzzyMatchEntry(KdbxEntry entry, String query) {
   if (query.isEmpty) return FuzzyMatchResult(1.0, []);
   FuzzyMatchResult? best;
   for (final (text, _) in entryFields(entry)) {

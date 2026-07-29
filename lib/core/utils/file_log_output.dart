@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
@@ -43,7 +44,7 @@ class FileLogOutput extends LogOutput {
       _sink?.writeln(
         '${DateTime.now()} [INFO] FileLogOutput initialized, path=${_file?.path}',
       );
-      _sink?.flush();
+      unawaited(_sink?.flush());
     } catch (_) {
       // If file init fails, stop buffering to avoid unbounded memory growth.
       _initFailed = true;

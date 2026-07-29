@@ -124,7 +124,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           log.w('Failed to update recent files after open: $e');
         }),
       );
-      _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
+      unawaited(_ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -249,15 +249,6 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
       try {
         final syncService = _ref.read(syncServiceProvider);
-        // Conflict detection: check if remote changed since last sync
-        final remoteInfo = await syncService.getRemoteFileInfo(config);
-        if (session != _session || !_service.isOpen) return false;
-        final lastInfo = _service.lastSyncedRemoteInfo;
-        if (_hasRemoteChanged(remoteInfo, lastInfo)) {
-          _lastSyncAuditReport = await inspectCloudDiff();
-          _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
-          return false;
-        }
         // Skip upload if local content hasn't changed since last save
         if (!wasDirty) {
           log.i('Content unchanged, skipping upload');
@@ -266,6 +257,12 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         }
         await syncService.ensureRemoteDirectory(config);
         if (session != _session || !_service.isOpen) return false;
+        // Conditional PUT: upload only if the remote revision still matches
+        // the last known one (If-Match) or is new (If-None-Match). This atomically
+        // detects a conflict in a single round trip, avoiding a separate
+        // PROPFIND before every save. On a 412 the server rejects the upload
+        // and we fall back to the diff dialog below.
+        final lastInfo = _service.lastSyncedRemoteInfo;
         final newInfo = await syncService.uploadDatabase(
           config,
           bytes,
@@ -372,7 +369,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     final db = await _service.reloadFromBytes(bytes, password: password);
     await _service.save();
     state = AsyncValue.data(db);
-    _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
+    unawaited(_ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db));
 
     if (_ref.read(openedFromCloudProvider)) {
       await forceUpload();
@@ -432,17 +429,27 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     if (lockSession != _session) return;
     WebDavConfig? config;
     if (isCloud && path != null && bytes.isNotEmpty) {
-      config = await _ref
-          .read(webDavSettingsServiceProvider)
-          .getConfigById(profileId);
-      if (lockSession != _session) return;
-      if (config != null && config.enabled) {
-        await _markPendingUpload(
-          path,
-          config.remoteFilePath,
-          profileId,
-          lastInfo,
-        );
+      try {
+        config = await _ref
+            .read(webDavSettingsServiceProvider)
+            .getConfigById(profileId);
+        if (lockSession != _session) return;
+        if (config != null && config.enabled) {
+          await _markPendingUpload(
+            path,
+            config.remoteFilePath,
+            profileId,
+            lastInfo,
+          );
+        }
+      } catch (e, st) {
+        // Cloud bookkeeping (config lookup / pending-upload marker) must not
+        // prevent the lock from closing the database and clearing the master
+        // password / key file from memory. The local save already succeeded, so
+        // data is safe on disk; the upload can resume on next open. We null the
+        // config so the background upload below is skipped for this attempt.
+        log.e('Failed to mark pending upload during lock', error: e, stackTrace: st);
+        config = null;
       }
     }
 
@@ -592,7 +599,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     await _service.save();
     _service.setLastSyncedRemoteInfo(result.info);
     state = AsyncValue.data(db);
-    _ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db);
+    unawaited(_ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db));
     if (_service.filePath != null) {
       final recentSvc = _ref.read(recentFilesServiceProvider);
       final existing = await recentSvc.getRecentFiles();

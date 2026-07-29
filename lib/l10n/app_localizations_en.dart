@@ -529,6 +529,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useThisPassword => 'Use This Password';
 
   @override
+  String get excludeAmbiguous => 'Exclude ambiguous (0 O 1 l I |)';
+
+  @override
+  String get characterMode => 'Characters';
+
+  @override
+  String get passphraseMode => 'Passphrase';
+
+  @override
+  String get wordCount => 'Word Count';
+
+  @override
+  String get separatorLabel => 'Separator';
+
+  @override
+  String get appendDigit => 'Append digit';
+
+  @override
   String get recycleBin => 'Recycle Bin';
 
   @override

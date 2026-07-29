@@ -183,6 +183,12 @@
   "customSymbols": "Custom Symbols",
   "customSymbolsHint": "Enter additional symbols to include",
   "useThisPassword": "Use This Password",
+  "excludeAmbiguous": "Exclude ambiguous (0 O 1 l I |)",
+  "characterMode": "Characters",
+  "passphraseMode": "Passphrase",
+  "wordCount": "Word Count",
+  "separatorLabel": "Separator",
+  "appendDigit": "Append digit",
 
   "recycleBin": "Recycle Bin",
 

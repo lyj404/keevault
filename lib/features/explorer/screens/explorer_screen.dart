@@ -651,10 +651,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.syncConflict),
+    unawaited(
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.syncConflict),
         content: SizedBox(
           width: 520,
           child: SingleChildScrollView(
@@ -680,16 +681,17 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
               Navigator.of(ctx).pop();
               _syncFromCloud(context);
             },
-            child: Text(l10n.downloadCloudVersion),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _forceUpload(context, ref);
-            },
-            child: Text(l10n.overwriteCloud),
-          ),
-        ],
+             child: Text(l10n.downloadCloudVersion),
+           ),
+           FilledButton(
+             onPressed: () {
+               Navigator.of(ctx).pop();
+               _forceUpload(context, ref);
+             },
+             child: Text(l10n.overwriteCloud),
+           ),
+         ],
+       ),
       ),
     );
   }

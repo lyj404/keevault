@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -35,44 +36,44 @@ class SyncException implements Exception {
   String toString() => 'SyncException($type): $message';
 }
 
+/// Classifies a transport failure into a [SyncErrorType] using typed Dio
+/// metadata and exception types. This is a pure top-level function so it can
+/// be unit-tested without a live network connection. String matching is
+/// intentionally avoided: it is fragile (a redirect body or unrelated message
+/// containing "401" would misclassify) and unnecessary since dio and dart:io
+/// expose structured status codes.
+SyncErrorType classifySyncError(Object error) {
+  if (error is SyncException) return error.type;
+  if (error is DioException) {
+    final status = error.response?.statusCode;
+    if (status == 401 || status == 403) return SyncErrorType.auth;
+    if (status == 404) return SyncErrorType.notFound;
+    if (status == 409 || status == 412) return SyncErrorType.conflict;
+    if (status != null && status >= 500) return SyncErrorType.serverError;
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return SyncErrorType.timeout;
+    }
+    if (error.type == DioExceptionType.connectionError) {
+      return SyncErrorType.network;
+    }
+  }
+  if (error is SocketException) return SyncErrorType.network;
+  if (error is TimeoutException) return SyncErrorType.timeout;
+  // No typed metadata available — surface as unknown instead of guessing
+  // from a human-readable message that may contain misleading substrings.
+  return SyncErrorType.unknown;
+}
+
 class SyncService {
   webdav.Client? _cachedClient;
   WebDavConfig? _cachedConfig;
   static const _maxRetries = 3;
   static const _baseDelayMs = 1000;
 
-  /// Classifies transport failures using typed Dio metadata whenever it is
-  /// available. String matching is retained only for third-party WebDAV
-  /// exceptions that do not expose a status code.
-  SyncErrorType _classifyError(Object error) {
-    if (error is SyncException) return error.type;
-    if (error is DioException) {
-      final status = error.response?.statusCode;
-      if (status == 401 || status == 403) return SyncErrorType.auth;
-      if (status == 404) return SyncErrorType.notFound;
-      if (status == 409 || status == 412) return SyncErrorType.conflict;
-      if (status != null && status >= 500) return SyncErrorType.serverError;
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.sendTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return SyncErrorType.timeout;
-      }
-      if (error.type == DioExceptionType.connectionError) {
-        return SyncErrorType.network;
-      }
-    }
-    if (error is SocketException) return SyncErrorType.network;
-    final message = error.toString().toLowerCase();
-    if (message.contains('401') || message.contains('403')) {
-      return SyncErrorType.auth;
-    }
-    if (message.contains('404')) return SyncErrorType.notFound;
-    if (message.contains('409') || message.contains('412')) {
-      return SyncErrorType.conflict;
-    }
-    if (message.contains('timeout')) return SyncErrorType.timeout;
-    return SyncErrorType.unknown;
-  }
+  /// Classifies transport failures via the pure [classifySyncError] helper.
+  SyncErrorType _classifyError(Object error) => classifySyncError(error);
 
   /// Whether an error is transient and worth retrying.
   bool _isRetryable(SyncErrorType type) {
@@ -147,37 +148,42 @@ class SyncService {
       try {
         await client.readDir(remotePath);
       } catch (e) {
-        final msg = e.toString();
-        if (msg.contains('401') || msg.contains('403')) {
-          log.w('Auth failed');
-          return 'auth_failed';
-        }
-        if (msg.contains('404') || msg.contains('409')) {
-          return null;
-        }
-        try {
-          await client.ping();
-          log.w('Path not accessible: $remotePath');
-          return 'path_not_accessible:$remotePath';
-        } catch (_) {
-          log.e('Connection failed', error: msg);
-          return 'connection_failed:$msg';
+        switch (_classifyError(e)) {
+          case SyncErrorType.auth:
+            log.w('Auth failed');
+            return 'auth_failed';
+          case SyncErrorType.notFound:
+            // Path missing but server reachable — connection itself is fine.
+            return null;
+          case SyncErrorType.conflict:
+            return null;
+          default:
+            // Distinguish "server reachable, path bad" from "server unreachable".
+            try {
+              await client.ping();
+              log.w('Path not accessible: $remotePath');
+              return 'path_not_accessible:$remotePath';
+            } catch (e2) {
+              final msg = e2.toString();
+              log.e('Connection failed', error: msg);
+              return 'connection_failed:$msg';
+            }
         }
       }
       log.i('Connection test passed');
       return null;
     } catch (e) {
-      final msg = e.toString();
-      if (msg.contains('401') || msg.contains('403')) {
-        log.w('Auth failed');
-        return 'auth_failed';
+      switch (_classifyError(e)) {
+        case SyncErrorType.auth:
+          log.w('Auth failed');
+          return 'auth_failed';
+        case SyncErrorType.network:
+          log.e('Network failed');
+          return 'network_failed';
+        default:
+          log.e('Connection failed', error: e);
+          return 'connection_failed:$e';
       }
-      if (msg.contains('SocketException') || msg.contains('Connection')) {
-        log.e('Network failed');
-        return 'network_failed';
-      }
-      log.e('Connection failed', error: msg);
-      return 'connection_failed:$msg';
     }
   }
 

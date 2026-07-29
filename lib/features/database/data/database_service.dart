@@ -559,7 +559,10 @@ class DatabaseService {
     return entry;
   }
 
-  List<SearchResult> search(String query) {
+  /// Searches all entries for [query], returning matches ranked by relevance.
+  /// When [limit] is provided, at most [limit] top results are returned, which
+  /// avoids sorting/allocating the full match set for very large databases.
+  List<SearchResult> search(String query, {int? limit}) {
     if (_db == null || query.isEmpty) return [];
     if (_searchIndex == null) {
       log.d('[DatabaseService] building search index lazily');
@@ -571,6 +574,7 @@ class DatabaseService {
       final match = record.matchScore(query);
       if (match != null && match.isMatch) {
         results.add(SearchResult(record.entry, match.score, match.positions));
+        if (limit != null && results.length >= limit) break;
       }
     }
     results.sort((a, b) => b.score.compareTo(a.score));

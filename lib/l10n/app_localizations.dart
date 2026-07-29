@@ -1088,6 +1088,42 @@ abstract class AppLocalizations {
   /// **'使用此密码'**
   String get useThisPassword;
 
+  /// No description provided for @excludeAmbiguous.
+  ///
+  /// In zh, this message translates to:
+  /// **'排除易混字符 (0 O 1 l I |)'**
+  String get excludeAmbiguous;
+
+  /// No description provided for @characterMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'字符'**
+  String get characterMode;
+
+  /// No description provided for @passphraseMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'短语'**
+  String get passphraseMode;
+
+  /// No description provided for @wordCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'单词数'**
+  String get wordCount;
+
+  /// No description provided for @separatorLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'分隔符'**
+  String get separatorLabel;
+
+  /// No description provided for @appendDigit.
+  ///
+  /// In zh, this message translates to:
+  /// **'追加数字'**
+  String get appendDigit;
+
   /// No description provided for @recycleBin.
   ///
   /// In zh, this message translates to:

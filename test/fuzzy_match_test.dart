@@ -1,5 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kpasslib/kpasslib.dart';
 import 'package:keevault/core/utils/fuzzy_match.dart';
+
+KdbxEntry _makeEntry() {
+  final dir = Directory.systemTemp.createTempSync('fuzzy_');
+  addTearDown(() => dir.delete(recursive: true));
+  final db = KdbxDatabase.create(
+    credentials: KdbxCredentials(
+      password: ProtectedData.fromString('pw'),
+    ),
+    name: 't',
+  );
+  final entry = db.createEntry(parent: db.root);
+  return entry;
+}
 
 void main() {
   group('fuzzyMatch', () {
@@ -39,4 +55,42 @@ void main() {
       expect(result.positions, isEmpty);
     });
   });
+
+  group('entryFields', () {
+    test('exposes searchable fields and excludes the Password field', () {
+      final entry = _makeEntry();
+      entry.fields['Title'] = KdbxTextField.fromText(text: 'GitHub');
+      entry.fields['UserName'] = KdbxTextField.fromText(text: 'alice');
+      entry.fields['Password'] = KdbxTextField.fromText(text: 'secret');
+      entry.tags = ['work', 'dev'];
+
+      final fields = entryFields(entry);
+      final names = fields.map((f) => f.$2).toSet();
+      expect(names.contains('Title'), true);
+      expect(names.contains('UserName'), true);
+      expect(names.contains('Password'), false);
+      expect(fields.any((f) => f.$1 == 'work'), true);
+    });
+  });
+
+  group('fuzzyMatchEntry', () {
+    test('matches across multiple fields and returns a positive score', () {
+      final entry = _makeEntry();
+      entry.fields['Title'] = KdbxTextField.fromText(text: 'GitLab');
+      entry.fields['URL'] = KdbxTextField.fromText(text: 'https://gitlab.com');
+
+      final match = fuzzyMatchEntry(entry, 'gitlab');
+      expect(match, isNotNull);
+      expect(match!.isMatch, true);
+    });
+
+    test('returns null-ish/empty for a query that matches nothing', () {
+      final entry = _makeEntry();
+      entry.fields['Title'] = KdbxTextField.fromText(text: 'GitHub');
+
+      final match = fuzzyMatchEntry(entry, 'zzz');
+      expect(match, isNull);
+    });
+  });
 }
+

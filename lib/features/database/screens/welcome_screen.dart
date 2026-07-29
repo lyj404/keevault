@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,7 +67,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     if (!file.isCloud) {
       if (exists && mounted) {
         _autoOpened = true;
-        context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
+        unawaited(context.push('/unlock?path=${Uri.encodeComponent(file.path)}'));
       }
       return;
     }
@@ -78,7 +79,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       if (exists) {
         // Local file exists but WebDAV not configured — open as local file.
         if (mounted) {
-          context.push('/unlock?path=${Uri.encodeComponent(file.path)}');
+          unawaited(context.push('/unlock?path=${Uri.encodeComponent(file.path)}'));
         }
       } else {
         // Local cache missing and no WebDAV config — remove stale record.
@@ -106,14 +107,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           remoteInfo,
           file.webDavProfileId,
         );
-        context.push(query);
+        unawaited(context.push(query));
         return;
       }
       final l10n = AppLocalizations.of(context)!;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => _SyncLoadingDialog(message: l10n.syncingCloudDatabase),
+      unawaited(
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => _SyncLoadingDialog(message: l10n.syncingCloudDatabase),
+        ),
       );
       var loadingVisible = true;
       void dismissLoading() {
@@ -135,8 +138,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             dismissLoading();
             _setCloudOfflineMode(l10n.openLocalDatabase);
             ref.read(openedFromCloudProvider.notifier).state = true;
-            context.push(
-              _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+            unawaited(
+              context.push(
+                _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+              ),
             );
             return;
           }
@@ -169,13 +174,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         dismissLoading();
         if (mounted) {
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push(
-            _buildCloudUnlockQuery(
-              localPath,
-              downloadedInfo.eTag != null || downloadedInfo.mTime != null
-                  ? downloadedInfo
-                  : remoteInfo,
-              config.id,
+          unawaited(
+            context.push(
+              _buildCloudUnlockQuery(
+                localPath,
+                downloadedInfo.eTag != null || downloadedInfo.mTime != null
+                    ? downloadedInfo
+                    : remoteInfo,
+                config.id,
+              ),
             ),
           );
         }
@@ -185,8 +192,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         if (mounted && exists) {
           _setCloudOfflineMode(_translateDownloadError(e, l10n));
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push(
-            _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+          unawaited(
+            context.push(
+              _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+            ),
           );
         } else if (mounted) {
           _showErrorDialog(context, _translateDownloadError(e, l10n));
@@ -198,8 +207,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           AppLocalizations.of(context)!.cloudDatabaseNotExist,
         );
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push(
-          _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+        unawaited(
+          context.push(
+            _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+          ),
         );
       } else {
         _showErrorDialog(
@@ -408,8 +419,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
     if (result != null && result.files.single.path != null) {
       if (context.mounted) {
-        context.push(
-          '/unlock?path=${Uri.encodeComponent(result.files.single.path!)}',
+        unawaited(
+          context.push(
+            '/unlock?path=${Uri.encodeComponent(result.files.single.path!)}',
+          ),
         );
       }
     }
@@ -461,11 +474,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         _setCloudOnlineMode();
         ref.read(openedFromCloudProvider.notifier).state = true;
         if (context.mounted) {
-          context.push(
-            _buildCloudUnlockQuery(
-              cachedFile.path,
-              remoteInfo,
-              cachedFile.webDavProfileId,
+          unawaited(
+            context.push(
+              _buildCloudUnlockQuery(
+                cachedFile.path,
+                remoteInfo,
+                cachedFile.webDavProfileId,
+              ),
             ),
           );
         }
@@ -474,10 +489,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
 
     if (!context.mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _SyncLoadingDialog(message: l10n.downloadingFromCloud),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => _SyncLoadingDialog(message: l10n.downloadingFromCloud),
+      ),
     );
     var loadingVisible = true;
     void dismissLoading() {
@@ -503,11 +520,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           dismissLoading();
           _setCloudOfflineMode(l10n.openLocalDatabase);
           ref.read(openedFromCloudProvider.notifier).state = true;
-          this.context.push(
-            _buildCloudUnlockQuery(
-              cachedFile.path,
-              null,
-              cachedFile.webDavProfileId,
+          unawaited(
+            this.context.push(
+              _buildCloudUnlockQuery(
+                cachedFile.path,
+                null,
+                cachedFile.webDavProfileId,
+              ),
             ),
           );
           return;
@@ -542,13 +561,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       dismissLoading();
       if (context.mounted) {
         ref.read(openedFromCloudProvider.notifier).state = true;
-        context.push(
-          _buildCloudUnlockQuery(
-            localPath,
-            downloadedInfo.eTag != null || downloadedInfo.mTime != null
-                ? downloadedInfo
-                : remoteInfo,
-            config.id,
+        unawaited(
+          context.push(
+            _buildCloudUnlockQuery(
+              localPath,
+              downloadedInfo.eTag != null || downloadedInfo.mTime != null
+                  ? downloadedInfo
+                  : remoteInfo,
+              config.id,
+            ),
           ),
         );
       }
@@ -562,11 +583,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         if (cachedExists) {
           _setCloudOfflineMode(_translateDownloadError(e, l10n));
           ref.read(openedFromCloudProvider.notifier).state = true;
-          context.push(
-            _buildCloudUnlockQuery(
-              cachedFile.path,
-              null,
-              cachedFile.webDavProfileId,
+          unawaited(
+            context.push(
+              _buildCloudUnlockQuery(
+                cachedFile.path,
+                null,
+                cachedFile.webDavProfileId,
+              ),
             ),
           );
           return;

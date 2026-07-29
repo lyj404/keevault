@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -354,16 +355,18 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
       _keyData = storedCredentials.keyData;
       _keyFileName = storedCredentials.keyFileName;
     });
-    ref
-        .read(databaseProvider.notifier)
-        .openFile(
-          widget.filePath,
-          storedCredentials.password,
-          isCloud: widget.isCloud,
-          webDavProfileId: widget.webDavProfileId,
-          syncedETag: widget.syncedETag,
-          keyData: storedCredentials.keyData,
-        );
+    unawaited(
+      ref
+          .read(databaseProvider.notifier)
+          .openFile(
+            widget.filePath,
+            storedCredentials.password,
+            isCloud: widget.isCloud,
+            webDavProfileId: widget.webDavProfileId,
+            syncedETag: widget.syncedETag,
+            keyData: storedCredentials.keyData,
+          ),
+    );
   }
 
   Widget _buildKeyFilePicker(AppLocalizations l10n, ColorScheme colorScheme) {

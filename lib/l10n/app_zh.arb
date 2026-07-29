@@ -190,6 +190,12 @@
   "customSymbols": "自定义符号",
   "customSymbolsHint": "输入额外要包含的符号",
   "useThisPassword": "使用此密码",
+  "excludeAmbiguous": "排除易混字符 (0 O 1 l I |)",
+  "characterMode": "字符",
+  "passphraseMode": "短语",
+  "wordCount": "单词数",
+  "separatorLabel": "分隔符",
+  "appendDigit": "追加数字",
 
   "recycleBin": "回收站",
 

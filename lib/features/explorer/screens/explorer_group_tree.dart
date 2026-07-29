@@ -355,8 +355,9 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
       if (value == 'rename') widget.onRenameGroup(group);
       if (value == 'delete') widget.onDeleteGroup(group);
       if (value == 'restore') widget.onRestoreGroup?.call(group);
-      if (value == 'permanent_delete')
+      if (value == 'permanent_delete') {
         widget.onPermanentDeleteGroup?.call(group);
+      }
     });
   }
 }

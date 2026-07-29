@@ -520,6 +520,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get useThisPassword => '使用此密码';
 
   @override
+  String get excludeAmbiguous => '排除易混字符 (0 O 1 l I |)';
+
+  @override
+  String get characterMode => '字符';
+
+  @override
+  String get passphraseMode => '短语';
+
+  @override
+  String get wordCount => '单词数';
+
+  @override
+  String get separatorLabel => '分隔符';
+
+  @override
+  String get appendDigit => '追加数字';
+
+  @override
   String get recycleBin => '回收站';
 
   @override
