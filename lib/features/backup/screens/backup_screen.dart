@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
@@ -226,7 +227,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     }
                     return ListView.builder(
                       addAutomaticKeepAlives: false,
-                      cacheExtent: 200,
+                      scrollCacheExtent: const ScrollCacheExtent.pixels(200),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 4,

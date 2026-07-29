@@ -46,7 +46,7 @@ class _GroupTreeViewState extends ConsumerState<_GroupTreeView> {
 
     return ListView.builder(
       addAutomaticKeepAlives: false,
-      cacheExtent: 200,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(200),
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: visible.length,
       itemBuilder: (context, index) {

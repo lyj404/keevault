@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/theme/app_theme.dart';
@@ -82,7 +83,7 @@ class EntryHistoryScreen extends ConsumerWidget {
             )
           : ListView.builder(
               addAutomaticKeepAlives: false,
-              cacheExtent: 200,
+              scrollCacheExtent: const ScrollCacheExtent.pixels(200),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: history.length,
               itemBuilder: (context, index) {
