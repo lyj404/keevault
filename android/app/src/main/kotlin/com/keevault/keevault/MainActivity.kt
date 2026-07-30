@@ -98,7 +98,7 @@ class MainActivity : FlutterFragmentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun isDefaultAutofillService(): Boolean {
         val mgr = getSystemService(AutofillManager::class.java) ?: return false
-        return mgr.isAutofillSupported && hasEnabledAutofillServices()
+        return mgr.isAutofillSupported && mgr.hasEnabledAutofillServices()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
