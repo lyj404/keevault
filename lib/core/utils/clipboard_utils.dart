@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../constants/app_constants.dart';
 
 Timer? _clipboardTimer;
+int _scheduleGeneration = 0;
 List<int>? _lastCopiedMac;
 final Uint8List _clipboardMacKey = Uint8List.fromList(
   List<int>.generate(32, (_) => Random.secure().nextInt(256)),
@@ -36,12 +37,17 @@ void copyToClipboardWithAutoClear(
   Duration timeout = AppConstants.clipboardClearTimeout,
 }) {
   _clipboardTimer?.cancel();
+  // Bump the generation so any in-flight (async) _scheduleClear from a
+  // previous copy knows it has been superseded and won't arm a stale timer.
+  final generation = ++_scheduleGeneration;
   unawaited(Clipboard.setData(ClipboardData(text: text)));
-  unawaited(_scheduleClear(text, timeout));
+  unawaited(_scheduleClear(text, timeout, generation));
 }
 
-Future<void> _scheduleClear(String text, Duration timeout) async {
+Future<void> _scheduleClear(String text, Duration timeout, int generation) async {
   final copiedMac = await _mac(text);
+  // A newer copy arrived while computing the MAC; don't arm a timer for it.
+  if (generation != _scheduleGeneration) return;
   _lastCopiedMac = copiedMac;
   if (timeout.inSeconds <= 0) return;
   _clipboardTimer = Timer(timeout, () async {

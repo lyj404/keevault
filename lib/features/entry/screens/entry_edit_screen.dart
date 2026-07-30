@@ -746,8 +746,11 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       entry.times.touch();
       entry.pushHistory();
     }
-    entry.times.expires = _expires;
-    entry.times.expiry = KdbxTime(_expires ? _expiryDate : null);
+    // Avoid the inconsistent "expires=true but expiry=null" state: only honour
+    // the expiry date when one is actually set.
+    final effectiveExpires = _expires && _expiryDate != null;
+    entry.times.expires = effectiveExpires;
+    entry.times.expiry = KdbxTime(effectiveExpires ? _expiryDate : null);
     entry.fields['Title'] = KdbxTextField.fromText(text: _titleCtrl.text);
     entry.fields['UserName'] = KdbxTextField.fromText(text: _usernameCtrl.text);
     entry.fields['Password'] =

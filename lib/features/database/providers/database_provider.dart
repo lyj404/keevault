@@ -315,7 +315,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   /// Force upload, ignoring conflict detection (used after user chooses to overwrite).
   /// Always persists locally first so disk and cloud stay aligned.
-  Future<void> forceUpload() async {
+  /// Pass [savedBytes] when the caller has already persisted the database to
+  /// avoid a redundant serialization/disk write.
+  Future<void> forceUpload({Uint8List? savedBytes}) async {
     final config = await _ref
         .read(webDavSettingsServiceProvider)
         .getConfigById(_currentWebDavProfileId);
@@ -324,7 +326,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     try {
       // Persist to disk (and optional auto-backup) before upload so a crash
       // after overwrite cannot leave local cache behind cloud.
-      final bytes = await _service.save();
+      final bytes = savedBytes ?? await _service.save();
       final syncService = _ref.read(syncServiceProvider);
       await syncService.ensureRemoteDirectory(config);
       final newInfo = await syncService.uploadDatabase(
@@ -367,12 +369,12 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   Future<bool> restoreBackupBytes(Uint8List bytes, {String? password}) async {
     final db = await _service.reloadFromBytes(bytes, password: password);
-    await _service.save();
+    final savedBytes = await _service.save();
     state = AsyncValue.data(db);
     unawaited(_ref.read(expirationReminderProvider.notifier).checkExpiringEntries(db));
 
     if (_ref.read(openedFromCloudProvider)) {
-      await forceUpload();
+      await forceUpload(savedBytes: savedBytes);
       return _ref.read(syncStateProvider) == SyncState.success;
     }
 

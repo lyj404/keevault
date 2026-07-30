@@ -296,11 +296,9 @@ class EntryDetailScreen extends ConsumerWidget {
               visualDensity: VisualDensity.compact,
             ),
             onPressed: () {
-              final db = ref.read(databaseServiceProvider).db;
-              if (db != null) {
-                db.move(item: entry, target: null);
-                ref.read(databaseServiceProvider).markDirty();
-              }
+              final service = ref.read(databaseServiceProvider);
+              service.discardItem(entry);
+              service.markDirty();
               refreshExplorerLists(ref);
               Navigator.pop(ctx);
               if (context.mounted) {

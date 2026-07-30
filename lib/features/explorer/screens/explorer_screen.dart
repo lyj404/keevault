@@ -414,11 +414,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       message: l10n.permanentDeleteConfirm,
     );
     if (confirmed) {
-      final db = ref.read(databaseServiceProvider).db;
-      if (db != null) {
-        db.move(item: entry, target: null);
-        ref.read(databaseServiceProvider).markDirty();
-      }
+      final service = ref.read(databaseServiceProvider);
+      service.discardItem(entry);
+      service.markDirty();
       refreshExplorerLists(ref);
       if (context.mounted) showToast(context, l10n.permanentlyDeleted);
     }
@@ -460,11 +458,9 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       message: l10n.permanentDeleteConfirm,
     );
     if (confirmed) {
-      final db = ref.read(databaseServiceProvider).db;
-      if (db != null) {
-        db.move(item: group, target: null);
-        ref.read(databaseServiceProvider).markDirty();
-      }
+      final service = ref.read(databaseServiceProvider);
+      service.discardItem(group);
+      service.markDirty();
       refreshExplorerLists(ref);
       if (context.mounted) showToast(context, l10n.permanentlyDeleted);
     }

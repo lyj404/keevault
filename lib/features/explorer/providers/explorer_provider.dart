@@ -91,6 +91,7 @@ final explorerListRevisionProvider = StateProvider<int>((ref) => 0);
 /// Call after any mutation (add/delete/edit) to refresh explorer-backed lists.
 void refreshExplorerLists(WidgetRef ref) {
   ref.invalidate(entriesProvider);
+  ref.invalidate(allTagsProvider);
   ref.read(selectedEntryProvider.notifier).state = null;
   ref.read(explorerListRevisionProvider.notifier).state++;
 }

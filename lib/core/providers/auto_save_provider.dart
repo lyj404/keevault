@@ -58,6 +58,13 @@ class AutoSaveNotifier extends StateNotifier<int> {
         // Cloud conflict or sync error; syncStateProvider drives the UI.
         log.w('Auto-save completed locally but cloud sync did not succeed');
       }
+      // A mutation that lands while serialization is running keeps the dirty
+      // flag set (the saved bytes do not include it). Re-check and reschedule
+      // so the pending change is persisted even if no further user activity
+      // fires the listener in app.dart.
+      if (_ref.read(isDirtyProvider)) {
+        _scheduleIfDirty();
+      }
     } catch (e) {
       log.w('Auto-save failed, retrying once', error: e);
       _scheduleIfDirty();

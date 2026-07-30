@@ -150,7 +150,6 @@ class DatabaseService {
   String? _preloadedFilePath;
   List<KdbxEntry>? _allEntriesCache;
   Map<String, KdbxEntry>? _entryByUuid;
-  Set<String>? _tagsCache;
   List<_SearchRecord>? _searchIndex;
 
   /// Last known remote file metadata, used for conflict detection.
@@ -192,15 +191,16 @@ class DatabaseService {
   }
 
   /// All unique tags across the entire database, sorted alphabetically.
+  /// Computed from the cached [allEntries] list on every call so in-place tag
+  /// mutations (e.g. batch tag, entry edit) are always reflected without a
+  /// separate invalidation step.
   Set<String> get allTags {
-    if (_tagsCache == null) {
-      _tagsCache = <String>{};
-      for (final entry in allEntries) {
-        final entryTags = entry.tags;
-        if (entryTags != null) _tagsCache!.addAll(entryTags);
-      }
+    final tags = <String>{};
+    for (final entry in allEntries) {
+      final entryTags = entry.tags;
+      if (entryTags != null) tags.addAll(entryTags);
     }
-    return _tagsCache!;
+    return tags;
   }
 
   void _rebuildEntryCache() {
@@ -208,7 +208,6 @@ class DatabaseService {
     _entryByUuid = _allEntriesCache == null
         ? null
         : {for (final e in _allEntriesCache!) e.uuid.string: e};
-    _tagsCache = null;
     log.d(
       '[DatabaseService] _rebuildEntryCache count=${_allEntriesCache?.length}',
     );
@@ -564,6 +563,10 @@ class DatabaseService {
   /// avoids sorting/allocating the full match set for very large databases.
   List<SearchResult> search(String query, {int? limit}) {
     if (_db == null || query.isEmpty) return [];
+    // Ensure the entry cache is fresh before (re)building the search index.
+    // Mutations null _allEntriesCache without touching _searchIndex, so an
+    // explicit cache check here guarantees the index reflects current state.
+    _ensureCacheFresh();
     if (_searchIndex == null) {
       log.d('[DatabaseService] building search index lazily');
       _rebuildSearchIndex();
@@ -784,13 +787,12 @@ class DatabaseService {
     _filePath = null;
     _password = null;
     _keyData = null;
-    markClean();
+    if (_dirty) markClean();
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
     _preloadedFilePath = null;
     _allEntriesCache = null;
     _entryByUuid = null;
-    _tagsCache = null;
     _searchIndex = null;
   }
 }

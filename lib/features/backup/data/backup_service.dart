@@ -110,6 +110,7 @@ class BackupService {
         sourcePath: filePath,
         sha256: sha256,
         sizeBytes: bytes.length,
+        isPreOverwriteSnapshot: true,
       );
       log.i('Backup created: $filename (${bytes.length} bytes)');
       await _cleanupOldBackups(filePath);
@@ -266,6 +267,7 @@ class BackupService {
     required String sourcePath,
     required String sha256,
     required int sizeBytes,
+    bool isPreOverwriteSnapshot = false,
   }) async {
     final metaFile = await _metadataFile(filename);
     await metaFile.writeAsString(
@@ -275,6 +277,10 @@ class BackupService {
         'sha256': sha256,
         'sizeBytes': sizeBytes,
         'createdAt': DateTime.now().toUtc().toIso8601String(),
+        // Backups are taken before the atomic replace, so they hold the
+        // *previous* version of the database (the rollback target), not the
+        // newly saved one. Flag it so restore UIs can label it correctly.
+        if (isPreOverwriteSnapshot) 'isPreOverwriteSnapshot': true,
       }),
       flush: true,
     );

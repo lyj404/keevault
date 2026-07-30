@@ -30,6 +30,21 @@ class _TotpDisplayWidgetState extends ConsumerState<TotpDisplayWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant TotpDisplayWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reload when the underlying entry instance changes (e.g. after cloud
+    // sync replaces the whole database) or when a different entry is passed.
+    if (!identical(widget.entry, oldWidget.entry)) {
+      _timer?.cancel();
+      _timer = null;
+      _config = null;
+      _code = '';
+      _remaining = 0;
+      _loadConfig();
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
