@@ -8,3 +8,10 @@ In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the re
 
 If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
 <!-- CODEGRAPH_END -->
+
+## Commands
+
+- Lint / static analysis: `flutter analyze`
+- Tests: `flutter test`
+- Regenerate localizations after editing `lib/l10n/*.arb`: `flutter gen-l10n`
+- Full check before committing: `flutter analyze && flutter test`

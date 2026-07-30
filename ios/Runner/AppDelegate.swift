@@ -10,11 +10,11 @@ import UIKit
     GeneratedPluginRegistrant.register(with: self)
 
     if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(
+      let urlChannel = FlutterMethodChannel(
         name: "com.keevault.keevault/external_url",
         binaryMessenger: controller.binaryMessenger
       )
-      channel.setMethodCallHandler { call, result in
+      urlChannel.setMethodCallHandler { call, result in
         guard call.method == "openUrl" else {
           result(FlutterMethodNotImplemented)
           return
@@ -34,6 +34,65 @@ import UIKit
 
         UIApplication.shared.open(url, options: [:]) { opened in
           result(opened)
+        }
+      }
+
+      // App Group container access for the autofill credential snapshot
+      // consumed by the Credential Provider Extension. Methods:
+      //   getContainerPath -> String?  (absolute path or nil if App Group unset)
+      //   writeFile {path, bytes}     -> Bool
+      //   deleteFile {path}           -> Bool
+      let appGroupChannel = FlutterMethodChannel(
+        name: "com.keevault.keevault/app_group",
+        binaryMessenger: controller.binaryMessenger
+      )
+      appGroupChannel.setMethodCallHandler { call, result in
+        let fm = FileManager.default
+        let appGroupId = "group.com.keevault.keevault"
+        switch call.method {
+        case "getContainerPath":
+          let url = fm.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)
+          result(url?.path)
+        case "writeFile":
+          guard
+            let args = call.arguments as? [String: Any],
+            let path = args["path"] as? String,
+            let bytes = args["bytes"] as? FlutterStandardTypedData
+          else {
+            result(false)
+            return
+          }
+          do {
+            try fm.createDirectory(
+              at: URL(fileURLWithPath: path).deletingLastPathComponent(),
+              withIntermediateDirectories: true
+            )
+            try bytes.data.write(to: URL(fileURLWithPath: path), options: .atomic)
+            result(true)
+          } catch {
+            result(false)
+          }
+        case "deleteFile":
+          guard
+            let args = call.arguments as? [String: Any],
+            let path = args["path"] as? String
+          else {
+            result(false)
+            return
+          }
+          let url = URL(fileURLWithPath: path)
+          if fm.fileExists(atPath: url.path) {
+            do {
+              try fm.removeItem(at: url)
+              result(true)
+            } catch {
+              result(false)
+            }
+          } else {
+            result(true)
+          }
+        default:
+          result(FlutterMethodNotImplemented)
         }
       }
     }

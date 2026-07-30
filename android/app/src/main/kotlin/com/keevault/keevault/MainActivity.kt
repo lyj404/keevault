@@ -4,7 +4,11 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.view.WindowManager
+import android.view.autofill.AutofillManager
+import androidx.annotation.RequiresApi
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
@@ -71,6 +75,42 @@ class MainActivity : FlutterFragmentActivity() {
             } catch (_: SecurityException) {
                 result.success(false)
             }
+        }
+
+        // Autofill status / system-settings bridge (Android O+).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            MethodChannel(
+                flutterEngine.dartExecutor.binaryMessenger,
+                "com.keevault.keevault/autofill_control",
+            ).setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "isDefaultService" -> result.success(isDefaultAutofillService())
+                    "requestSetDefault" -> {
+                        requestSetDefaultAutofillService()
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun isDefaultAutofillService(): Boolean {
+        val mgr = getSystemService(AutofillManager::class.java) ?: return false
+        return mgr.isAutofillSupported && hasEnabledAutofillServices()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun requestSetDefaultAutofillService() {
+        try {
+            startActivity(Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE))
+        } catch (_: ActivityNotFoundException) {
+            // The dedicated "set as autofill" prompt isn't available on this
+            // device/ROM. The user must enable KeeVault manually under system
+            // autofill settings; nothing else we can launch reliably here.
+        } catch (_: Exception) {
+            // Ignore — the user can still enable it from system settings.
         }
     }
 }
