@@ -2431,48 +2431,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'云端数据已发生变化，待同步的本地更改未覆盖远端。'**
   String get pendingUploadConflict;
-
-  /// No description provided for @autofill.
-  ///
-  /// In zh, this message translates to:
-  /// **'自动填充'**
-  String get autofill;
-
-  /// No description provided for @autofillDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'让 KeeVault 在其他应用和浏览器中自动填充密码。'**
-  String get autofillDescription;
-
-  /// No description provided for @enableAutofill.
-  ///
-  /// In zh, this message translates to:
-  /// **'启用自动填充'**
-  String get enableAutofill;
-
-  /// No description provided for @setAsAutofillService.
-  ///
-  /// In zh, this message translates to:
-  /// **'设为自动填充服务'**
-  String get setAsAutofillService;
-
-  /// No description provided for @autofillIsDefault.
-  ///
-  /// In zh, this message translates to:
-  /// **'KeeVault 已是当前自动填充服务。'**
-  String get autofillIsDefault;
-
-  /// No description provided for @autofillNotDefault.
-  ///
-  /// In zh, this message translates to:
-  /// **'KeeVault 不是系统自动填充服务，点击设为默认。'**
-  String get autofillNotDefault;
-
-  /// No description provided for @autofillIosHint.
-  ///
-  /// In zh, this message translates to:
-  /// **'在 iOS 上，请在 设置 → 密码 → 密码选项 中启用 KeeVault。'**
-  String get autofillIosHint;
 }
 
 class _AppLocalizationsDelegate

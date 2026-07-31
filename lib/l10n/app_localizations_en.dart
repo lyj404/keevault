@@ -1250,28 +1250,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pendingUploadConflict =>
       'Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten.';
-
-  @override
-  String get autofill => 'Autofill';
-
-  @override
-  String get autofillDescription =>
-      'Let KeeVault suggest credentials in other apps and browsers.';
-
-  @override
-  String get enableAutofill => 'Enable Autofill';
-
-  @override
-  String get setAsAutofillService => 'Set as Autofill Service';
-
-  @override
-  String get autofillIsDefault => 'KeeVault is your autofill service.';
-
-  @override
-  String get autofillNotDefault =>
-      'KeeVault is not the system autofill service. Tap to set it as default.';
-
-  @override
-  String get autofillIosHint =>
-      'On iOS, enable KeeVault under Settings → Passwords → Password Options.';
 }

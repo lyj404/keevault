@@ -11,7 +11,6 @@ import 'core/utils/logger.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/tray_service.dart';
-import 'features/autofill/services/autofill_method_handler.dart';
 import 'l10n/app_localizations.dart';
 import 'features/database/providers/database_provider.dart';
 
@@ -35,10 +34,9 @@ void main() async {
   }
 
   // Capture the root ProviderContainer globally so headless background handlers
-  // (e.g. the mobile autofill method channel) can read providers without a
-  // BuildContext. UncontrolledProviderScope exposes an externally-owned
-  // container; it lives for the whole process and is intentionally not
-  // disposed (no shorter owner than the app itself).
+  // can read providers without a BuildContext. UncontrolledProviderScope exposes
+  // an externally-owned container; it lives for the whole process and is
+  // intentionally not disposed (no shorter owner than the app itself).
   globalContainer = ProviderContainer();
 
   runApp(
@@ -63,9 +61,6 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
   @override
   void initState() {
     super.initState();
-    // Wire up the autofill method channel. The handler reads the global
-    // ProviderContainer, so it only needs to be registered once per process.
-    AutofillMethodHandler.register();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(fileLogOutput.init());
       CryptoService.initialize();

@@ -1218,25 +1218,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pendingUploadConflict => '云端数据已发生变化，待同步的本地更改未覆盖远端。';
-
-  @override
-  String get autofill => '自动填充';
-
-  @override
-  String get autofillDescription => '让 KeeVault 在其他应用和浏览器中自动填充密码。';
-
-  @override
-  String get enableAutofill => '启用自动填充';
-
-  @override
-  String get setAsAutofillService => '设为自动填充服务';
-
-  @override
-  String get autofillIsDefault => 'KeeVault 已是当前自动填充服务。';
-
-  @override
-  String get autofillNotDefault => 'KeeVault 不是系统自动填充服务，点击设为默认。';
-
-  @override
-  String get autofillIosHint => '在 iOS 上，请在 设置 → 密码 → 密码选项 中启用 KeeVault。';
 }

@@ -450,12 +450,5 @@
   "hideInBackgroundDescription": "应用失去焦点或进入后台时遮挡密码库内容。",
   "backupIntegrityFailed": "备份完整性校验失败",
   "pendingUploadFailed": "待同步的云端更改上传失败，已保留本地加密副本。",
-  "pendingUploadConflict": "云端数据已发生变化，待同步的本地更改未覆盖远端。",
-  "autofill": "自动填充",
-  "autofillDescription": "让 KeeVault 在其他应用和浏览器中自动填充密码。",
-  "enableAutofill": "启用自动填充",
-  "setAsAutofillService": "设为自动填充服务",
-  "autofillIsDefault": "KeeVault 已是当前自动填充服务。",
-  "autofillNotDefault": "KeeVault 不是系统自动填充服务，点击设为默认。",
-  "autofillIosHint": "在 iOS 上，请在 设置 → 密码 → 密码选项 中启用 KeeVault。"
+  "pendingUploadConflict": "云端数据已发生变化，待同步的本地更改未覆盖远端。"
 }

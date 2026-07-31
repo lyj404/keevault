@@ -441,12 +441,5 @@
   "hideInBackgroundDescription": "Cover the vault while the app is inactive or in the background.",
   "backupIntegrityFailed": "Backup integrity verification failed",
   "pendingUploadFailed": "Pending cloud changes could not be uploaded. The local encrypted copy was kept.",
-  "pendingUploadConflict": "Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten.",
-  "autofill": "Autofill",
-  "autofillDescription": "Let KeeVault suggest credentials in other apps and browsers.",
-  "enableAutofill": "Enable Autofill",
-  "setAsAutofillService": "Set as Autofill Service",
-  "autofillIsDefault": "KeeVault is your autofill service.",
-  "autofillNotDefault": "KeeVault is not the system autofill service. Tap to set it as default.",
-  "autofillIosHint": "On iOS, enable KeeVault under Settings → Passwords → Password Options."
+  "pendingUploadConflict": "Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten."
 }
