@@ -72,5 +72,5 @@ class MainActivity : FlutterFragmentActivity() {
                 result.success(false)
             }
         }
-
     }
+}
