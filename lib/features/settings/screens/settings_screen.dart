@@ -158,75 +158,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: ClayDecoration.iconContainer(
-                                brightness: brightness,
-                              ),
-                              child: Icon(
-                                Icons.cloud_queue_rounded,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                l10n.webdavProfiles,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _createNewProfile,
-                              icon: const Icon(Icons.add_rounded, size: 20),
-                              tooltip: l10n.newProfile,
-                            ),
-                            IconButton(
-                              onPressed: _profiles.length <= 1
-                                  ? null
-                                  : _deleteCurrentProfile,
-                              icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 20,
-                              ),
-                              tooltip: l10n.delete,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedProfileId,
-                          decoration: InputDecoration(
-                            labelText: l10n.webdavProfile,
-                            border: const OutlineInputBorder(),
-                          ),
-                          items: _profiles
-                              .map(
-                                (profile) => DropdownMenuItem<String>(
-                                  value: profile.id,
-                                  child: Text(profile.name),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            _selectProfile(value);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // Theme switcher card
                   _SectionCard(
                     brightness: brightness,
@@ -796,45 +727,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Enable toggle card
+                  // WebDAV card — toggle + profile selector
                   _SectionCard(
                     brightness: brightness,
-                    child: Row(
+                    child: Column(
                       children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.cloud_upload_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.webdavSync,
-                                style: Theme.of(context).textTheme.titleMedium,
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: ClayDecoration.iconContainer(
+                                brightness: brightness,
                               ),
-                              Text(
-                                l10n.autoSyncOnSave,
-                                style: Theme.of(context).textTheme.bodySmall,
+                              child: Icon(
+                                Icons.cloud_upload_rounded,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.webdavSync,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  Text(
+                                    l10n.autoSyncOnSave,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _enabled,
+                              onChanged: (v) => setState(() => _enabled = v),
+                              activeThumbColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                            ),
+                          ],
                         ),
-                        Switch(
-                          value: _enabled,
-                          onChanged: (v) => setState(() => _enabled = v),
-                          activeThumbColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: _selectedProfileId,
+                                decoration: InputDecoration(
+                                  labelText: l10n.webdavProfile,
+                                  border: const OutlineInputBorder(),
+                                ),
+                                items: _profiles
+                                    .map(
+                                      (profile) => DropdownMenuItem<String>(
+                                        value: profile.id,
+                                        child: Text(profile.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value == null) return;
+                                  _selectProfile(value);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: _createNewProfile,
+                              icon: const Icon(Icons.add_rounded, size: 20),
+                              tooltip: l10n.newProfile,
+                            ),
+                            IconButton(
+                              onPressed: _profiles.length <= 1
+                                  ? null
+                                  : _deleteCurrentProfile,
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 20,
+                              ),
+                              tooltip: l10n.delete,
+                            ),
+                          ],
                         ),
                       ],
                     ),
