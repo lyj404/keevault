@@ -306,12 +306,6 @@ jobs:
 
       - name: Generate checksums
         run: find . -maxdepth 1 -type f \( -name 'KeeVault-*' -o -name 'keevault_*' \) -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
-      - name: Generate SBOM
-        uses: anchore/sbom-action@v0
-        with:
-          path: .
-          format: spdx-json
-          output-file: KeeVault-${{ github.ref_name }}.spdx.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
@@ -322,7 +316,6 @@ jobs:
             KeeVault-*.tar.gz
             KeeVault-*.apk
             KeeVault-*-setup.exe
-            KeeVault-*.spdx.json
             keevault_*.deb
             SHA256SUMS
   publish-aur:
