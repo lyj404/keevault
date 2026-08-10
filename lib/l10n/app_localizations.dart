@@ -1148,6 +1148,48 @@ abstract class AppLocalizations {
   /// **'服务器已连接，但路径「{path}」不可访问'**
   String serverConnectedPathNotAccessible(Object path);
 
+  /// No description provided for @pathNotExistTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'路径不存在'**
+  String get pathNotExistTitle;
+
+  /// No description provided for @pathNotExistMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'路径「{path}」不存在。数据库文件将在首次同步时生成。'**
+  String pathNotExistMessage(Object path);
+
+  /// No description provided for @reenterPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新输入'**
+  String get reenterPath;
+
+  /// No description provided for @createPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建目录'**
+  String get createPath;
+
+  /// No description provided for @creatingPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建中...'**
+  String get creatingPath;
+
+  /// No description provided for @pathCreated.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录已创建'**
+  String get pathCreated;
+
+  /// No description provided for @pathCreateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建失败: {msg}'**
+  String pathCreateFailed(Object msg);
+
   /// No description provided for @connectionFailedMsg.
   ///
   /// In zh, this message translates to:

@@ -22,6 +22,9 @@ import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 
+/// User's choice when prompted that the remote path does not exist.
+enum _PathNotExistChoice { reenter, create }
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -1058,13 +1061,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final errorKey = await ref
           .read(syncServiceProvider)
           .testConnection(config);
-      if (mounted) {
-        setState(() {
-          _testing = false;
-          _connectionOk = errorKey == null;
-          _connectionError = _translateError(errorKey);
-        });
+      if (!mounted) return;
+
+      // Path missing on an otherwise reachable server: ask the user whether
+      // to re-enter the path or create it now. We intercept before showing an
+      // error so the dialog drives the next action.
+      if (errorKey != null &&
+          errorKey.startsWith('path_not_accessible:')) {
+        final path = errorKey.substring('path_not_accessible:'.length);
+        final choice = await _promptPathNotExist(path);
+        if (!mounted) return;
+        if (choice == _PathNotExistChoice.create) {
+          await _createRemotePath(config);
+        }
+        // For re-enter or dismiss: leave the form as-is so the user can edit.
+        return;
       }
+
+      setState(() {
+        _testing = false;
+        _connectionOk = errorKey == null;
+        _connectionError = _translateError(errorKey);
+      });
     } catch (e, st) {
       log.e('WebDAV test connection failed', error: e, stackTrace: st);
       if (mounted) {
@@ -1091,6 +1109,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return l10n.connectionFailedMsg(msg);
     }
     return errorKey;
+  }
+
+  Future<_PathNotExistChoice?> _promptPathNotExist(String path) async {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<_PathNotExistChoice>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.pathNotExistTitle),
+        content: Text(l10n.pathNotExistMessage(path)),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(_PathNotExistChoice.reenter),
+            child: Text(l10n.reenterPath),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(_PathNotExistChoice.create),
+            child: Text(l10n.createPath),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createRemotePath(WebDavConfig config) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _testing = true;
+      _connectionOk = null;
+      _connectionError = null;
+    });
+    try {
+      await ref.read(syncServiceProvider).ensureRemoteDirectory(config);
+      if (!mounted) return;
+      setState(() {
+        _testing = false;
+        _connectionOk = true;
+        _connectionError = l10n.pathCreated;
+      });
+    } catch (e, st) {
+      log.e('WebDAV create path failed', error: e, stackTrace: st);
+      if (!mounted) return;
+      setState(() {
+        _testing = false;
+        _connectionOk = false;
+        _connectionError = l10n.pathCreateFailed(e.toString());
+      });
+    }
   }
 
   Future<void> _save() async {

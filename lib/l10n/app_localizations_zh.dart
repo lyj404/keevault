@@ -552,6 +552,31 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get pathNotExistTitle => '路径不存在';
+
+  @override
+  String pathNotExistMessage(Object path) {
+    return '路径「$path」不存在。数据库文件将在首次同步时生成。';
+  }
+
+  @override
+  String get reenterPath => '重新输入';
+
+  @override
+  String get createPath => '创建目录';
+
+  @override
+  String get creatingPath => '创建中...';
+
+  @override
+  String get pathCreated => '目录已创建';
+
+  @override
+  String pathCreateFailed(Object msg) {
+    return '创建失败: $msg';
+  }
+
+  @override
   String connectionFailedMsg(Object msg) {
     return '连接失败: $msg';
   }

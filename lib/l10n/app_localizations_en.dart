@@ -562,6 +562,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get pathNotExistTitle => 'Path Not Found';
+
+  @override
+  String pathNotExistMessage(Object path) {
+    return 'Path \'$path\' does not exist. The database file will be created on first sync.';
+  }
+
+  @override
+  String get reenterPath => 'Re-enter';
+
+  @override
+  String get createPath => 'Create';
+
+  @override
+  String get creatingPath => 'Creating...';
+
+  @override
+  String get pathCreated => 'Directory created';
+
+  @override
+  String pathCreateFailed(Object msg) {
+    return 'Create failed: $msg';
+  }
+
+  @override
   String connectionFailedMsg(Object msg) {
     return 'Connection failed: $msg';
   }
