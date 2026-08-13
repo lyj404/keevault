@@ -38,6 +38,16 @@ class TotpService {
   static const _kSize = 'TimeOtp-Size';
   static const _kAlgorithm = 'TimeOtp-Algorithm';
 
+  /// Cheap check for whether [entry] carries a TOTP secret, without fully
+  /// parsing the rest of the config. Used to filter lists before the more
+  /// expensive [loadFromEntry] is deferred to each tile.
+  bool hasTotp(KdbxEntry entry) {
+    final cd = entry.customData;
+    if (cd == null) return false;
+    final secret = cd.map[_kSecret]?.value;
+    return secret != null && secret.isNotEmpty;
+  }
+
   TotpConfig? loadFromEntry(KdbxEntry entry) {
     final cd = entry.customData;
     if (cd == null) return null;

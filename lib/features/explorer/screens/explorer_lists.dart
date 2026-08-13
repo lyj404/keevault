@@ -503,11 +503,12 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
     final allEntries = service.allEntries;
     final l10n = AppLocalizations.of(context)!;
 
-    final totpEntries = <_TotpEntryInfo>[];
+    // Filter with the cheap hasTotp check only; full config parsing is
+    // deferred to each _TotpListTile so per-build cost stays low.
+    final totpEntries = <KdbxEntry>[];
     for (final entry in allEntries) {
       if (service.isInRecycleBin(entry)) continue;
-      final config = widget.totpService.loadFromEntry(entry);
-      if (config == null) continue;
+      if (!widget.totpService.hasTotp(entry)) continue;
       if (_query.isNotEmpty) {
         final title = entry.fields['Title']?.text ?? '';
         final username = entry.fields['UserName']?.text ?? '';
@@ -517,7 +518,7 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
           continue;
         }
       }
-      totpEntries.add(_TotpEntryInfo(entry: entry, config: config));
+      totpEntries.add(entry);
     }
 
     return Column(
@@ -565,13 +566,12 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   itemCount: totpEntries.length,
                   itemBuilder: (context, index) {
-                    final info = totpEntries[index];
+                    final entry = totpEntries[index];
                     return _TotpListTile(
-                      entry: info.entry,
-                      config: info.config,
+                      entry: entry,
                       totpService: widget.totpService,
-                      onTap: () => widget.onEntryOpen(info.entry),
-                      onDelete: () => _deleteTotpEntry(info.entry),
+                      onTap: () => widget.onEntryOpen(entry),
+                      onDelete: () => _deleteTotpEntry(entry),
                     );
                   },
                 ),
@@ -581,22 +581,14 @@ class _MobileTotpTabState extends ConsumerState<_MobileTotpTab> {
   }
 }
 
-class _TotpEntryInfo {
-  final KdbxEntry entry;
-  final TotpConfig config;
-  const _TotpEntryInfo({required this.entry, required this.config});
-}
-
 class _TotpListTile extends StatefulWidget {
   final KdbxEntry entry;
-  final TotpConfig config;
   final TotpService totpService;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   const _TotpListTile({
     required this.entry,
-    required this.config,
     required this.totpService,
     required this.onTap,
     required this.onDelete,
@@ -607,6 +599,7 @@ class _TotpListTile extends StatefulWidget {
 }
 
 class _TotpListTileState extends State<_TotpListTile> {
+  TotpConfig? _config;
   String _code = '';
   int _remaining = 0;
   Timer? _timer;
@@ -614,8 +607,19 @@ class _TotpListTileState extends State<_TotpListTile> {
   @override
   void initState() {
     super.initState();
-    _updateCode();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCode());
+    _loadConfig();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TotpListTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(widget.entry, oldWidget.entry)) {
+      _timer?.cancel();
+      _timer = null;
+      _code = '';
+      _remaining = 0;
+      _loadConfig();
+    }
   }
 
   @override
@@ -624,9 +628,19 @@ class _TotpListTileState extends State<_TotpListTile> {
     super.dispose();
   }
 
+  void _loadConfig() {
+    _config = widget.totpService.loadFromEntry(widget.entry);
+    if (_config != null) {
+      _updateCode();
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCode());
+    }
+  }
+
   void _updateCode() {
-    final newCode = widget.totpService.generateCode(widget.config);
-    final newRemaining = widget.totpService.remainingSeconds(widget.config);
+    final config = _config;
+    if (config == null) return;
+    final newCode = widget.totpService.generateCode(config);
+    final newRemaining = widget.totpService.remainingSeconds(config);
     if (mounted && (newCode != _code || newRemaining != _remaining)) {
       setState(() {
         _code = newCode;
@@ -643,7 +657,9 @@ class _TotpListTileState extends State<_TotpListTile> {
     final l10n = AppLocalizations.of(context)!;
     final title = widget.entry.fields['Title']?.text ?? l10n.untitled;
     final isLow = _remaining <= 5;
-    final progress = _remaining / widget.config.period;
+    final progress = _config == null
+        ? 0.0
+        : _remaining / _config!.period;
     final codeDisplay = _code.length == 6
         ? '${_code.substring(0, 3)} ${_code.substring(3)}'
         : _code;

@@ -15,31 +15,41 @@ class _TagFilterBar extends ConsumerWidget {
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Icon(
-              Icons.label_outline_rounded,
-              size: 16,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 4),
-          _TagChip(
-            label: l10n.allTags,
-            selected: selectedTag == null,
-            onTap: () => ref.read(selectedTagProvider.notifier).state = null,
-          ),
-          for (final tag in allTags)
-            _TagChip(
-              label: tag,
-              selected: selectedTag == tag,
-              onTap: () => ref.read(selectedTagProvider.notifier).state =
-                  selectedTag == tag ? null : tag,
-            ),
-        ],
+        itemCount: allTags.length + 2,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Icon(
+                Icons.label_outline_rounded,
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            );
+          }
+          if (index == 1) {
+            return Row(
+              children: [
+                const SizedBox(width: 4),
+                _TagChip(
+                  label: l10n.allTags,
+                  selected: selectedTag == null,
+                  onTap: () =>
+                      ref.read(selectedTagProvider.notifier).state = null,
+                ),
+              ],
+            );
+          }
+          final tag = allTags[index - 2];
+          return _TagChip(
+            label: tag,
+            selected: selectedTag == tag,
+            onTap: () => ref.read(selectedTagProvider.notifier).state =
+                selectedTag == tag ? null : tag,
+          );
+        },
       ),
     );
   }

@@ -88,13 +88,20 @@ class _EntryListTileState extends State<EntryListTile> {
       backgroundColor: colorScheme.primaryContainer,
     );
     final spans = <TextSpan>[];
-    for (int i = 0; i < text.length; i++) {
+    int i = 0;
+    while (i < text.length) {
+      final isHighlight = positions.contains(i);
+      int j = i + 1;
+      while (j < text.length && positions.contains(j) == isHighlight) {
+        j++;
+      }
       spans.add(
         TextSpan(
-          text: text[i],
-          style: positions.contains(i) ? highlightStyle : normalStyle,
+          text: text.substring(i, j),
+          style: isHighlight ? highlightStyle : normalStyle,
         ),
       );
+      i = j;
     }
     return RichText(
       text: TextSpan(children: spans),
