@@ -812,6 +812,7 @@ class _MobileSearchTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(searchResultsProvider);
+    final query = ref.watch(searchQueryProvider);
     final service = ref.read(databaseServiceProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -837,6 +838,7 @@ class _MobileSearchTab extends ConsumerWidget {
           child: EntryListTile(
             key: ValueKey(entry.uuid),
             entry: entry,
+            query: query,
             onTap: () {},
             onOpen: () {
               final encodedUuid = Uri.encodeComponent(entry.uuid.string);
