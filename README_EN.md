@@ -7,10 +7,6 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 <p align="center">
   <img src="assets/images/screenshot_en.png" width="600" alt="Desktop">
 </p>
-<p align="center">
-  <img src="assets/images/phone1.png" width="240" alt="Mobile - Entries">
-  <img src="assets/images/phone2-TOTP-en.png" width="240" alt="Mobile - TOTP">
-</p>
 
 ## Features
 
@@ -24,16 +20,16 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 
 Download from [Releases](https://github.com/lyj404/keevault/releases).
 
-| Platform | Notes |
-|----------|-------|
-| Windows | Download `KeeVault-*-windows-x64.zip`, extract and run `keevault.exe` |
-| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb` |
-| Arch Linux | `yay -S keevault-bin` or `paru -S keevault-bin` |
-| Android | Install the APK for your arch (`arm64-v8a` / `armeabi-v7a` / `x86_64`) |
+| Platform        | Notes                                                                  |
+| --------------- | ---------------------------------------------------------------------- |
+| Windows         | Download `KeeVault-*-windows-x64.zip`, extract and run `keevault.exe`  |
+| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb`                              |
+| Arch Linux      | `yay -S keevault-bin` or `paru -S keevault-bin`                        |
+| Android         | Install the APK for your arch (`arm64-v8a` / `armeabi-v7a` / `x86_64`) |
 
 ## Build from Source
 
-Requires Flutter / Dart SDK >= 3.12.0
+Requires Flutter / Dart SDK >= 3.13.0
 
 ```bash
 git clone https://github.com/lyj404/keevault

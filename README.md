@@ -7,10 +7,6 @@
 <p align="center">
   <img src="assets/images/screenshot.png" width="600" alt="桌面端">
 </p>
-<p align="center">
-  <img src="assets/images/phone1.png" width="240" alt="移动端-条目列表">
-  <img src="assets/images/phone2-TOTP.png" width="240" alt="移动端-TOTP">
-</p>
 
 ## 功能
 
@@ -24,16 +20,16 @@
 
 从 [Releases](https://github.com/lyj404/keevault/releases) 下载对应平台安装包。
 
-| 平台 | 说明 |
-|------|------|
-| Windows | 下载 `KeeVault-*-windows-x64.zip`，解压运行 `keevault.exe` |
-| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb` |
-| Arch Linux | `yay -S keevault-bin` 或 `paru -S keevault-bin` |
-| Android | 下载对应架构 APK（`arm64-v8a` / `armeabi-v7a` / `x86_64`）安装 |
+| 平台            | 说明                                                           |
+| --------------- | -------------------------------------------------------------- |
+| Windows         | 下载 `KeeVault-*-windows-x64.zip`，解压运行 `keevault.exe`     |
+| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb`                      |
+| Arch Linux      | `yay -S keevault-bin` 或 `paru -S keevault-bin`                |
+| Android         | 下载对应架构 APK（`arm64-v8a` / `armeabi-v7a` / `x86_64`）安装 |
 
 ## 从源码构建
 
-需要 Flutter / Dart SDK >= 3.12.0
+需要 Flutter / Dart SDK >= 3.13.0
 
 ```bash
 git clone https://github.com/lyj404/keevault
