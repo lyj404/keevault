@@ -482,7 +482,7 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           .getConfigById(file.webDavProfileId);
       if (config == null || !config.enabled) return false;
       final bytes = await File(file.path).readAsBytes();
-      return _uploadEncryptedBytes(
+      return await _uploadEncryptedBytes(
         bytes: bytes,
         config: config,
         path: file.path,

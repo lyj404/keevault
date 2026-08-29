@@ -1,7 +1,6 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/providers/auto_lock_provider.dart';
@@ -227,12 +226,10 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
               routerConfig: router,
               debugShowCheckedModeBanner: false,
               locale: locale,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
+               localizationsDelegates: [
+                 AppLocalizations.delegate,
+                 ...GlobalMaterialLocalizations.delegates,
+               ],
               supportedLocales: const [Locale('zh'), Locale('en')],
             ),
             if (_backgroundPrivacyVisible)

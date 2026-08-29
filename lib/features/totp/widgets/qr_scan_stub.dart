@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Stub for platforms without camera support (Linux, Windows, Web)
 class QrScanScreen extends StatelessWidget {

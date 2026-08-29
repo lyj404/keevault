@@ -12,6 +12,13 @@ analyzer:
     # Treat unawaited futures and unsafe casts as warnings rather than hints.
     unawaited_futures: warning
     cast_nullable_to_non_nullable: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:

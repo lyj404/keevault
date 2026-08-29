@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shows a toast notification that slides in from the right side.
 /// [isError] controls the color: green for success, red for error.

@@ -58,6 +58,7 @@ app.*.map.json
 /android/app/release
 
 # Android
+/android/build/
 /android/.gradle
 /android/captures/
 /android/gradlew

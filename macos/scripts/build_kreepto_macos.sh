@@ -12,7 +12,7 @@ CRATE_DIR="$PROJECT_ROOT/native/kreepto-rust"
 OUT_DIR="$SCRIPT_DIR/../build/macos"
 
 # Minimum macOS version; keep in sync with Podfile / kreepto.podspec.
-export MACOSX_DEPLOYMENT_TARGET="10.14"
+export MACOSX_DEPLOYMENT_TARGET="12.0"
 
 TARGETS=(
   "aarch64-apple-darwin"
