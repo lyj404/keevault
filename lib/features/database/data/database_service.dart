@@ -227,6 +227,11 @@ class DatabaseService {
 
   void rebuildEntryCache() => _rebuildEntryCache();
 
+  /// Drops the lowercase search index. It duplicates the text of every entry,
+  /// so it is only worth keeping while a search session is actually active;
+  /// the next search rebuilds it on demand.
+  void clearSearchIndex() => _searchIndex = null;
+
   /// Returns true if the given group is the recycle bin group.
   bool isRecycleBinGroup(KdbxGroup group) {
     final recycleBinUuid = _db?.meta.recycleBinUuid;
@@ -493,7 +498,10 @@ class DatabaseService {
     // background isolate; Isolate.run previously failed with:
     // "Illegal argument in isolate message: object is unsendable ... _Future".
     // KDF/crypto inside kpasslib is already async, so the UI can still yield.
-    final bytes = Uint8List.fromList(await db.save());
+    // kpasslib's save() already returns a freshly built Uint8List; copying it
+    // again via Uint8List.fromList would double the whole database in memory.
+    final saved = await db.save();
+    final bytes = saved is Uint8List ? saved : Uint8List.fromList(saved);
     await validateBytes(bytes, password, keyData: _keyData);
     await _atomicFileStore.commit(
       path,
@@ -519,7 +527,8 @@ class DatabaseService {
   /// Serializes the database to bytes without writing to disk.
   Future<Uint8List> saveToBytes() async {
     if (_db == null) return Uint8List(0);
-    return Uint8List.fromList(await _db!.save());
+    final saved = await _db!.save();
+    return saved is Uint8List ? saved : Uint8List.fromList(saved);
   }
 
   Future<void> saveAs(String newPath) async {

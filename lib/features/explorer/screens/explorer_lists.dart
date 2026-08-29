@@ -602,7 +602,6 @@ class _TotpListTileState extends State<_TotpListTile> {
   TotpConfig? _config;
   String _code = '';
   int _remaining = 0;
-  Timer? _timer;
 
   @override
   void initState() {
@@ -614,8 +613,8 @@ class _TotpListTileState extends State<_TotpListTile> {
   void didUpdateWidget(covariant _TotpListTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(widget.entry, oldWidget.entry)) {
-      _timer?.cancel();
-      _timer = null;
+      TotpTicker.instance.removeListener(_onTick);
+      _config = null;
       _code = '';
       _remaining = 0;
       _loadConfig();
@@ -624,23 +623,30 @@ class _TotpListTileState extends State<_TotpListTile> {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    TotpTicker.instance.removeListener(_onTick);
     super.dispose();
   }
 
   void _loadConfig() {
     _config = widget.totpService.loadFromEntry(widget.entry);
     if (_config != null) {
-      _updateCode();
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCode());
+      _updateCode(force: true);
+      TotpTicker.instance.addListener(_onTick);
     }
   }
 
-  void _updateCode() {
+  void _onTick() => _updateCode();
+
+  /// Called once per second by the shared ticker. The code only changes when
+  /// the period wraps (remaining jumps back up), so the HMAC is recomputed
+  /// once per period instead of on every tick.
+  void _updateCode({bool force = false}) {
     final config = _config;
     if (config == null) return;
-    final newCode = widget.totpService.generateCode(config);
     final newRemaining = widget.totpService.remainingSeconds(config);
+    final newCode = force || newRemaining > _remaining
+        ? widget.totpService.generateCode(config)
+        : _code;
     if (mounted && (newCode != _code || newRemaining != _remaining)) {
       setState(() {
         _code = newCode;

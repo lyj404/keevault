@@ -18,5 +18,12 @@ final searchResultsProvider = Provider<List<SearchResult>>((ref) {
   ref.watch(explorerListRevisionProvider);
   if (query.isEmpty) return [];
   final service = ref.read(databaseServiceProvider);
+  if (query.isEmpty) {
+    // No active search: drop the lowercase index. It duplicates the text of
+    // every entry, so it should only exist while a search session is live;
+    // the next search rebuilds it on demand.
+    service.clearSearchIndex();
+    return [];
+  }
   return service.search(query, limit: searchResultLimit);
 });

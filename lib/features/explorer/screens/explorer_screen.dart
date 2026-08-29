@@ -25,6 +25,7 @@ import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 import '../../sync/data/sync_service.dart' show SyncException, SyncErrorType;
 import '../../totp/data/totp_service.dart';
+import '../../totp/data/totp_ticker.dart';
 import '../../totp/widgets/totp_edit_sheet.dart';
 import '../../search/providers/search_provider.dart';
 import '../providers/explorer_provider.dart';

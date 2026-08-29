@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kpasslib/kpasslib.dart';
@@ -7,6 +6,7 @@ import '../../../core/utils/clipboard_utils.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/totp_service.dart';
+import '../data/totp_ticker.dart';
 
 class TotpDisplayWidget extends ConsumerStatefulWidget {
   final KdbxEntry entry;
@@ -21,7 +21,6 @@ class _TotpDisplayWidgetState extends ConsumerState<TotpDisplayWidget> {
   TotpConfig? _config;
   String _code = '';
   int _remaining = 0;
-  Timer? _timer;
 
   @override
   void initState() {
@@ -35,8 +34,7 @@ class _TotpDisplayWidgetState extends ConsumerState<TotpDisplayWidget> {
     // Reload when the underlying entry instance changes (e.g. after cloud
     // sync replaces the whole database) or when a different entry is passed.
     if (!identical(widget.entry, oldWidget.entry)) {
-      _timer?.cancel();
-      _timer = null;
+      TotpTicker.instance.removeListener(_onTick);
       _config = null;
       _code = '';
       _remaining = 0;
@@ -46,22 +44,32 @@ class _TotpDisplayWidgetState extends ConsumerState<TotpDisplayWidget> {
 
   @override
   void dispose() {
-    _timer?.cancel();
+    TotpTicker.instance.removeListener(_onTick);
     super.dispose();
   }
 
   void _loadConfig() {
     _config = _totpService.loadFromEntry(widget.entry);
     if (_config != null) {
-      _updateCode();
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCode());
+      _updateCode(force: true);
+      TotpTicker.instance.addListener(_onTick);
     }
   }
 
-  void _updateCode() {
-    if (_config == null) return;
-    final newCode = _totpService.generateCode(_config!);
-    final newRemaining = _totpService.remainingSeconds(_config!);
+  /// Called once per second by the shared ticker. The code only changes when
+  /// the period wraps (remaining jumps back up), so the HMAC is recomputed
+  /// once per period instead of on every tick.
+  void _onTick() {
+    _updateCode();
+  }
+
+  void _updateCode({bool force = false}) {
+    final config = _config;
+    if (config == null) return;
+    final newRemaining = _totpService.remainingSeconds(config);
+    final newCode = force || newRemaining > _remaining
+        ? _totpService.generateCode(config)
+        : _code;
     if (mounted && (newCode != _code || newRemaining != _remaining)) {
       setState(() {
         _code = newCode;
