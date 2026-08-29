@@ -2,6 +2,10 @@
 
 # KeeVault
 
+[![Release](https://img.shields.io/github/v/release/lyj404/keevault)](https://github.com/lyj404/keevault/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey)]()
+
 基于 Flutter 的跨平台 KeePass 兼容密码管理器。
 
 <p align="center">
@@ -10,6 +14,7 @@
 
 ## 功能
 
+- KDBX 3.x / 4.x 全兼容（读写、合并同步）
 - WebDAV 云同步、TOTP、指纹解锁、Key File 双因素认证
 - CSV / KDBX 导入导出，兼容 Chrome、1Password、LastPass、Bitwarden 等
 - 文件附件、条目历史、自定义字段、标签与分组
@@ -25,7 +30,7 @@
 | Windows         | 下载 `KeeVault-*-windows-x64.zip`，解压运行 `keevault.exe`     |
 | Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb`                      |
 | Arch Linux      | `yay -S keevault-bin` 或 `paru -S keevault-bin`                |
-| Android         | 下载对应架构 APK（`arm64-v8a` / `armeabi-v7a` / `x86_64`）安装 |
+| Android         | 下载对应架构 APK（`arm64-v8a` / `armeabi-v7a` / `x86_64`）安装。APK 未上架任何应用商店，请仅从 GitHub Releases 下载 |
 
 ## 从源码构建
 
@@ -40,7 +45,7 @@ flutter run -d windows    # 或 linux / android
 
 ## 技术栈
 
-Flutter · Riverpod · go_router · kpasslib · WebDAV · local_auth
+[Flutter](https://flutter.dev) · [Riverpod](https://pub.dev/packages/flutter_riverpod) · [go_router](https://pub.dev/packages/go_router) · [kpasslib](https://pub.dev/packages/kpasslib) · [WebDAV](https://pub.dev/packages/webdav_client) · [local_auth](https://pub.dev/packages/local_auth)
 
 ## 友链
 
