@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
@@ -59,14 +60,33 @@ class WindowsNotificationHelper {
       nid.ref.cbSize = sizeOf<NOTIFYICONDATA>();
       nid.ref.hWnd = _hWnd;
       nid.ref.uID = 1;
-      nid.ref.uFlags = NIF_INFO;
-      nid.ref.dwInfoFlags = NIIF_INFO;
-      nid.ref.Anonymous.uTimeout = 10000;
-      nid.ref.szInfoTitle = title;
-      nid.ref.szInfo = body;
+      nid.ref.uCallbackMessage = WM_APP + 1;
+      // The balloon notification is attached to a notification-area icon, so
+      // it must be added first and kept alive while the balloon shows. The
+      // previous NIM_ADD(NIF_INFO) + immediate NIM_DELETE made Explorer
+      // cancel the balloon before it was visible.
+      nid.ref.uFlags = NIF_MESSAGE;
+      if (Shell_NotifyIcon(NIM_ADD, nid) != 0) {
+        nid.ref.uFlags = NIF_INFO;
+        nid.ref.dwInfoFlags = NIIF_INFO;
+        nid.ref.Anonymous.uTimeout = 10000;
+        nid.ref.szInfoTitle = title;
+        nid.ref.szInfo = body;
+        Shell_NotifyIcon(NIM_MODIFY, nid);
 
-      Shell_NotifyIcon(NIM_ADD, nid);
-      Shell_NotifyIcon(NIM_DELETE, nid);
+        // Remove the (invisible) icon once the balloon has had time to show.
+        Timer(const Duration(seconds: 15), () {
+          final cleanup = calloc<NOTIFYICONDATA>();
+          try {
+            cleanup.ref.cbSize = sizeOf<NOTIFYICONDATA>();
+            cleanup.ref.hWnd = _hWnd;
+            cleanup.ref.uID = 1;
+            Shell_NotifyIcon(NIM_DELETE, cleanup);
+          } finally {
+            calloc.free(cleanup);
+          }
+        });
+      }
     } finally {
       calloc.free(nid);
     }

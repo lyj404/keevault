@@ -325,6 +325,9 @@ class EntryHistoryScreen extends ConsumerWidget {
       ..defaultSequence = historyEntry.autoType.defaultSequence
       ..items = List.from(historyEntry.autoType.items);
     currentEntry.times = KdbxTimes.copyFrom(historyEntry.times);
+    // The restore itself is a modification: keep the entry's modification
+    // time at "now" instead of inheriting the historical timestamp.
+    currentEntry.times.touch();
     currentEntry.previousParent = historyEntry.previousParent;
 
     final sourceCustomData = historyEntry.customData;

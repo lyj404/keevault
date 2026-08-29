@@ -116,5 +116,6 @@ coverage/
 .agents/
 .opencode/
 .codegraph/
+.zcode/
 
 .vfox/

@@ -1276,4 +1276,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pendingUploadConflict =>
       'Cloud data changed before pending local changes could be uploaded. The remote file was not overwritten.';
+
+  @override
+  String get discardChangesTitle => 'Unsaved changes';
+
+  @override
+  String get discardChangesBody =>
+      'This entry has unsaved changes. Discard them and leave?';
+
+  @override
+  String get discardAndLeave => 'Discard';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get entryNoLongerExists =>
+      'This entry no longer exists in the open database. Your changes were not saved.';
 }

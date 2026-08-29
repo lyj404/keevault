@@ -28,6 +28,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    // Clear the query so a stale search (and its full-vault result
+    // computation) does not survive the page for the next visit.
+    ref.read(searchQueryProvider.notifier).state = '';
     _searchCtrl.dispose();
     _keyboardFocusNode.dispose();
     _debounce?.cancel();

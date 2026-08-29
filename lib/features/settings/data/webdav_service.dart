@@ -8,6 +8,19 @@ class WebDavSettingsService {
   final _storage = const SecureStorageHelper();
   final _encryptor = PasswordEncryptor();
 
+  /// Serializes read-modify-write cycles on the profiles state. Concurrent
+  /// mutations (e.g. two quick "new profile" actions interleaving) would
+  /// otherwise write whole snapshots built from the same stale read, and the
+  /// loser's profile would be dropped.
+  static Future<void> _writeQueue = Future.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final result = _writeQueue.then((_) => action());
+    // Keep the chain alive even when an action fails.
+    _writeQueue = result.then((_) {}, onError: (_) {});
+    return result;
+  }
+
   Future<WebDavConfig?> getConfig() async {
     return (await getProfilesState()).activeProfile;
   }
@@ -57,18 +70,20 @@ class WebDavSettingsService {
     return decrypted;
   }
 
-  Future<void> saveConfig(WebDavConfig config) async {
-    final state = await getProfilesState();
-    final profiles = [...state.profiles];
-    final index = profiles.indexWhere((profile) => profile.id == config.id);
-    if (index >= 0) {
-      profiles[index] = config;
-    } else {
-      profiles.add(config);
-    }
-    await _persistState(
-      WebDavProfilesState(profiles: profiles, activeProfileId: config.id),
-    );
+  Future<void> saveConfig(WebDavConfig config) {
+    return _serialized(() async {
+      final state = await getProfilesState();
+      final profiles = [...state.profiles];
+      final index = profiles.indexWhere((profile) => profile.id == config.id);
+      if (index >= 0) {
+        profiles[index] = config;
+      } else {
+        profiles.add(config);
+      }
+      await _persistState(
+        WebDavProfilesState(profiles: profiles, activeProfileId: config.id),
+      );
+    });
   }
 
   Future<void> deleteConfig() async {
@@ -76,26 +91,33 @@ class WebDavSettingsService {
     await _storage.delete(key: _configKey);
   }
 
-  Future<void> deleteProfile(String profileId) async {
-    final state = await getProfilesState();
-    final profiles = state.profiles
-        .where((profile) => profile.id != profileId)
-        .toList();
-    final nextActive = state.activeProfileId == profileId
-        ? (profiles.isEmpty ? null : profiles.first.id)
-        : state.activeProfileId;
-    await _persistState(
-      WebDavProfilesState(profiles: profiles, activeProfileId: nextActive),
-    );
+  Future<void> deleteProfile(String profileId) {
+    return _serialized(() async {
+      final state = await getProfilesState();
+      final profiles = state.profiles
+          .where((profile) => profile.id != profileId)
+          .toList();
+      final nextActive = state.activeProfileId == profileId
+          ? (profiles.isEmpty ? null : profiles.first.id)
+          : state.activeProfileId;
+      await _persistState(
+        WebDavProfilesState(profiles: profiles, activeProfileId: nextActive),
+      );
+    });
   }
 
-  Future<void> setActiveProfile(String profileId) async {
-    final state = await getProfilesState();
-    final exists = state.profiles.any((profile) => profile.id == profileId);
-    if (!exists) return;
-    await _persistState(
-      WebDavProfilesState(profiles: state.profiles, activeProfileId: profileId),
-    );
+  Future<void> setActiveProfile(String profileId) {
+    return _serialized(() async {
+      final state = await getProfilesState();
+      final exists = state.profiles.any((profile) => profile.id == profileId);
+      if (!exists) return;
+      await _persistState(
+        WebDavProfilesState(
+          profiles: state.profiles,
+          activeProfileId: profileId,
+        ),
+      );
+    });
   }
 
   /// Encrypts the password in a [WebDavConfig] before storage.

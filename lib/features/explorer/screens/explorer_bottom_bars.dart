@@ -318,7 +318,18 @@ Future<void> _syncFromCloud(BuildContext context) async {
   }
   if (!context.mounted) return;
   final syncService = container.read(syncServiceProvider);
-  final exists = await syncService.remoteFileExists(config);
+  final bool exists;
+  try {
+    exists = await syncService.remoteFileExists(config);
+  } catch (e) {
+    // Auth/network failure must not be presented as "cloud has no database"
+    // — that would guide the user into creating/overwriting a real one.
+    log.e('Remote file probe failed before sync', error: e);
+    if (context.mounted) {
+      _showSyncErrorDialog(context, l10n.syncFailed);
+    }
+    return;
+  }
   if (!exists) {
     if (context.mounted) {
       _showSyncErrorDialog(context, l10n.cloudNoDatabaseSaveFirst);

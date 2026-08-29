@@ -148,6 +148,8 @@ class DatabaseService {
   int _mutationCount = 0;
   Uint8List? _preloadedBytes;
   String? _preloadedFilePath;
+  DateTime? _preloadedModified;
+  int? _preloadedSize;
   List<KdbxEntry>? _allEntriesCache;
   Map<String, KdbxEntry>? _entryByUuid;
   List<_SearchRecord>? _searchIndex;
@@ -265,8 +267,30 @@ class DatabaseService {
       return;
     }
     log.i('Preloading file: $filePath');
-    _preloadedBytes = await Isolate.run(() => File(filePath).readAsBytes());
+    final loaded = await Isolate.run(() async {
+      final file = File(filePath);
+      final stat = await file.stat();
+      return (bytes: await file.readAsBytes(), stat: stat);
+    });
+    _preloadedBytes = loaded.bytes;
     _preloadedFilePath = filePath;
+    _preloadedModified = loaded.stat.modified;
+    _preloadedSize = loaded.stat.size;
+  }
+
+  /// The preloaded bytes can go stale while the unlock screen is open (e.g.
+  /// a "download latest" flow rewrites the same cache path). Verify size and
+  /// mtime before trusting them: opening a stale preload and saving it would
+  /// overwrite the newer file while matching its remote revision.
+  Future<bool> _isPreloadFresh(String filePath) async {
+    if (_preloadedModified == null || _preloadedSize == null) return false;
+    try {
+      final stat = await File(filePath).stat();
+      return stat.size == _preloadedSize &&
+          stat.modified == _preloadedModified;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Loads a KDBX database in a background isolate to avoid blocking the UI.
@@ -306,12 +330,14 @@ class DatabaseService {
       password,
       keyData: keyData,
     );
-    // Preload is only safe when it matches this path and recovery did not
-    // rewrite the file underneath.
+    // Preload is only safe when it matches this path, recovery did not
+    // rewrite the file underneath, and the file has not been changed on disk
+    // since the preload was taken.
     final canUsePreload =
         !recovered &&
         _preloadedBytes != null &&
-        _preloadedFilePath == filePath;
+        _preloadedFilePath == filePath &&
+        await _isPreloadFresh(filePath);
     final bytes =
         canUsePreload ? _preloadedBytes! : await File(filePath).readAsBytes();
     _preloadedBytes = null;
@@ -418,7 +444,10 @@ class DatabaseService {
     if (pw == null) throw Exception('no_password_cannot_reload');
     _db = await _loadDatabase(bytes, pw, keyData: _keyData);
     _password = pw;
-    markClean();
+    // Keep the database dirty until the reloaded content is actually
+    // persisted: if the following save() fails, close()/auto-save must still
+    // see the pending change instead of silently dropping the restore.
+    markDirty();
     _localizeRecycleBin();
     _rebuildEntryCache();
     return _db!;
@@ -448,9 +477,16 @@ class DatabaseService {
   }
 
   Future<Uint8List> _saveOnce() async {
-    if (_db == null || _filePath == null) return Uint8List(0);
-    log.i('Saving database: $_filePath');
-    final db = _db!;
+    final db = _db;
+    final path = _filePath;
+    final password = _password;
+    // A queued save can start after close() cleared the state. Fail loudly so
+    // callers never mistake empty bytes for a successful save (an empty result
+    // must never reach a cloud upload).
+    if (db == null || path == null || password == null) {
+      throw StateError('Cannot save: database is closed');
+    }
+    log.i('Saving database: $path');
     final mutationCountAtStart = _mutationCount;
     // Serialize on the main isolate. KdbxDatabase graphs (and any enclosing
     // service state captured by a closure) are not reliably sendable to a
@@ -458,8 +494,7 @@ class DatabaseService {
     // "Illegal argument in isolate message: object is unsendable ... _Future".
     // KDF/crypto inside kpasslib is already async, so the UI can still yield.
     final bytes = Uint8List.fromList(await db.save());
-    await validateBytes(bytes, _password!, keyData: _keyData);
-    final path = _filePath!;
+    await validateBytes(bytes, password, keyData: _keyData);
     await _atomicFileStore.commit(
       path,
       bytes,
@@ -791,6 +826,8 @@ class DatabaseService {
     _lastSyncedRemoteInfo = null;
     _preloadedBytes = null;
     _preloadedFilePath = null;
+    _preloadedModified = null;
+    _preloadedSize = null;
     _allEntriesCache = null;
     _entryByUuid = null;
     _searchIndex = null;

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,26 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
             state == AppLifecycleState.hidden)) {
       if (mounted) setState(() => _backgroundPrivacyVisible = true);
     }
+    // Mobile only: the process can be reclaimed at any time after pausing,
+    // and dirty data lives only in memory (auto-save is disabled by default).
+    // Persist now — the local disk write completes first inside save().
+    if ((state == AppLifecycleState.paused ||
+            state == AppLifecycleState.hidden) &&
+        !Platform.isWindows &&
+        !Platform.isLinux &&
+        !Platform.isMacOS) {
+      final notifier = ref.read(databaseProvider.notifier);
+      if (ref.read(databaseProvider).valueOrNull != null && notifier.isDirty) {
+        unawaited(
+          notifier.save().then(
+            (_) {},
+            onError: (Object e) {
+              debugPrint('Background save failed: $e');
+            },
+          ),
+        );
+      }
+    }
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
@@ -94,9 +115,10 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
       }
     }
 
-    // Copy shortcuts require an active entry
+    // Copy shortcuts require an active entry in an unlocked database.
     final activeEntry = ref.read(activeEntryProvider);
-    if (activeEntry == null) return KeyEventResult.ignored;
+    final dbUnlocked = ref.read(databaseProvider).valueOrNull != null;
+    if (activeEntry == null || !dbUnlocked) return KeyEventResult.ignored;
 
     String? message;
     if (event.logicalKey == LogicalKeyboardKey.keyB) {
@@ -194,10 +216,11 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
         locale ?? WidgetsBinding.instance.platformDispatcher.locale;
     final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(appRouterProvider);
-    // Auto-save: schedule save when database becomes dirty.
+    // Auto-save: when the database becomes dirty, arm both the idle deadline
+    // and the hard max deadline (user activity only postpones the idle one).
     ref.listen(isDirtyProvider, (prev, next) {
       if (next) {
-        ref.read(autoSaveProvider.notifier).resetTimer();
+        ref.read(autoSaveProvider.notifier).onDirty();
       }
     });
 

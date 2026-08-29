@@ -9,7 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/data/sync_service.dart'
-    show RemoteFileInfo, SyncException, SyncErrorType;
+    show RemoteFileInfo, SyncException, SyncErrorType, normalizeETag;
 import '../../sync/providers/sync_provider.dart';
 import '../providers/database_provider.dart';
 
@@ -96,7 +96,27 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       // Local cache missing but WebDAV is configured — fall through to download.
     }
     final syncService = ref.read(syncServiceProvider);
-    final remoteInfo = await syncService.getRemoteFileInfo(config);
+    RemoteFileInfo? remoteInfo;
+    try {
+      remoteInfo = await syncService.getRemoteFileInfo(config);
+    } catch (e) {
+      // Unreachable server is not the same as "no cloud database"; fall back
+      // to the local cache instead of pretending the remote is gone.
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      final message = _translateDownloadError(e, l10n);
+      if (exists) {
+        _setCloudOfflineMode(message);
+        unawaited(
+          context.push(
+            _buildCloudUnlockQuery(file.path, null, file.webDavProfileId),
+          ),
+        );
+      } else {
+        _showErrorDialog(context, message);
+      }
+      return;
+    }
     if (!mounted) return;
     if (remoteInfo != null) {
       if (_isCachedCopyCurrent(file, remoteInfo) && exists) {
@@ -450,7 +470,17 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
     if (!context.mounted) return;
     final syncService = ref.read(syncServiceProvider);
-    final remoteInfo = await syncService.getRemoteFileInfo(config);
+    RemoteFileInfo? remoteInfo;
+    try {
+      remoteInfo = await syncService.getRemoteFileInfo(config);
+    } catch (e) {
+      // Auth/network failure must not be presented as "cloud has no database"
+      // — that would guide the user into creating/overwriting a real one.
+      if (context.mounted) {
+        _showErrorDialog(context, _translateDownloadError(e, l10n));
+      }
+      return;
+    }
     if (remoteInfo == null) {
       if (context.mounted) {
         _showCloudNoDatabaseDialog(context, l10n);
@@ -602,8 +632,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   bool _isCachedCopyCurrent(RecentFile file, RemoteFileInfo remoteInfo) {
     if (file.pendingUpload) return false;
+    // normalizeETag also makes records stored before weak-ETag normalization
+    // compare equal to their normalized remote counterparts.
     if (file.lastSyncedETag != null && remoteInfo.eTag != null) {
-      return file.lastSyncedETag == remoteInfo.eTag;
+      return normalizeETag(file.lastSyncedETag) ==
+          normalizeETag(remoteInfo.eTag);
     }
     if (file.lastSyncedMTime != null && remoteInfo.mTime != null) {
       return file.lastSyncedMTime == remoteInfo.mTime;

@@ -10,6 +10,7 @@ import 'core/utils/clipboard_utils.dart';
 import 'core/utils/logger.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
+import 'core/services/notification_service.dart';
 import 'core/tray_service.dart';
 import 'l10n/app_localizations.dart';
 import 'features/database/providers/database_provider.dart';
@@ -57,6 +58,8 @@ class KeeVaultAppWrapper extends ConsumerStatefulWidget {
 class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     with WindowListener {
   bool _trayInitialized = false;
+  bool _closing = false;
+  bool _quitting = false;
 
   @override
   void initState() {
@@ -99,20 +102,23 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
 
   Future<void> _persistDirtyDatabase() async {
     final db = ref.read(databaseProvider).valueOrNull;
-    final isDirty = ref.read(isDirtyProvider);
-    if (db == null || !isDirty) return;
+    if (db == null) return;
+    final notifier = ref.read(databaseProvider.notifier);
 
     try {
       // Local disk write happens first inside save(); the timeout mainly
       // bounds slow cloud sync retries so app exit isn't blocked for ~45s.
-      final success = await ref
-          .read(databaseProvider.notifier)
-          .save()
-          .timeout(const Duration(seconds: 20));
-      if (!success) {
-        log.w(
-          'Database save before app exit completed locally, but cloud sync reported a conflict.',
-        );
+      // A save already in flight may have serialized before the latest edit,
+      // so keep saving until the dirty flag clears (bounded) before exiting.
+      for (var attempt = 0; attempt < 3 && notifier.isDirty; attempt++) {
+        final success =
+            await notifier.save().timeout(const Duration(seconds: 20));
+        if (!success) {
+          log.w(
+            'Database save before app exit completed locally, but cloud sync reported a conflict.',
+          );
+          break;
+        }
       }
     } on TimeoutException {
       log.w('Save before app exit timed out; local save may have completed.');
@@ -125,13 +131,24 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
     }
   }
 
-  Future<void> _exitApp() async {
+  Future<void> _terminateApp() async {
+    _quitting = true;
     try {
       await _persistDirtyDatabase();
       await clearClipboardIfCopied();
+      try {
+        await TrayService().dispose();
+      } catch (_) {}
+      try {
+        NotificationService().dispose();
+      } catch (_) {}
       await windowManager.setPreventClose(false);
       await windowManager.close();
     } catch (_) {}
+  }
+
+  Future<void> _exitApp() async {
+    await _terminateApp();
   }
 
   @override
@@ -144,26 +161,34 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
 
   @override
   void onWindowClose() async {
-    final behavior = ref.read(closeBehaviorProvider);
-    if (behavior == CloseBehavior.exit) {
-      await _persistDirtyDatabase();
-      await clearClipboardIfCopied();
-      await windowManager.setPreventClose(false);
-      await windowManager.close();
-      return;
-    }
-    if (behavior == CloseBehavior.minimizeToTray) {
-      if (_trayInitialized) {
-        await windowManager.hide();
-      } else {
-        await _persistDirtyDatabase();
-        await clearClipboardIfCopied();
-        await windowManager.setPreventClose(false);
-        await windowManager.close();
+    // The close event can fire again while the (async) handling below is in
+    // progress; without a guard the dialog and exit sequence would run twice.
+    if (_closing) return;
+    _closing = true;
+    try {
+      // The preference loads asynchronously; never act on the default before
+      // it has been read (a fast close on startup would otherwise ignore the
+      // user's remembered choice).
+      await ref.read(closeBehaviorProvider.notifier).ensureLoaded();
+      final behavior = ref.read(closeBehaviorProvider);
+      if (behavior == CloseBehavior.exit) {
+        await _exitApp();
+        return;
       }
-      return;
+      if (behavior == CloseBehavior.minimizeToTray) {
+        if (_trayInitialized) {
+          await windowManager.hide();
+        } else {
+          await _exitApp();
+        }
+        return;
+      }
+      await _showCloseDialog();
+    } finally {
+      // Exit paths run once; minimize paths leave the app running, so close
+      // handling must be re-enabled for the next window-close event.
+      if (!_quitting) _closing = false;
     }
-    await _showCloseDialog();
   }
 
   Future<void> _showCloseDialog() async {
@@ -250,10 +275,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
             .read(closeBehaviorProvider.notifier)
             .setCloseBehavior(CloseBehavior.exit);
       }
-      await _persistDirtyDatabase();
-      await clearClipboardIfCopied();
-      await windowManager.setPreventClose(false);
-      await windowManager.close();
+      await _terminateApp();
     } else {
       if (remember) {
         await ref
@@ -263,10 +285,7 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
       if (_trayInitialized) {
         await windowManager.hide();
       } else {
-        await _persistDirtyDatabase();
-        await clearClipboardIfCopied();
-        await windowManager.setPreventClose(false);
-        await windowManager.close();
+        await _terminateApp();
       }
     }
   }

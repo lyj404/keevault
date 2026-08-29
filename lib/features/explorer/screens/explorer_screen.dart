@@ -18,7 +18,8 @@ import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../database/data/database_service.dart' show SyncAuditChange;
+import '../../database/data/database_service.dart'
+    show SyncAuditChange, SyncAuditReport;
 import '../../database/providers/database_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
@@ -95,9 +96,16 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
   Future<void> _checkRemoteChangesOnResume() async {
     final isOpenedFromCloud = ref.read(openedFromCloudProvider);
     if (!isOpenedFromCloud) return;
-    final hasChanges = await ref
-        .read(databaseProvider.notifier)
-        .checkRemoteChanges();
+    final bool hasChanges;
+    try {
+      hasChanges = await ref
+          .read(databaseProvider.notifier)
+          .checkRemoteChanges();
+    } catch (e) {
+      // Best-effort background check: offline/auth errors surface elsewhere.
+      log.w('Remote change check on resume failed', error: e);
+      return;
+    }
     if (hasChanges && mounted) {
       _showAutoSyncDialog();
     }
@@ -575,7 +583,15 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       if (success) {
         showToast(context, l10n.saved);
       } else {
-        _showConflictDialog(context, ref);
+        // Only a genuine remote conflict offers the "overwrite cloud" dialog.
+        // Local save failures, unreachable servers or an aborted save must
+        // not be presented as conflicts — the overwrite option is destructive.
+        final syncState = ref.read(syncStateProvider);
+        if (syncState == SyncState.conflict) {
+          _showConflictDialog(context, ref);
+        } else {
+          showToast(context, l10n.saveFailed, isError: true);
+        }
       }
     } catch (e) {
       log.e('Save failed', error: e);
@@ -641,12 +657,18 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
 
   Future<void> _showSyncAuditDialog(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final report = await ref.read(databaseProvider.notifier).inspectCloudDiff();
+    SyncAuditReport? report;
+    try {
+      report = await ref.read(databaseProvider.notifier).inspectCloudDiff();
+    } catch (e) {
+      log.e('Failed to inspect cloud diff', error: e);
+    }
     if (!context.mounted) return;
     if (report == null || !report.hasChanges) {
       showToast(context, l10n.syncFailed, isError: true);
       return;
     }
+    final audit = report;
 
     unawaited(
       showDialog(
@@ -659,11 +681,11 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAuditSection(ctx, 'Local Only', report.localOnly),
+                _buildAuditSection(ctx, 'Local Only', audit.localOnly),
                 const SizedBox(height: 12),
-                _buildAuditSection(ctx, 'Cloud Only', report.remoteOnly),
+                _buildAuditSection(ctx, 'Cloud Only', audit.remoteOnly),
                 const SizedBox(height: 12),
-                _buildAuditSection(ctx, 'Modified Both', report.modifiedBoth),
+                _buildAuditSection(ctx, 'Modified Both', audit.modifiedBoth),
               ],
             ),
           ),

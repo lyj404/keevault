@@ -2473,6 +2473,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'云端数据已发生变化，待同步的本地更改未覆盖远端。'**
   String get pendingUploadConflict;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'有未保存的更改'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前条目的修改尚未保存，确定放弃并离开吗？'**
+  String get discardChangesBody;
+
+  /// No description provided for @discardAndLeave.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃'**
+  String get discardAndLeave;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续编辑'**
+  String get keepEditing;
+
+  /// No description provided for @entryNoLongerExists.
+  ///
+  /// In zh, this message translates to:
+  /// **'该条目在当前打开的数据库中已不存在，修改未保存。'**
+  String get entryNoLongerExists;
 }
 
 class _AppLocalizationsDelegate

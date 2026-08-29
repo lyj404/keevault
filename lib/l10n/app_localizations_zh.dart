@@ -1244,4 +1244,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pendingUploadConflict => '云端数据已发生变化，待同步的本地更改未覆盖远端。';
+
+  @override
+  String get discardChangesTitle => '有未保存的更改';
+
+  @override
+  String get discardChangesBody => '当前条目的修改尚未保存，确定放弃并离开吗？';
+
+  @override
+  String get discardAndLeave => '放弃';
+
+  @override
+  String get keepEditing => '继续编辑';
+
+  @override
+  String get entryNoLongerExists => '该条目在当前打开的数据库中已不存在，修改未保存。';
 }

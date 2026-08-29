@@ -459,5 +459,10 @@
   "hideInBackgroundDescription": "应用失去焦点或进入后台时遮挡密码库内容。",
   "backupIntegrityFailed": "备份完整性校验失败",
   "pendingUploadFailed": "待同步的云端更改上传失败，已保留本地加密副本。",
-  "pendingUploadConflict": "云端数据已发生变化，待同步的本地更改未覆盖远端。"
+  "pendingUploadConflict": "云端数据已发生变化，待同步的本地更改未覆盖远端。",
+  "discardChangesTitle": "有未保存的更改",
+  "discardChangesBody": "当前条目的修改尚未保存，确定放弃并离开吗？",
+  "discardAndLeave": "放弃",
+  "keepEditing": "继续编辑",
+  "entryNoLongerExists": "该条目在当前打开的数据库中已不存在，修改未保存。"
 }

@@ -7,12 +7,76 @@ import 'package:path_provider/path_provider.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 import '../../../core/utils/fnv_hash.dart';
 import '../../../core/utils/logger.dart';
+import '../../database/data/atomic_file_store.dart';
 import '../../settings/data/webdav_config.dart';
+
+/// Normalizes a raw ETag header value for storage and replay in conditional
+/// requests. Strips surrounding whitespace and the `W/` weak-validator prefix
+/// (weak ETags replayed verbatim violate RFC 7232 and are rejected with 400
+/// by some servers). Returns null for empty values.
+String? normalizeETag(String? raw) {
+  if (raw == null) return null;
+  var value = raw.trim();
+  if (value.isEmpty) return null;
+  if (value.length >= 2 &&
+      (value.codeUnitAt(0) | 0x20) == 0x77 /* w */ &&
+      value.codeUnitAt(1) == 0x2f /* / */) {
+    value = value.substring(2).trim();
+  }
+  return value.isEmpty ? null : value;
+}
+
+/// Builds the conditional-request headers for a database PUT so the upload
+/// only lands when the remote revision still matches [expected].
+///
+/// - Strong (or normalized) ETag → `If-Match`.
+/// - No known remote revision at all → `If-None-Match: *`, which only
+///   succeeds when the file does not exist yet (protects an unseen remote).
+/// - Validator-less server (no ETag) → `If-Unmodified-Since` from mTime.
+/// - No validator of any kind on a previously seen revision → conflict:
+///   the remote state cannot be verified, so uploading unconditionally is
+///   not safe (it could overwrite a newer remote database).
+Map<String, String> buildConditionalUploadHeaders(RemoteFileInfo? expected) {
+  final eTag = normalizeETag(expected?.eTag);
+  if (eTag != null) return {'if-match': eTag};
+  if (expected == null) return {'if-none-match': '*'};
+  final mTime = expected.mTime;
+  if (mTime != null) {
+    return {'if-unmodified-since': HttpDate.format(mTime.toUtc())};
+  }
+  throw SyncException(
+    SyncErrorType.conflict,
+    'Remote revision has no validator (no ETag/Last-Modified); '
+    'refusing an unconditional upload',
+  );
+}
 
 class RemoteFileInfo {
   final String? eTag;
   final DateTime? mTime;
   const RemoteFileInfo({this.eTag, this.mTime});
+}
+
+/// Normalizes a configured WebDAV path (collapses duplicate slashes, strips a
+/// trailing slash) and percent-encodes characters that would break the request
+/// URL. The webdav_client library joins the server URL and the path verbatim,
+/// so spaces, '#' or '?' would produce an invalid request line or be parsed as
+/// fragment/query separators. Existing percent-escapes are left untouched.
+String encodeDavPath(String path) {
+  var normalized = path.trim().replaceAll(RegExp(r'/+'), '/');
+  if (normalized.length > 1 && normalized.endsWith('/')) {
+    normalized = normalized.substring(0, normalized.length - 1);
+  }
+  if (normalized.isEmpty) return '';
+  final encoded = normalized
+      .split('/')
+      .map((segment) => segment.replaceAllMapped(
+            RegExp(r"""[^A-Za-z0-9\-._~!$&'()*+,;=:@%]"""),
+            (m) => Uri.encodeComponent(m[0]!),
+          ))
+      .join('/');
+  // Root path stays a bare slash.
+  return encoded.isEmpty ? '/' : encoded;
 }
 
 /// Classification of sync errors for user-friendly messaging.
@@ -144,7 +208,7 @@ class SyncService {
     log.i('Testing WebDAV connection: ${config.serverUrl}');
     try {
       final client = _buildClient(config);
-      final remotePath = config.remotePath.isEmpty ? '/' : config.remotePath;
+      final remotePath = config.remotePath.isEmpty ? '/' : encodeDavPath(config.remotePath);
       try {
         await client.readDir(remotePath);
       } catch (e) {
@@ -189,7 +253,7 @@ class SyncService {
 
   Future<void> ensureRemoteDirectory(WebDavConfig config) async {
     final client = _buildClient(config);
-    await client.mkdirAll(config.remotePath);
+    await client.mkdirAll(encodeDavPath(config.remotePath));
   }
 
   Future<Uint8List?> downloadDatabase(WebDavConfig config) async {
@@ -198,7 +262,7 @@ class SyncService {
     try {
       final bytes = await _withRetry(
         'Download',
-        () => client.read(config.remoteFilePath),
+        () => client.read(encodeDavPath(config.remoteFilePath)),
       );
       log.i('Downloaded ${bytes.length} bytes');
       return Uint8List.fromList(bytes);
@@ -208,16 +272,23 @@ class SyncService {
     }
   }
 
+  /// Returns null only when the remote file does not exist (404). Any other
+  /// failure (auth, network, server) is thrown so callers cannot mistake an
+  /// unreachable server for "no database on the cloud" — that mistake guided
+  /// users into overwriting a real remote database.
   Future<RemoteFileInfo?> getRemoteFileInfo(WebDavConfig config) async {
     final client = _buildClient(config);
     try {
       final file = await _withRetry(
         'GetFileInfo',
-        () => client.readProps(config.remoteFilePath),
+        () => client.readProps(encodeDavPath(config.remoteFilePath)),
       );
-      return RemoteFileInfo(eTag: file.eTag, mTime: file.mTime);
-    } catch (_) {
-      return null;
+      return RemoteFileInfo(eTag: normalizeETag(file.eTag), mTime: file.mTime);
+    } catch (e) {
+      final typed = _asSyncException(e);
+      if (typed.type == SyncErrorType.notFound) return null;
+      log.e('GetFileInfo failed', error: typed);
+      throw typed;
     }
   }
 
@@ -235,7 +306,7 @@ class SyncService {
         () => client.c.req<List<int>>(
           client,
           'GET',
-          config.remoteFilePath,
+          encodeDavPath(config.remoteFilePath),
           optionsHandler: (options) =>
               options.responseType = ResponseType.bytes,
         ),
@@ -247,7 +318,7 @@ class SyncService {
         throw SyncException(SyncErrorType.serverError, 'Empty WebDAV response');
       }
       final info = RemoteFileInfo(
-        eTag: response.headers.value('etag'),
+        eTag: normalizeETag(response.headers.value('etag')),
         mTime: _parseHttpDate(response.headers.value('last-modified')),
       );
       log.i('Downloaded ${data.length} bytes with a revision token');
@@ -270,21 +341,31 @@ class SyncService {
     RemoteFileInfo? expected,
     bool force = false,
   }) async {
+    // A zero-length PUT would destroy the remote database. This can only
+    // happen if the caller serialized a closed database, so refuse loudly
+    // instead of letting an unconditional overwrite through.
+    if (bytes.isEmpty) {
+      throw SyncException(
+        SyncErrorType.unknown,
+        'Refusing to upload an empty database file',
+      );
+    }
     log.i('Uploading ${bytes.length} bytes with conflict protection');
     final client = _buildClient(config);
+    // Computed before the request so a missing validator fails fast with a
+    // conflict instead of silently uploading unconditionally.
+    final conditionalHeaders = force
+        ? const <String, String>{}
+        : buildConditionalUploadHeaders(expected);
     try {
       final response = await client.c.req<void>(
         client,
         'PUT',
-        config.remoteFilePath,
+        encodeDavPath(config.remoteFilePath),
         data: Stream<List<int>>.value(bytes),
         optionsHandler: (options) {
           options.headers?['content-length'] = bytes.length;
-          if (!force) {
-            final eTag = expected?.eTag;
-            options.headers?[eTag == null ? 'if-none-match' : 'if-match'] =
-                eTag ?? '*';
-          }
+          options.headers?.addAll(conditionalHeaders);
         },
       );
       final status = response.statusCode;
@@ -292,7 +373,7 @@ class SyncService {
         throw _httpException(status, response.statusMessage);
       }
       log.i('Upload complete');
-      final responseETag = response.headers.value('etag');
+      final responseETag = normalizeETag(response.headers.value('etag'));
       final responseMTime = _parseHttpDate(
         response.headers.value('last-modified'),
       );
@@ -334,13 +415,19 @@ class SyncService {
     }
   }
 
+  /// Returns true only when the remote file exists; false only when the
+  /// server answers 404. Any other failure (auth, network, server) is thrown
+  /// so callers cannot treat an unreachable server as "no remote database".
   Future<bool> remoteFileExists(WebDavConfig config) async {
     final client = _buildClient(config);
     try {
-      await client.readProps(config.remoteFilePath);
+      await client.readProps(encodeDavPath(config.remoteFilePath));
       return true;
-    } catch (_) {
-      return false;
+    } catch (e) {
+      final typed = _asSyncException(e);
+      if (typed.type == SyncErrorType.notFound) return false;
+      log.e('remoteFileExists failed', error: typed);
+      throw typed;
     }
   }
 
@@ -358,7 +445,10 @@ class SyncService {
       await cacheDir.create(recursive: true);
     }
     final file = File('${cacheDir.path}/${_cacheFileNameFor(config)}');
-    await file.writeAsBytes(result.bytes, flush: true);
+    // The cache file is also the save target while the database is open from
+    // the cloud, so the replacement must be atomic: a bare writeAsBytes
+    // interrupted mid-write would corrupt the only local copy.
+    await const AtomicFileStore().commit(file.path, result.bytes);
     return (path: file.path, info: result.info);
   }
 

@@ -50,6 +50,19 @@ class RecentFilesService {
   static const _lastOpenedKey = 'last_opened_file';
   final _storage = const SecureStorageHelper();
 
+  /// Serializes read-modify-write cycles across instances. Concurrent
+  /// metadata updates (e.g. an auto-save upload finishing while the user
+  /// locks the database) would otherwise overwrite each other and could drop
+  /// the pendingUpload marker, leaving local and cloud silently diverged.
+  static Future<void> _writeQueue = Future.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final result = _writeQueue.then((_) => action());
+    // Keep the chain alive even when an action fails.
+    _writeQueue = result.then((_) {}, onError: (_) {});
+    return result;
+  }
+
   Future<List<RecentFile>> getRecentFiles() async {
     final data = await _storage.read(key: _key);
     if (data == null) return [];
@@ -72,37 +85,41 @@ class RecentFilesService {
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
     bool pendingUpload = false,
-  }) async {
-    final files = await getRecentFiles();
-    files.removeWhere((f) => f.path == filePath);
-    files.insert(
-      0,
-      RecentFile(
-        path: filePath,
-        isCloud: isCloud,
-        remotePath: remotePath,
-        webDavProfileId: webDavProfileId,
-        lastSyncedETag: lastSyncedETag,
-        lastSyncedMTime: lastSyncedMTime,
-        pendingUpload: pendingUpload,
-      ),
-    );
-    if (files.length > AppConstants.maxRecentFiles) {
-      files.removeRange(AppConstants.maxRecentFiles, files.length);
-    }
-    await _storage.write(
-      key: _key,
-      value: jsonEncode(files.map((f) => f.toJson()).toList()),
-    );
+  }) {
+    return _serialized(() async {
+      final files = await getRecentFiles();
+      files.removeWhere((f) => f.path == filePath);
+      files.insert(
+        0,
+        RecentFile(
+          path: filePath,
+          isCloud: isCloud,
+          remotePath: remotePath,
+          webDavProfileId: webDavProfileId,
+          lastSyncedETag: lastSyncedETag,
+          lastSyncedMTime: lastSyncedMTime,
+          pendingUpload: pendingUpload,
+        ),
+      );
+      if (files.length > AppConstants.maxRecentFiles) {
+        files.removeRange(AppConstants.maxRecentFiles, files.length);
+      }
+      await _storage.write(
+        key: _key,
+        value: jsonEncode(files.map((f) => f.toJson()).toList()),
+      );
+    });
   }
 
-  Future<void> removeRecentFile(String filePath) async {
-    final files = await getRecentFiles();
-    files.removeWhere((f) => f.path == filePath);
-    await _storage.write(
-      key: _key,
-      value: jsonEncode(files.map((f) => f.toJson()).toList()),
-    );
+  Future<void> removeRecentFile(String filePath) {
+    return _serialized(() async {
+      final files = await getRecentFiles();
+      files.removeWhere((f) => f.path == filePath);
+      await _storage.write(
+        key: _key,
+        value: jsonEncode(files.map((f) => f.toJson()).toList()),
+      );
+    });
   }
 
   Future<RecentFile?> getLastOpenedFile() async {
@@ -123,21 +140,23 @@ class RecentFilesService {
     String? lastSyncedETag,
     DateTime? lastSyncedMTime,
     bool pendingUpload = false,
-  }) async {
-    await _storage.write(
-      key: _lastOpenedKey,
-      value: jsonEncode(
-        RecentFile(
-          path: filePath,
-          isCloud: isCloud,
-          remotePath: remotePath,
-          webDavProfileId: webDavProfileId,
-          lastSyncedETag: lastSyncedETag,
-          lastSyncedMTime: lastSyncedMTime,
-          pendingUpload: pendingUpload,
-        ).toJson(),
-      ),
-    );
+  }) {
+    return _serialized(() async {
+      await _storage.write(
+        key: _lastOpenedKey,
+        value: jsonEncode(
+          RecentFile(
+            path: filePath,
+            isCloud: isCloud,
+            remotePath: remotePath,
+            webDavProfileId: webDavProfileId,
+            lastSyncedETag: lastSyncedETag,
+            lastSyncedMTime: lastSyncedMTime,
+            pendingUpload: pendingUpload,
+          ).toJson(),
+        ),
+      );
+    });
   }
 
   Future<void> clearLastOpenedFile() async {

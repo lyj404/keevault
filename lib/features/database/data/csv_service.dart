@@ -128,7 +128,10 @@ class CsvService {
       }
 
       final sb = StringBuffer();
-      if (inQuote && pendingField != null && pendingField.isNotEmpty) {
+      // Join continuation lines with '\n' even when the quoted content so far
+      // is empty (a quote opened at the very end of the previous line);
+      // otherwise the first line break of a multi-line field is lost.
+      if (inQuote && pendingField != null) {
         sb.write(pendingField);
         sb.write('\n');
       }
@@ -172,6 +175,13 @@ class CsvService {
         rows.add(row);
         pendingField = null;
       }
+    }
+
+    // The file ended inside a quoted field: flush what was accumulated so the
+    // final row is not silently dropped.
+    if (inQuote && currentRow != null) {
+      currentRow.add(pendingField ?? '');
+      rows.add(currentRow);
     }
 
     log.i('CSV import: manual parser returned ${rows.length} rows');

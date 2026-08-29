@@ -33,6 +33,12 @@ class PasswordEncryptor {
 
   static final _aesGcm = AesGcm.with256bits();
 
+  /// In-flight key creation, shared across instances. Two concurrent
+  /// first-time encryptions must not each generate a key: the last write to
+  /// secure storage would win and data encrypted with the loser's key could
+  /// never be decrypted again.
+  static Future<Uint8List>? _keyCreation;
+
   final FlutterSecureStorage _storage;
   Uint8List? _cachedKey;
 
@@ -42,19 +48,32 @@ class PasswordEncryptor {
   /// Returns the device-bound encryption key, generating one if needed.
   Future<Uint8List> _getOrCreateKey() async {
     if (_cachedKey != null) return _cachedKey!;
+    final inFlight = _keyCreation;
+    if (inFlight != null) {
+      final key = await inFlight;
+      return _cachedKey ?? key;
+    }
+    final creation = _readOrCreateKey();
+    _keyCreation = creation;
+    try {
+      final key = await creation;
+      _cachedKey = key;
+      return key;
+    } finally {
+      if (identical(_keyCreation, creation)) _keyCreation = null;
+    }
+  }
 
+  Future<Uint8List> _readOrCreateKey() async {
     final existing = await _storage.read(key: _keyStorageName);
     if (existing != null) {
-      _cachedKey = base64Url.decode(existing);
-      return _cachedKey!;
+      return base64Url.decode(existing);
     }
-
     final random = Random.secure();
     final key = Uint8List.fromList(
       List.generate(32, (_) => random.nextInt(256)),
     );
     await _storage.write(key: _keyStorageName, value: base64Url.encode(key));
-    _cachedKey = key;
     return key;
   }
 

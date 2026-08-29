@@ -12,10 +12,12 @@ export '../data/csv_service.dart' show CsvEntry;
 import '../../../core/providers/auto_lock_provider.dart';
 import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/providers/expiration_reminder_provider.dart';
+import '../../explorer/providers/explorer_provider.dart'
+    show activeEntryProvider;
 import '../../settings/data/webdav_config.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../../sync/data/sync_service.dart'
-    show RemoteFileInfo, SyncErrorType, SyncException;
+    show RemoteFileInfo, SyncErrorType, SyncException, normalizeETag;
 import '../../sync/providers/sync_provider.dart';
 
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
@@ -84,9 +86,18 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
             // Welcome screen already verified eTag, reuse it directly
             _service.setLastSyncedRemoteInfo(RemoteFileInfo(eTag: syncedETag));
           } else {
-            final info = await _ref
-                .read(syncServiceProvider)
-                .getRemoteFileInfo(config);
+            RemoteFileInfo? info;
+            try {
+              info = await _ref
+                  .read(syncServiceProvider)
+                  .getRemoteFileInfo(config);
+            } catch (e) {
+              // Unreachable server must not block opening the database.
+              // Leaving the remote info unset makes the first upload use
+              // If-None-Match, which is fail-safe against overwriting a
+              // remote file we never saw.
+              log.w('Remote probe failed while opening database', error: e);
+            }
             _service.setLastSyncedRemoteInfo(info);
             eTag = info?.eTag;
             remoteMTime = info?.mTime;
@@ -156,16 +167,14 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
         _currentWebDavProfileId = config.id;
         remotePath = config.remoteFilePath;
         _ref.read(openedFromCloudProvider.notifier).state = true;
-        // Upload the newly created database to the cloud immediately.
+        // Upload the newly created database to the cloud immediately. The
+        // upload is conditional (If-None-Match: *) so an existing remote
+        // database is never silently overwritten by a fresh local one.
         final syncService = _ref.read(syncServiceProvider);
         try {
           await syncService.ensureRemoteDirectory(config);
           final bytes = await _service.save();
-          final newInfo = await syncService.uploadDatabase(
-            config,
-            bytes,
-            force: true,
-          );
+          final newInfo = await syncService.uploadDatabase(config, bytes);
           _service.setLastSyncedRemoteInfo(newInfo);
           eTag = newInfo.eTag;
           remoteMTime = newInfo.mTime;
@@ -208,9 +217,21 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   /// Returns true on success, false if a conflict was detected (caller should show dialog).
   /// Concurrent callers (auto-save timer, manual save, close, app exit) share
   /// the same in-flight save instead of racing on disk writes and uploads.
+  /// A caller that joins an in-flight save gets one more round automatically
+  /// when mutations landed while that save was serializing, so awaiting
+  /// [save] means the caller's data is actually persisted.
   Future<bool> save() {
     final inFlight = _saveInFlight;
-    if (inFlight != null) return inFlight;
+    if (inFlight != null) {
+      return inFlight.then((success) async {
+        if (!success || !_service.isOpen || !_service.isDirty) return success;
+        return _startSave();
+      });
+    }
+    return _startSave();
+  }
+
+  Future<bool> _startSave() {
     final session = _session;
     late Future<bool> future;
     future = _doSave(session).whenComplete(() {
@@ -256,7 +277,12 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           return true;
         }
         await syncService.ensureRemoteDirectory(config);
-        if (session != _session || !_service.isOpen) return false;
+        if (session != _session || !_service.isOpen) {
+          // Aborted mid-sync (lock/close): never leave the state machine
+          // stuck on "syncing".
+          _ref.read(syncStateProvider.notifier).state = SyncState.error;
+          return false;
+        }
         // Conditional PUT: upload only if the remote revision still matches
         // the last known one (If-Match) or is new (If-None-Match). This atomically
         // detects a conflict in a single round trip, avoiding a separate
@@ -268,6 +294,14 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
           bytes,
           expected: lastInfo,
         );
+        if (session != _session) {
+          // The database was locked/closed while this upload was in flight.
+          // Record the revision (the service is still open at this point) and
+          // let the lock/close path persist recent-file metadata, so the two
+          // writers cannot race on the pendingUpload marker.
+          _service.setLastSyncedRemoteInfo(newInfo);
+          return true;
+        }
         _service.setLastSyncedRemoteInfo(newInfo);
         // Persist the eTag so next startup can skip redundant download
         if (newInfo.eTag != null && _service.filePath != null) {
@@ -301,7 +335,14 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
       } catch (e) {
         log.e('Sync failed', error: e);
         if (e is SyncException && e.type == SyncErrorType.conflict) {
-          _lastSyncAuditReport = await inspectCloudDiff();
+          try {
+            _lastSyncAuditReport = await inspectCloudDiff();
+          } catch (diffError) {
+            // Fetching the diff is best-effort; a failure here must not
+            // escape and leave the sync state machine stuck on "syncing".
+            log.e('Failed to inspect cloud diff after conflict',
+                error: diffError);
+          }
           _ref.read(syncStateProvider.notifier).state = SyncState.conflict;
         } else {
           _ref.read(syncStateProvider.notifier).state = SyncState.error;
@@ -324,9 +365,24 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     if (config == null || !config.enabled) return;
     _ref.read(syncStateProvider.notifier).state = SyncState.syncing;
     try {
-      // Persist to disk (and optional auto-backup) before upload so a crash
-      // after overwrite cannot leave local cache behind cloud.
-      final bytes = savedBytes ?? await _service.save();
+      final Uint8List bytes;
+      if (savedBytes != null) {
+        bytes = savedBytes;
+      } else {
+        // Wait out any in-flight save (including chained follow-up rounds)
+        // so its upload cannot race the forced one.
+        while (_saveInFlight != null) {
+          final inFlight = _saveInFlight!;
+          await inFlight.catchError((_) => false);
+        }
+        if (!_service.isOpen) {
+          _ref.read(syncStateProvider.notifier).state = SyncState.error;
+          return;
+        }
+        // Persist to disk (and optional auto-backup) before upload so a crash
+        // after overwrite cannot leave local cache behind cloud.
+        bytes = await _service.save();
+      }
       final syncService = _ref.read(syncServiceProvider);
       await syncService.ensureRemoteDirectory(config);
       final newInfo = await syncService.uploadDatabase(
@@ -386,13 +442,20 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   }
 
   Future<void> close() async {
-    if (_service.isOpen && _service.isDirty) {
+    if (_service.isOpen) {
       try {
-        final success = await save();
-        if (!success) {
-          log.w(
-            'Database saved locally before close, but cloud sync reported a conflict.',
-          );
+        // A save that was already in flight may have serialized before the
+        // latest edit (the mutationCount mechanism keeps the dirty flag set in
+        // that case). Keep saving until the dirty flag clears so closing never
+        // discards mutations that landed mid-serialization.
+        for (var attempt = 0; attempt < 3 && _service.isDirty; attempt++) {
+          final success = await save();
+          if (!success) {
+            log.w(
+              'Database saved locally before close, but cloud sync reported a conflict.',
+            );
+            break;
+          }
         }
       } catch (e, st) {
         log.e('Failed to save database before close', error: e, stackTrace: st);
@@ -406,11 +469,9 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
   Future<void> lock() async {
     if (!_service.isOpen) return;
     final lockSession = ++_session;
-    final wasDirty = _service.isDirty;
     final path = _service.filePath;
     final isCloud = _ref.read(openedFromCloudProvider);
     final profileId = _currentWebDavProfileId;
-    final lastInfo = _service.lastSyncedRemoteInfo;
 
     // Publish the locked state before the first await. Protected pages can no
     // longer read the database while local persistence finishes.
@@ -418,6 +479,22 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _ref.read(isDirtyProvider.notifier).state = false;
     _ref.read(autoLockProvider.notifier).cancelTimer();
     _ref.read(autoSaveProvider.notifier).cancelTimer();
+    // An in-flight sync cannot complete once the database is locked.
+    _ref.read(syncStateProvider.notifier).state = SyncState.idle;
+
+    // Wait out any in-flight save (including chained follow-up rounds that
+    // re-register _saveInFlight) so its upload completes before we snapshot
+    // bytes and revision metadata; otherwise the two uploads would race on
+    // the remote file and on the recent-file pendingUpload marker.
+    while (_saveInFlight != null) {
+      final inFlight = _saveInFlight!;
+      await inFlight.catchError((_) => false);
+      if (lockSession != _session) return;
+    }
+    // Re-read after joining: the joined save may have uploaded and refreshed
+    // the remote revision, so an upload started here must match against it.
+    final lastInfo = _service.lastSyncedRemoteInfo;
+    final wasDirty = _service.isDirty;
 
     Uint8List bytes = Uint8List(0);
     Object? localSaveError;
@@ -576,7 +653,11 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
     _service.close();
     state = const AsyncValue.data(null);
     _currentWebDavProfileId = null;
+    // Dropping the reference stops copy shortcuts from reading fields of a
+    // closed (locked) database.
+    _ref.read(activeEntryProvider.notifier).state = null;
     _ref.read(openedFromCloudProvider.notifier).state = false;
+    _ref.read(syncStateProvider.notifier).state = SyncState.idle;
     if (clearLastOpened) {
       unawaited(_ref.read(recentFilesServiceProvider).clearLastOpenedFile());
     }
@@ -662,8 +743,10 @@ class DatabaseNotifier extends StateNotifier<AsyncValue<KdbxDatabase?>> {
 
   bool _hasRemoteChanged(RemoteFileInfo? remoteInfo, RemoteFileInfo? lastInfo) {
     if (remoteInfo == null || lastInfo == null) return false;
+    // normalizeETag also makes records stored before weak-ETag normalization
+    // compare equal to their normalized remote counterparts.
     if (remoteInfo.eTag != null && lastInfo.eTag != null) {
-      return remoteInfo.eTag != lastInfo.eTag;
+      return normalizeETag(remoteInfo.eTag) != normalizeETag(lastInfo.eTag);
     }
     if (remoteInfo.mTime != null && lastInfo.mTime != null) {
       return remoteInfo.mTime != lastInfo.mTime;

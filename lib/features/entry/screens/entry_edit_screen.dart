@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kpasslib/kpasslib.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/auto_lock_provider.dart';
+import '../../../core/providers/auto_save_provider.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/widgets/attachments_section.dart';
 import '../../../core/widgets/password_text_field.dart';
@@ -81,6 +84,48 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     if (!_loaded) {
       _loaded = true;
       _loadEntry();
+      // Attach activity listeners only after the initial values are loaded so
+      // programmatic field population is not treated as a user edit.
+      _titleCtrl.addListener(_onFormChanged);
+      _usernameCtrl.addListener(_onFormChanged);
+      _passwordCtrl.addListener(_onFormChanged);
+      _urlCtrl.addListener(_onFormChanged);
+      _notesCtrl.addListener(_onFormChanged);
+    }
+  }
+
+  /// Any edit on this screen counts as user activity: reset the auto-lock and
+  /// auto-save timers so typing (which produces no pointer/key events at the
+  /// root listener on mobile) cannot trigger a mid-edit lock, and remember
+  /// there are unsaved changes for the back-navigation guard.
+  void _onFormChanged() {
+    _hasChanges = true;
+    ref.read(autoLockProvider.notifier).resetTimer();
+    ref.read(autoSaveProvider.notifier).resetTimer();
+  }
+
+  Future<void> _confirmDiscardChanges() async {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.discardChangesTitle),
+        content: Text(l10n.discardChangesBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.keepEditing),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.discardAndLeave),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) {
+      context.pop();
     }
   }
 
@@ -125,16 +170,20 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
   void _loadCustomFields(KdbxEntry entry) {
     for (final e in entry.fields.entries) {
       if (AppConstants.standardKeys.contains(e.key)) continue;
-      _customFields.add(_CustomFieldData(
+      final field = _CustomFieldData(
         originalKey: e.key,
         name: e.key,
         value: e.value.text,
         protected: e.value is ProtectedTextField,
-      ));
+      );
+      field.nameCtrl.addListener(_onFormChanged);
+      field.valueCtrl.addListener(_onFormChanged);
+      _customFields.add(field);
     }
   }
 
   bool _saved = false;
+  bool _hasChanges = false;
 
   @override
   void dispose() {
@@ -164,7 +213,13 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_confirmDiscardChanges());
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(_isEdit ? l10n.editEntry : l10n.newEntry),
         actions: [
@@ -279,12 +334,15 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                     ),
                     Switch(
                       value: _expires,
-                      onChanged: (v) => setState(() {
-                        _expires = v;
-                        if (v && _expiryDate == null) {
-                          _expiryDate = DateTime.now().add(const Duration(days: 30));
-                        }
-                      }),
+                      onChanged: (v) {
+                        setState(() {
+                          _expires = v;
+                          if (v && _expiryDate == null) {
+                            _expiryDate = DateTime.now().add(const Duration(days: 30));
+                          }
+                        });
+                        _onFormChanged();
+                      },
                     ),
                   ],
                 ),
@@ -299,7 +357,10 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                         firstDate: DateTime(2000),
                         lastDate: DateTime(2100),
                       );
-                      if (picked != null) setState(() => _expiryDate = picked);
+                      if (picked != null) {
+                        setState(() => _expiryDate = picked);
+                        _onFormChanged();
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -318,7 +379,10 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                           if (_expiryDate != null)
                             IconButton(
                               icon: Icon(Icons.clear_rounded, size: 18, color: colorScheme.onSurfaceVariant),
-                              onPressed: () => setState(() => _expiryDate = null),
+                              onPressed: () {
+                                setState(() => _expiryDate = null);
+                                _onFormChanged();
+                              },
                             ),
                         ],
                       ),
@@ -347,10 +411,12 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               const SizedBox(height: 4),
               _AttachmentsSectionWrapper(
                 entry: _entry!,
+                onFormActivity: _onFormChanged,
               ),
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -381,7 +447,10 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 Chip(
                   label: Text(_tags[i], style: TextStyle(fontSize: 13)),
                   visualDensity: VisualDensity.compact,
-                  onDeleted: () => setState(() => _tags.removeAt(i)),
+                  onDeleted: () {
+                    setState(() => _tags.removeAt(i));
+                    _onFormChanged();
+                  },
                   deleteIconColor: colorScheme.onSurfaceVariant,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -425,7 +494,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                 onSubmitted: (_) {
                   final tag = ctrl.text.trim();
                   if (tag.isNotEmpty && !_tags.contains(tag)) {
-                    setState(() => _tags.add(tag));
+                    setState(() => _tags.add(tag)); _onFormChanged();
                   }
                   Navigator.pop(ctx);
                 },
@@ -442,7 +511,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         onPressed: () {
-                          setState(() => _tags.add(tag));
+                          setState(() => _tags.add(tag)); _onFormChanged();
                           Navigator.pop(ctx);
                         },
                       ),
@@ -457,7 +526,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               onPressed: () {
                 final tag = ctrl.text.trim();
                 if (tag.isNotEmpty && !_tags.contains(tag)) {
-                  setState(() => _tags.add(tag));
+                  setState(() => _tags.add(tag)); _onFormChanged();
                 }
                 Navigator.pop(ctx);
               },
@@ -505,7 +574,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                       ],
                     ),
                   );
-                  if (confirmed == true) setState(() => _totpConfig = null);
+                  if (confirmed == true) setState(() => _totpConfig = null); _onFormChanged();
                 },
               ),
           ],
@@ -539,7 +608,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
                       initial: _totpConfig,
                       initialTitle: _titleCtrl.text,
                     );
-                    if (result != null) setState(() => _totpConfig = result.config);
+                    if (result != null) setState(() => _totpConfig = result.config); _onFormChanged();
                   },
                   child: Text(l10n.edit),
                 ),
@@ -554,7 +623,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
               child: TextButton.icon(
                 onPressed: () async {
                   final result = await showTotpEditSheet(context);
-                  if (result != null) setState(() => _totpConfig = result.config);
+                  if (result != null) setState(() => _totpConfig = result.config); _onFormChanged();
                 },
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text(l10n.setupTotp),
@@ -676,6 +745,8 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
 
   void _addCustomField() {
     final field = _CustomFieldData(originalKey: '', name: '', value: '');
+    field.nameCtrl.addListener(_onFormChanged);
+    field.valueCtrl.addListener(_onFormChanged);
     setState(() => _customFields.add(field));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       field.nameFocus.requestFocus();
@@ -709,22 +780,15 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
       _customFields.remove(field);
       field.dispose();
     });
+    _onFormChanged();
   }
 
   void _save() {
     final service = ref.read(databaseServiceProvider);
-    // Create entry on demand for new entries (deferred from _loadEntry, Bug #2 fix).
-    if (!_isEdit && _entry == null) {
-      if (_targetGroup == null) return;
-      _wasDirtyBeforeCreate = service.isDirty;
-      _entry = service.createEntry(_targetGroup!);
-    }
-    final entry = _entry;
-    if (entry == null) return;
-
     final l10n = AppLocalizations.of(context)!;
 
-    // Validate custom field names
+    // Validate custom field names BEFORE creating a new entry so a failed
+    // save never leaves a blank draft entry behind for auto-save to persist.
     final names = <String>{};
     for (final f in _customFields) {
       final name = f.nameCtrl.text.trim();
@@ -740,6 +804,30 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
         showToast(context, l10n.fieldNameDuplicate(name), isError: true);
         return;
       }
+    }
+
+    // Create entry on demand for new entries (deferred from _loadEntry, Bug #2 fix).
+    if (!_isEdit && _entry == null) {
+      if (_targetGroup == null) return;
+      _wasDirtyBeforeCreate = service.isDirty;
+      _entry = service.createEntry(_targetGroup!);
+    }
+    var entry = _entry;
+    if (entry == null) return;
+
+    if (_isEdit) {
+      // The database instance can be replaced underneath this screen (e.g.
+      // reloadFromCloud after a remote change). Resolve the live entry by
+      // UUID so edits land in the database that is actually open instead of
+      // an orphaned object from a replaced instance.
+      final live = service.findEntryByUuid(entry.uuid);
+      if (live == null) {
+        if (!mounted) return;
+        showToast(context, l10n.entryNoLongerExists, isError: true);
+        return;
+      }
+      entry = live;
+      _entry = live;
     }
 
     if (_isEdit) {
@@ -793,6 +881,7 @@ class _EntryEditScreenState extends ConsumerState<EntryEditScreen> {
     }
 
     _saved = true;
+    _hasChanges = false;
     service.markDirty();
     refreshExplorerLists(ref);
     if (mounted) context.pop();
@@ -813,8 +902,12 @@ class _SectionCard extends StatelessWidget {
 
 class _AttachmentsSectionWrapper extends ConsumerStatefulWidget {
   final KdbxEntry entry;
+  final VoidCallback onFormActivity;
 
-  const _AttachmentsSectionWrapper({required this.entry});
+  const _AttachmentsSectionWrapper({
+    required this.entry,
+    required this.onFormActivity,
+  });
 
   @override
   ConsumerState<_AttachmentsSectionWrapper> createState() => _AttachmentsSectionWrapperState();
@@ -827,7 +920,10 @@ class _AttachmentsSectionWrapperState extends ConsumerState<_AttachmentsSectionW
     return AttachmentsSection(
       entry: widget.entry,
       service: service,
-      onChanged: () => setState(() {}),
+      onChanged: () {
+        setState(() {});
+        widget.onFormActivity();
+      },
     );
   }
 }

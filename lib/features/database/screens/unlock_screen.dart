@@ -45,7 +45,15 @@ class _UnlockScreenState extends ConsumerState<UnlockScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(databaseProvider.notifier).preloadFile(widget.filePath);
+    // Fire-and-forget preload: a missing/unreadable file must not surface as
+    // an unhandled async exception here — openFile reports it properly.
+    unawaited(
+      ref.read(databaseProvider.notifier).preloadFile(widget.filePath).catchError(
+        (Object e) {
+          debugPrint('Preload failed for ${widget.filePath}: $e');
+        },
+      ),
+    );
   }
 
   @override

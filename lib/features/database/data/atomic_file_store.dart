@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import '../../../core/utils/logger.dart';
 
 /// Durable, recoverable file replacement used for sensitive database files.
 ///
@@ -24,7 +25,11 @@ class AtomicFileStore {
     final token = '${DateTime.now().microsecondsSinceEpoch}_$pid';
     final temp = File('${target.path}.keevault.$token.tmp');
     final rollback = File('${target.path}.keevault.$token.rollback');
-    final manifest = File('${target.path}.keevault.transaction.json');
+    // The manifest carries the commit token so concurrent commits to the same
+    // target each keep their own transaction state instead of corrupting a
+    // single shared manifest (which previously mixed stage/sha256 data from
+    // both writers and could recover the wrong version after a crash).
+    final manifest = File('${target.path}.keevault.$token.transaction.json');
     final hash = validationHash ?? await _sha256(bytes);
 
     final data = <String, dynamic>{
@@ -62,8 +67,17 @@ class AtomicFileStore {
       // supplied by the caller before invoking commit or immediately after it.
       data['stage'] = 'committed';
       await manifest.writeAsString(jsonEncode(data), flush: true);
-      if (await rollback.exists()) await rollback.delete();
-      if (await manifest.exists()) await manifest.delete();
+      // The new file is already installed at this point, so cleanup is
+      // best-effort: deleting the rollback can fail on Windows when an AV or
+      // sync client holds a handle, and rethrowing would misreport a
+      // successful save as a failure. Leftover artifacts are finished by the
+      // recovery pass on the next open.
+      try {
+        if (await rollback.exists()) await rollback.delete();
+        if (await manifest.exists()) await manifest.delete();
+      } catch (e) {
+        log.w('AtomicFileStore post-commit cleanup failed', error: e);
+      }
       return AtomicCommitResult(
         path: target.path,
         bytesWritten: bytes.length,
@@ -75,24 +89,63 @@ class AtomicFileStore {
         await rollback.rename(target.path);
       }
       rethrow;
-    } finally {
-      if (await temp.exists()) {
-        // A failed transaction deliberately leaves the temp file available for
-        // recovery; successful transactions have already renamed it.
-      }
     }
   }
 
   Future<AtomicTransaction?> readPending(String targetPath) async {
-    final manifest = File('$targetPath.keevault.transaction.json');
-    if (!await manifest.exists()) return null;
+    final manifest = await _findManifest(targetPath);
+    if (manifest == null) return null;
     try {
       final value = jsonDecode(await manifest.readAsString());
       if (value is! Map) return null;
-      return AtomicTransaction.fromJson(Map<String, dynamic>.from(value));
+      final transaction = AtomicTransaction.fromJson(
+        Map<String, dynamic>.from(value),
+      );
+      if (!_samePath(transaction.target, targetPath)) return null;
+      return transaction;
     } catch (_) {
       return null;
     }
+  }
+
+  /// Finds the manifest for [targetPath] across concurrent commits by picking
+  /// the newest `*.keevault.<token>.transaction.json` in the target directory.
+  /// Also matches the legacy fixed-name manifest written by older versions.
+  Future<File?> _findManifest(String targetPath) async {
+    final directory = File(targetPath).parent;
+    final base = _baseName(targetPath);
+    final List<FileSystemEntity> entries;
+    try {
+      entries = await directory.list().toList();
+    } catch (_) {
+      return null;
+    }
+    File? newest;
+    for (final entry in entries) {
+      if (entry is! File) continue;
+      final name = _baseName(entry.path);
+      final isTokenized =
+          name.startsWith('$base.keevault.') &&
+          name.endsWith('.transaction.json');
+      final isLegacy = name == '$base.keevault.transaction.json';
+      if (!isTokenized && !isLegacy) continue;
+      if (newest == null ||
+          entry.path.compareTo(newest.path) > 0) {
+        newest = entry;
+      }
+    }
+    return newest;
+  }
+
+  /// Compares two paths, tolerating Windows vs forward separators.
+  bool _samePath(String a, String b) =>
+      a.replaceAll('\\', '/') == b.replaceAll('\\', '/');
+
+  String _baseName(String path) {
+    final slash = path.lastIndexOf('/');
+    final backslash = path.lastIndexOf('\\');
+    final index = slash > backslash ? slash : backslash;
+    return index < 0 ? path : path.substring(index + 1);
   }
 
   Future<List<AtomicRecoveryCandidate>> candidates(String targetPath) async {
@@ -121,8 +174,8 @@ class AtomicFileStore {
       final file = File(path);
       if (await file.exists()) await file.delete();
     }
-    final manifest = File('$targetPath.keevault.transaction.json');
-    if (await manifest.exists()) await manifest.delete();
+    final manifest = await _findManifest(targetPath);
+    if (manifest != null && await manifest.exists()) await manifest.delete();
   }
 
   Future<String> _sha256(Uint8List bytes) async {

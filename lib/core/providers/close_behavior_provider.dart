@@ -20,10 +20,15 @@ final closeBehaviorProvider = StateNotifierProvider<CloseBehaviorNotifier, Close
 class CloseBehaviorNotifier extends StateNotifier<CloseBehavior> {
   static const _storage = SecureStorageHelper();
   static const _key = 'close_behavior';
+  Future<void>? _loading;
 
   CloseBehaviorNotifier() : super(CloseBehavior.ask) {
-    _load();
+    _loading = _load();
   }
+
+  /// Awaits the initial load so window-close handling never acts on the
+  /// default value before the persisted preference has been read.
+  Future<void> ensureLoaded() => _loading ?? Future.value();
 
   Future<void> _load() async {
     final value = await _storage.read(key: _key);

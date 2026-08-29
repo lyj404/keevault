@@ -10,7 +10,9 @@ crate-type = ["cdylib", "staticlib"]
 opt-level = 3
 lto = true
 codegen-units = 1
-panic = "abort"
+# catch_unwind in the FFI boundary (see run_guarded in lib.rs) can only
+# contain a panic when the unwind strategy is used; `abort` would defeat it.
+panic = "unwind"
 strip = "symbols"
 debug = false
 
