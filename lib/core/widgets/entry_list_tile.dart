@@ -311,13 +311,7 @@ class _EntryListTileState extends State<EntryListTile> {
                       alpha: brightness == Brightness.dark ? 0.55 : 0.35,
                     ),
                   )
-                : _hovered
-                ? Border.all(color: colorScheme.outline.withValues(alpha: 0.35))
-                : Border.all(
-                    color: colorScheme.outline.withValues(
-                      alpha: brightness == Brightness.dark ? 0.28 : 0.20,
-                    ),
-                  ),
+                : Border.all(color: colorScheme.outline),
           ),
           child: Material(
             color: Colors.transparent,

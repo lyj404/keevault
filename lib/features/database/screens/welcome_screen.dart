@@ -902,9 +902,9 @@ class _RecentFileTile extends StatelessWidget {
         decoration: ClayDecoration.card(brightness: brightness),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
             onTap: onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -923,7 +923,7 @@ class _RecentFileTile extends StatelessWidget {
                           : Icons.description_rounded,
                       size: 18,
                       color: recentFile.isCloud
-                          ? Colors.teal
+                          ? colorScheme.secondary
                           : colorScheme.primary,
                     ),
                   ),

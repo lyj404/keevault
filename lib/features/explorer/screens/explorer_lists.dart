@@ -670,9 +670,9 @@ class _TotpListTileState extends State<_TotpListTile> {
         color: isDark
             ? ClayColors.surfaceCardDark
             : ClayColors.surfaceCardLight,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           onTap: widget.onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1064,9 +1064,9 @@ class _ToolTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

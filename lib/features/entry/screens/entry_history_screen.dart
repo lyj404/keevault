@@ -372,9 +372,9 @@ class _HistoryTile extends StatelessWidget {
         decoration: ClayDecoration.card(brightness: brightness),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
             onTap: onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

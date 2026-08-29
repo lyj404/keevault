@@ -151,7 +151,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
       ScaffoldMessenger.of(navCtx).showSnackBar(
         SnackBar(
           content: Text(message, style: const TextStyle(color: Colors.white)),
-          backgroundColor: const Color(0xFF0D9488),
+          backgroundColor: ClayColors.primary,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
           shape: RoundedRectangleBorder(
@@ -180,7 +180,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
     final Color background;
     if (success) {
       message = l10n?.saved ?? 'Saved';
-      background = const Color(0xFF0D9488);
+      background = ClayColors.primary;
     } else {
       final syncState = ref.read(syncStateProvider);
       if (syncState == SyncState.conflict) {
@@ -190,7 +190,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
       } else {
         message = l10n?.saveFailed ?? 'Save failed';
       }
-      background = Colors.red;
+      background = ClayColors.error;
     }
     ScaffoldMessenger.of(navCtx).showSnackBar(
       SnackBar(
@@ -259,7 +259,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: const ColoredBox(
-                  color: Color(0xFF111827),
+                  color: ClayColors.surfaceDark,
                   child: Center(
                     child: Icon(
                       Icons.lock_rounded,

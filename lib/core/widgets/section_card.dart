@@ -23,18 +23,22 @@ class SectionCard extends StatelessWidget {
         ? ClayColors.surfaceCardDark
         : ClayColors.surfaceCardLight;
 
-    // Material owns the fill color so ListTile / SwitchListTile ink paints
-    // on this ancestor (avoids "ink splashes may be invisible" assert).
+    // Material owns the fill color and hairline border so ListTile /
+    // SwitchListTile ink paints on this ancestor (avoids "ink splashes may
+    // be invisible" assert).
     return RepaintBoundary(
       child: Container(
         margin: margin ?? const EdgeInsets.only(bottom: ClayLayout.space12),
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          boxShadow: ClayDecoration.outerShadow(brightness),
-        ),
         child: Material(
           color: color,
-          borderRadius: radius,
+          shape: RoundedRectangleBorder(
+            borderRadius: radius,
+            side: BorderSide(
+              color: brightness == Brightness.dark
+                  ? ClayColors.outlineDark
+                  : ClayColors.outlineLight,
+            ),
+          ),
           clipBehavior: Clip.antiAlias,
           child: Padding(
             padding: padding ??

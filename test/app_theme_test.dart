@@ -56,7 +56,7 @@ void main() {
       final tt = theme.textTheme;
 
       expect(tt.titleMedium?.fontSize, 15);
-      expect(tt.titleMedium?.fontWeight, FontWeight.w700);
+      expect(tt.titleMedium?.fontWeight, FontWeight.w600);
       expect(tt.bodyMedium?.fontSize, 14);
       expect(tt.bodySmall?.fontSize, 12);
       expect(tt.labelSmall?.fontSize, 11);
@@ -114,7 +114,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       final theme = AppTheme.light(locale: const Locale('en'));
       expect(theme.listTileTheme.titleTextStyle?.fontSize, 15);
-      expect(theme.listTileTheme.titleTextStyle?.fontWeight, FontWeight.w700);
+      expect(theme.listTileTheme.titleTextStyle?.fontWeight, FontWeight.w600);
       expect(theme.listTileTheme.subtitleTextStyle?.fontSize, 12);
     });
   });

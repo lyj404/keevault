@@ -930,7 +930,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
                               ),
                             ),
                           ),

@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../theme/app_theme.dart';
+
 /// Shows a toast notification that slides in from the right side.
 /// [isError] controls the color: green for success, red for error.
 void showToast(BuildContext context, String message, {bool isError = false, Duration duration = const Duration(seconds: 2)}) {
@@ -9,9 +11,7 @@ void showToast(BuildContext context, String message, {bool isError = false, Dura
   final animation = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
       .animate(CurvedAnimation(parent: controller, curve: Curves.easeOutCubic));
 
-  final bgColor = isError
-      ? const Color(0xFFEF4444)
-      : const Color(0xFF0D9488);
+  final bgColor = isError ? ClayColors.error : ClayColors.primary;
 
   entry = OverlayEntry(
     builder: (_) => Align(

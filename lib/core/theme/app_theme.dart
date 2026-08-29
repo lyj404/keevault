@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Soft Clay layout tokens (spacing, radius, density).
+/// Minimal Neutral layout tokens (spacing, radius, density).
 ///
 /// Visual language (do not invent per-screen values):
 /// - Radius: sm chips/tools · md icons · lg buttons/inputs/list · xl dialogs/cards
-/// - Elevation: page bg < container < card; one soft shadow layer on raised surfaces
-/// - Lists: light border + listShadow (never full card outerShadow per row)
+/// - Elevation: surfaces are flat; separation comes from 1px hairline borders
+///   and surface-container steps. Shadows are reserved for floating overlays
+///   (dialogs, menus, sheets) only.
 /// - Motion: [motionFast]–[motionNormal]; respect MediaQuery.disableAnimations
 class ClayLayout {
   static const double space4 = 4;
@@ -17,16 +18,16 @@ class ClayLayout {
   static const double space24 = 24;
 
   /// Chips, tool icons, dense controls.
-  static const double radiusSm = 10;
+  static const double radiusSm = 8;
 
   /// Icon containers, tree rows, small surfaces.
-  static const double radiusMd = 12;
+  static const double radiusMd = 10;
 
   /// Buttons, text fields, list tiles, section cards.
-  static const double radiusLg = 16;
+  static const double radiusLg = 12;
 
   /// Dialogs, sheets, hero / empty-state panels.
-  static const double radiusXl = 20;
+  static const double radiusXl = 16;
 
   static const Duration motionFast = Duration(milliseconds: 160);
   static const Duration motionNormal = Duration(milliseconds: 220);
@@ -54,180 +55,140 @@ class ClayLayout {
   }
 }
 
-/// Soft Clay color system for KeeVault.
-/// Teal green brand (logo); surfaces and text optimized for light + dark.
+/// Minimal Neutral color system for KeeVault.
+///
+/// Zinc gray scale + a single indigo accent (Linear-style):
+/// - Surfaces step via zinc 50/100/200 (light) and 950/900/850/800 (dark).
+/// - Separation is done with [outlineLight]/[outlineDark] hairline borders,
+///   never shadows.
+/// - Class name kept as `ClayColors` for call-site compatibility.
 class ClayColors {
-  // Primary palette – teal green
-  static const primary = Color(0xFF0D9488);
-  static const primaryLight = Color(0xFF2DD4BF);
-  static const primaryDark = Color(0xFF0F766E);
-  static const primaryMuted = Color(0xFF5EEAD4);
+  // Primary palette – indigo
+  static const primary = Color(0xFF4F46E5);
+  static const primaryLight = Color(0xFF818CF8);
+  static const primaryDark = Color(0xFF4338CA);
+  static const primaryMuted = Color(0xFFA5B4FC);
 
-  // Secondary – emerald accent
-  static const secondary = Color(0xFF10B981);
-  static const secondaryLight = Color(0xFF34D399);
-  static const secondaryMuted = Color(0xFF6EE7B7);
+  // Secondary – sky (informational accent)
+  static const secondary = Color(0xFF0EA5E9);
+  static const secondaryLight = Color(0xFF38BDF8);
+  static const secondaryMuted = Color(0xFF7DD3FC);
 
-  // Tertiary – amber warm accent
+  // Tertiary – amber warm accent (warnings)
   static const tertiary = Color(0xFFF59E0B);
   static const tertiaryLight = Color(0xFFFBBF24);
 
-  // Surfaces – warm cream tones (light)
-  static const surfaceLight = Color(0xFFF5F9F8);
+  // Surfaces (light) – zinc steps: bg < container < card
+  static const surfaceLight = Color(0xFFFAFAFA);
   static const surfaceCardLight = Color(0xFFFFFFFF);
-  static const surfaceContainerLight = Color(0xFFECF5F3);
+  static const surfaceContainerLight = Color(0xFFF4F4F5);
 
-  // Dark surfaces – clearer elevation steps (bg < container < card)
-  static const surfaceDark = Color(0xFF0C1413);
-  static const surfaceCardDark = Color(0xFF1C2E2B);
-  static const surfaceContainerDark = Color(0xFF152422);
+  // Dark surfaces – zinc steps (bg < container < card)
+  static const surfaceDark = Color(0xFF09090B);
+  static const surfaceCardDark = Color(0xFF18181B);
+  static const surfaceContainerDark = Color(0xFF1F1F23);
 
   // Text (light mode)
-  static const onSurfaceLight = Color(0xFF1A2B29);
-  static const onSurfaceVariantLight = Color(0xFF5F7370);
-  static const outlineLight = Color(0xFF8FA5A2);
+  static const onSurfaceLight = Color(0xFF18181B);
+  static const onSurfaceVariantLight = Color(0xFF71717A);
+  static const outlineLight = Color(0xFFE4E4E7);
 
-  // Text (dark mode) – higher contrast on dark teal surfaces
-  static const onSurfaceDark = Color(0xFFF0FAF8);
-  static const onSurfaceVariantDark = Color(0xFFB7CBC7);
-  static const outlineDark = Color(0xFF7F9692);
+  // Text (dark mode) – hairline borders use zinc-700
+  static const onSurfaceDark = Color(0xFFFAFAFA);
+  static const onSurfaceVariantDark = Color(0xFFA1A1AA);
+  static const outlineDark = Color(0xFF3F3F46);
 
   // Dark interactive fills (avoid light primary + white text)
-  static const onPrimaryDark = Color(0xFF042F2E);
-  static const primaryContainerDark = Color(0xFF134E4A);
-  static const onPrimaryContainerDark = Color(0xFF99F6E4);
-  static const secondaryContainerDark = Color(0xFF065F46);
-  static const onSecondaryContainerDark = Color(0xFFA7F3D0);
+  static const onPrimaryDark = Color(0xFF1E1B4B);
+  static const primaryContainerDark = Color(0xFF312E81);
+  static const onPrimaryContainerDark = Color(0xFFC7D2FE);
+  static const secondaryContainerDark = Color(0xFF0C4A6E);
+  static const onSecondaryContainerDark = Color(0xFFBAE6FD);
 
   // Error
-  static const error = Color(0xFFEF4444);
+  static const error = Color(0xFFDC2626);
   static const errorLight = Color(0xFFFEE2E2);
-  static const errorDark = Color(0xFFDC2626);
-  static const errorOnDark = Color(0xFFFCA5A5);
-  static const errorContainerDark = Color(0xFF5C1A1A);
+  static const errorDark = Color(0xFF991B1B);
+  static const errorOnDark = Color(0xFFF87171);
+  static const errorContainerDark = Color(0xFF7F1D1D);
   static const onErrorContainerDark = Color(0xFFFECACA);
 }
 
-/// Soft Clay decorations — prefer these over ad-hoc BoxDecoration.
+/// Minimal Neutral decorations — prefer these over ad-hoc BoxDecoration.
 class ClayDecoration {
   // Cached decorations to avoid per-build allocations.
   static final _cardCache = <(Brightness, double), BoxDecoration>{};
   static final _iconContainerCache = <(Brightness, double), BoxDecoration>{};
 
-  /// Raised surface shadow (section cards, panels). Soft, low color bloom.
+  /// Floating-overlay shadow (dialogs, menus, sheets only).
+  /// Regular surfaces must not use shadows — use hairline borders instead.
   static List<BoxShadow> outerShadow(Brightness brightness) {
     if (brightness == Brightness.dark) {
       return [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.28),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.12),
-          blurRadius: 3,
-          offset: const Offset(0, 1),
+          color: Colors.black.withValues(alpha: 0.40),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
         ),
       ];
     }
     return [
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.06),
-        blurRadius: 12,
-        offset: const Offset(0, 4),
-      ),
-      BoxShadow(
-        color: ClayColors.primaryMuted.withValues(alpha: 0.10),
-        blurRadius: 8,
-        offset: const Offset(0, 3),
+        color: Colors.black.withValues(alpha: 0.08),
+        blurRadius: 16,
+        offset: const Offset(0, 6),
       ),
     ];
   }
 
-  static final _listShadowLight = [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.04),
-      blurRadius: 5,
-      offset: const Offset(0, 2),
-    ),
-  ];
-  static final _listShadowDark = [
-    BoxShadow(
-      color: Colors.black.withValues(alpha: 0.16),
-      blurRadius: 5,
-      offset: const Offset(0, 2),
-    ),
-  ];
+  static const List<BoxShadow> _noShadow = [];
 
-  /// List-row elevation — single layer only (avoid stacking full card shadows).
-  static List<BoxShadow> listShadow(Brightness brightness) {
-    return brightness == Brightness.dark ? _listShadowDark : _listShadowLight;
-  }
+  /// List rows are flat — separation comes from their own hairline border.
+  static List<BoxShadow> listShadow(Brightness brightness) => _noShadow;
 
-  /// Sidebar edge shadow (wide layout).
+  /// Sidebar edge: a crisp 1px vertical hairline drawn as a zero-blur shadow,
+  /// so existing call sites keep working without layout changes.
   static List<BoxShadow> sidebarShadow(Brightness brightness) {
-    if (brightness == Brightness.dark) {
-      return [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.18),
-          blurRadius: 10,
-          offset: const Offset(2, 0),
-        ),
-      ];
-    }
     return [
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.05),
-        blurRadius: 10,
-        offset: const Offset(2, 0),
+        color: brightness == Brightness.dark
+            ? ClayColors.outlineDark
+            : ClayColors.outlineLight,
+        blurRadius: 0,
+        offset: const Offset(1, 0),
       ),
     ];
   }
 
-  /// Inset / recessed field feel (inputs).
-  static List<BoxShadow> innerShadow(Brightness brightness) {
-    if (brightness == Brightness.dark) {
-      return [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.32),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
-      ];
-    }
-    return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.04),
-        blurRadius: 3,
-        offset: const Offset(0, 1),
-      ),
-    ];
-  }
+  /// Flat inputs — no inset shadow.
+  static List<BoxShadow> innerShadow(Brightness brightness) => _noShadow;
 
-  /// Section / panel card (raised Soft Clay surface).
+  /// Section / panel card: flat fill + 1px hairline border.
   static BoxDecoration card({
     required Brightness brightness,
     Color? color,
     double radius = ClayLayout.radiusLg,
   }) {
+    final isDark = brightness == Brightness.dark;
+    final borderColor = isDark ? ClayColors.outlineDark : ClayColors.outlineLight;
     if (color != null) {
       return BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: outerShadow(brightness),
+        border: Border.all(color: borderColor),
       );
     }
     final key = (brightness, radius);
     return _cardCache[key] ??= BoxDecoration(
-      color: brightness == Brightness.dark
+      color: isDark
           ? ClayColors.surfaceCardDark
           : ClayColors.surfaceCardLight,
       borderRadius: BorderRadius.circular(radius),
-      boxShadow: outerShadow(brightness),
+      border: Border.all(color: borderColor),
     );
   }
 
-  /// Lightweight list-row surface (border + listShadow).
+  /// Lightweight list-row surface (flat fill + hairline border).
   static BoxDecoration listItem({
     required Brightness brightness,
     required ColorScheme colorScheme,
@@ -245,84 +206,57 @@ class ClayDecoration {
         border: Border.all(
           color: colorScheme.primary.withValues(alpha: isDark ? 0.55 : 0.35),
         ),
-        boxShadow: listShadow(brightness),
       );
     }
     return BoxDecoration(
       color: isDark ? ClayColors.surfaceCardDark : ClayColors.surfaceCardLight,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: colorScheme.outline.withValues(alpha: isDark ? 0.28 : 0.20),
+        color: isDark ? ClayColors.outlineDark : ClayColors.outlineLight,
       ),
-      boxShadow: listShadow(brightness),
     );
   }
 
-  /// Soft Clay input surface.
+  /// Flat input surface: container fill + hairline border (focus handled by
+  /// InputDecorationTheme, this box is for custom-drawn fields).
   static BoxDecoration input({
     required Brightness brightness,
     bool focused = false,
   }) {
     final isDark = brightness == Brightness.dark;
-    final focusColor = isDark ? ClayColors.primaryMuted : ClayColors.primary;
+    final focusColor = isDark ? ClayColors.primaryLight : ClayColors.primary;
     return BoxDecoration(
       color: isDark
           ? ClayColors.surfaceContainerDark
           : ClayColors.surfaceContainerLight,
       borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-      boxShadow: innerShadow(brightness),
       border: focused
           ? Border.all(color: focusColor, width: 2)
           : Border.all(
-              color: (isDark ? ClayColors.outlineDark : ClayColors.outlineLight)
-                  .withValues(alpha: 0.35),
+              color: isDark ? ClayColors.outlineDark : ClayColors.outlineLight,
               width: 1,
             ),
     );
   }
 
-  /// Soft Clay icon well.
+  /// Neutral icon well (no shadow). Pass a [color] for tinted wells.
   static BoxDecoration iconContainer({
     required Brightness brightness,
     Color? color,
     double radius = ClayLayout.radiusMd,
   }) {
     if (color != null) {
-      final isDark = brightness == Brightness.dark;
       return BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
       );
     }
     final key = (brightness, radius);
-    return _iconContainerCache[key] ??= _buildIconContainer(brightness, radius);
-  }
-
-  static BoxDecoration _buildIconContainer(
-    Brightness brightness,
-    double radius,
-  ) {
-    final isDark = brightness == Brightness.dark;
-    final bgColor = isDark
-        ? ClayColors.primaryContainerDark
-        : ClayColors.primary.withValues(alpha: 0.12);
-    return BoxDecoration(
-      color: bgColor,
+    return _iconContainerCache[key] ??= BoxDecoration(
+      color: brightness == Brightness.dark
+          ? ClayColors.surfaceContainerDark
+          : ClayColors.surfaceContainerLight,
       borderRadius: BorderRadius.circular(radius),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
-      ],
     );
   }
 }
@@ -365,11 +299,11 @@ class AppTheme {
       ),
       titleLarge: style(
         size: 18,
-        weight: FontWeight.w700,
+        weight: FontWeight.w600,
         color: onSurface,
         letterSpacing: -0.3,
       ),
-      titleMedium: style(size: 15, weight: FontWeight.w700, color: onSurface),
+      titleMedium: style(size: 15, weight: FontWeight.w600, color: onSurface),
       titleSmall: style(size: 14, weight: FontWeight.w600, color: onSurface),
       bodyLarge: style(size: 15, weight: FontWeight.w400, color: onSurface),
       bodyMedium: style(size: 14, weight: FontWeight.w400, color: onSurface),
@@ -381,7 +315,7 @@ class AppTheme {
       labelLarge: style(size: 14, weight: FontWeight.w600, color: onSurface),
       labelMedium: style(
         size: 12,
-        weight: FontWeight.w600,
+        weight: FontWeight.w500,
         color: onSurfaceVariant,
       ),
       labelSmall: style(
@@ -430,15 +364,15 @@ class AppTheme {
         brightness: Brightness.light,
         primary: ClayColors.primary,
         onPrimary: Colors.white,
-        primaryContainer: ClayColors.primaryLight.withValues(alpha: 0.2),
-        onPrimaryContainer: ClayColors.primaryDark,
+        primaryContainer: const Color(0xFFE0E7FF),
+        onPrimaryContainer: const Color(0xFF3730A3),
         secondary: ClayColors.secondary,
         onSecondary: Colors.white,
-        secondaryContainer: ClayColors.secondaryLight.withValues(alpha: 0.2),
-        onSecondaryContainer: const Color(0xFF065F46),
+        secondaryContainer: const Color(0xFFE0F2FE),
+        onSecondaryContainer: const Color(0xFF075985),
         tertiary: ClayColors.tertiary,
         onTertiary: Colors.white,
-        tertiaryContainer: ClayColors.tertiaryLight.withValues(alpha: 0.2),
+        tertiaryContainer: const Color(0xFFFEF3C7),
         onTertiaryContainer: const Color(0xFF92400E),
         error: ClayColors.error,
         onError: Colors.white,
@@ -448,12 +382,12 @@ class AppTheme {
         onSurface: ClayColors.onSurfaceLight,
         onSurfaceVariant: ClayColors.onSurfaceVariantLight,
         outline: ClayColors.outlineLight,
-        outlineVariant: ClayColors.outlineLight.withValues(alpha: 0.3),
+        outlineVariant: ClayColors.outlineLight,
         surfaceContainerLowest: Colors.white,
         surfaceContainerLow: ClayColors.surfaceContainerLight,
-        surfaceContainer: const Color(0xFFD5E8E4),
-        surfaceContainerHigh: const Color(0xFFC8DFD9),
-        surfaceContainerHighest: const Color(0xFFB8D4CC),
+        surfaceContainer: ClayColors.surfaceContainerLight,
+        surfaceContainerHigh: const Color(0xFFE4E4E7),
+        surfaceContainerHighest: const Color(0xFFD4D4D8),
       ),
       scaffoldBackgroundColor: ClayColors.surfaceLight,
       appBarTheme: AppBarTheme(
@@ -467,31 +401,34 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: ClayColors.outlineLight),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: ClayColors.outlineLight),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-          borderSide: const BorderSide(color: ClayColors.primary, width: 2),
+          borderSide: const BorderSide(color: ClayColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(color: ClayColors.error, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+          horizontal: 14,
+          vertical: 14,
         ),
         filled: true,
-        fillColor: ClayColors.surfaceContainerLight,
+        fillColor: ClayColors.surfaceCardLight,
         labelStyle: TextStyle(
           color: ClayColors.onSurfaceVariantLight,
           fontSize: 14,
         ),
-        hintStyle: TextStyle(color: ClayColors.outlineLight, fontSize: 14),
+        hintStyle: TextStyle(
+          color: ClayColors.onSurfaceVariantLight.withValues(alpha: 0.7),
+          fontSize: 14,
+        ),
         prefixIconColor: ClayColors.onSurfaceVariantLight,
         suffixIconColor: ClayColors.onSurfaceVariantLight,
       ),
@@ -500,6 +437,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+          side: BorderSide(color: ClayColors.outlineLight),
         ),
         color: Colors.transparent,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -514,7 +452,7 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: ClayColors.outlineLight.withValues(alpha: 0.15),
+        color: ClayColors.outlineLight,
         thickness: 1,
         space: 1,
       ),
@@ -538,8 +476,8 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium,
-          side: BorderSide.none,
-          backgroundColor: ClayColors.surfaceContainerLight,
+          side: const BorderSide(color: ClayColors.outlineLight),
+          backgroundColor: ClayColors.surfaceCardLight,
         ),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -561,6 +499,7 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+          side: BorderSide(color: ClayColors.outlineLight),
         ),
         backgroundColor: Colors.white,
         titleTextStyle: textTheme.titleLarge,
@@ -578,23 +517,26 @@ class AppTheme {
       popupMenuTheme: PopupMenuThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+          side: BorderSide(color: ClayColors.outlineLight),
         ),
-        elevation: 4,
+        elevation: 8,
         color: Colors.white,
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: ClayColors.onSurfaceLight,
-          textStyle: textTheme.titleMedium,
+          foregroundColor: ClayColors.primary,
+          textStyle: textTheme.titleMedium?.copyWith(
+            color: ClayColors.primary,
+          ),
         ),
       ),
       checkboxTheme: CheckboxThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        side: BorderSide(color: ClayColors.outlineLight.withValues(alpha: 0.4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        side: BorderSide(color: ClayColors.outlineLight),
       ),
       sliderTheme: SliderThemeData(
         activeTrackColor: ClayColors.primary,
-        inactiveTrackColor: ClayColors.primary.withValues(alpha: 0.15),
+        inactiveTrackColor: ClayColors.outlineLight,
         thumbColor: ClayColors.primary,
         overlayColor: ClayColors.primary.withValues(alpha: 0.1),
         trackHeight: 6,
@@ -619,32 +561,32 @@ class AppTheme {
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
         // Light primary for icons/accents; pair with dark onPrimary for filled controls.
-        primary: ClayColors.primaryMuted,
+        primary: ClayColors.primaryLight,
         onPrimary: ClayColors.onPrimaryDark,
         primaryContainer: ClayColors.primaryContainerDark,
         onPrimaryContainer: ClayColors.onPrimaryContainerDark,
-        secondary: ClayColors.secondaryMuted,
-        onSecondary: ClayColors.onPrimaryDark,
+        secondary: ClayColors.secondaryLight,
+        onSecondary: const Color(0xFF082F49),
         secondaryContainer: ClayColors.secondaryContainerDark,
         onSecondaryContainer: ClayColors.onSecondaryContainerDark,
         tertiary: ClayColors.tertiaryLight,
-        onTertiary: const Color(0xFF1A1030),
-        tertiaryContainer: const Color(0xFF5B3A0A),
-        onTertiaryContainer: ClayColors.tertiaryLight,
+        onTertiary: const Color(0xFF451A03),
+        tertiaryContainer: const Color(0xFF78350F),
+        onTertiaryContainer: const Color(0xFFFDE68A),
         error: ClayColors.errorOnDark,
-        onError: const Color(0xFF2D1010),
+        onError: const Color(0xFF450A0A),
         errorContainer: ClayColors.errorContainerDark,
         onErrorContainer: ClayColors.onErrorContainerDark,
         surface: ClayColors.surfaceDark,
         onSurface: ClayColors.onSurfaceDark,
         onSurfaceVariant: ClayColors.onSurfaceVariantDark,
         outline: ClayColors.outlineDark,
-        outlineVariant: ClayColors.outlineDark.withValues(alpha: 0.45),
-        surfaceContainerLowest: const Color(0xFF080E0D),
-        surfaceContainerLow: ClayColors.surfaceContainerDark,
-        surfaceContainer: const Color(0xFF1A2A28),
-        surfaceContainerHigh: const Color(0xFF243834),
-        surfaceContainerHighest: const Color(0xFF2C433F),
+        outlineVariant: ClayColors.outlineDark,
+        surfaceContainerLowest: const Color(0xFF0A0A0B),
+        surfaceContainerLow: ClayColors.surfaceCardDark,
+        surfaceContainer: ClayColors.surfaceContainerDark,
+        surfaceContainerHigh: const Color(0xFF27272A),
+        surfaceContainerHighest: const Color(0xFF303036),
       ),
       scaffoldBackgroundColor: ClayColors.surfaceDark,
       appBarTheme: AppBarTheme(
@@ -660,19 +602,21 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: ClayColors.outlineDark.withValues(alpha: 0.9),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: BorderSide(
-            color: ClayColors.outlineDark.withValues(alpha: 0.35),
+            color: ClayColors.outlineDark.withValues(alpha: 0.9),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           borderSide: const BorderSide(
-            color: ClayColors.primaryMuted,
-            width: 2,
+            color: ClayColors.primaryLight,
+            width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
@@ -683,8 +627,8 @@ class AppTheme {
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+          horizontal: 14,
+          vertical: 14,
         ),
         filled: true,
         fillColor: ClayColors.surfaceContainerDark,
@@ -693,7 +637,7 @@ class AppTheme {
           fontSize: 14,
         ),
         hintStyle: TextStyle(
-          color: ClayColors.onSurfaceVariantDark.withValues(alpha: 0.75),
+          color: ClayColors.onSurfaceVariantDark.withValues(alpha: 0.65),
           fontSize: 14,
         ),
         prefixIconColor: ClayColors.onSurfaceVariantDark,
@@ -704,6 +648,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+          side: BorderSide(color: ClayColors.outlineDark),
         ),
         color: Colors.transparent,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -720,22 +665,28 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: ClayColors.outlineDark.withValues(alpha: 0.28),
+        color: ClayColors.outlineDark,
         thickness: 1,
         space: 1,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          // Solid brand teal + white keeps CTA readable in dark mode.
-          backgroundColor: ClayColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: ClayColors.primary.withValues(alpha: 0.35),
-          disabledForegroundColor: Colors.white.withValues(alpha: 0.55),
+          // Light indigo + near-black label stays compliant in dark mode.
+          backgroundColor: ClayColors.primaryLight,
+          foregroundColor: ClayColors.onPrimaryDark,
+          disabledBackgroundColor: ClayColors.primaryLight.withValues(
+            alpha: 0.35,
+          ),
+          disabledForegroundColor: ClayColors.onPrimaryDark.withValues(
+            alpha: 0.55,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: textTheme.titleMedium?.copyWith(color: Colors.white),
+          textStyle: textTheme.titleMedium?.copyWith(
+            color: ClayColors.onPrimaryDark,
+          ),
           elevation: 0,
         ),
       ),
@@ -747,9 +698,7 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           textStyle: textTheme.titleMedium,
-          side: BorderSide(
-            color: ClayColors.outlineDark.withValues(alpha: 0.45),
-          ),
+          side: BorderSide(color: ClayColors.outlineDark),
           backgroundColor: ClayColors.surfaceContainerDark,
         ),
       ),
@@ -757,16 +706,17 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+          side: BorderSide(color: ClayColors.outlineDark),
         ),
         contentTextStyle: textTheme.bodyMedium?.copyWith(
           color: ClayColors.onSurfaceDark,
         ),
-        backgroundColor: const Color(0xFF2C433F),
+        backgroundColor: const Color(0xFF27272A),
         actionTextColor: ClayColors.primaryMuted,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: ClayColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: ClayColors.primaryLight,
+        foregroundColor: ClayColors.onPrimaryDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
         ),
@@ -775,13 +725,12 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
+          side: BorderSide(color: ClayColors.outlineDark),
         ),
         backgroundColor: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.titleLarge,
-        contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: ClayColors.onSurfaceVariantDark,
-        ),
+        contentTextStyle: textTheme.bodyMedium,
       ),
       bottomSheetTheme: BottomSheetThemeData(
         shape: RoundedRectangleBorder(
@@ -791,13 +740,14 @@ class AppTheme {
         ),
         backgroundColor: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
-        dragHandleColor: ClayColors.outlineDark.withValues(alpha: 0.6),
+        dragHandleColor: ClayColors.outlineDark,
       ),
       popupMenuTheme: PopupMenuThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+          side: BorderSide(color: ClayColors.outlineDark),
         ),
-        elevation: 6,
+        elevation: 8,
         color: ClayColors.surfaceCardDark,
         surfaceTintColor: Colors.transparent,
         textStyle: const TextStyle(
@@ -814,23 +764,23 @@ class AppTheme {
         ),
       ),
       iconTheme: const IconThemeData(color: ClayColors.onSurfaceVariantDark),
-      primaryIconTheme: const IconThemeData(color: ClayColors.primaryMuted),
+      primaryIconTheme: const IconThemeData(color: ClayColors.primaryLight),
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return ClayColors.primary;
+            return ClayColors.primaryLight;
           }
           return Colors.transparent;
         }),
-        checkColor: WidgetStateProperty.all(Colors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        side: BorderSide(color: ClayColors.outlineDark.withValues(alpha: 0.55)),
+        checkColor: WidgetStateProperty.all(ClayColors.onPrimaryDark),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        side: BorderSide(color: ClayColors.outlineDark),
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: ClayColors.primaryMuted,
-        inactiveTrackColor: ClayColors.primaryMuted.withValues(alpha: 0.22),
-        thumbColor: ClayColors.primaryMuted,
-        overlayColor: ClayColors.primaryMuted.withValues(alpha: 0.12),
+        activeTrackColor: ClayColors.primaryLight,
+        inactiveTrackColor: ClayColors.outlineDark,
+        thumbColor: ClayColors.primaryLight,
+        overlayColor: ClayColors.primaryLight.withValues(alpha: 0.12),
         trackHeight: 6,
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
       ),

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import '../theme/app_theme.dart';
 import '../utils/password_generator.dart';
 import '../utils/clipboard_utils.dart';
 import '../../l10n/app_localizations.dart';
@@ -129,18 +130,12 @@ class _PasswordGeneratorDialogState extends State<_PasswordGeneratorDialog> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: Theme.of(context).brightness == Brightness.dark
-                            ? 0.28
-                            : 0.04,
-                      ),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? ClayColors.outlineDark
+                        : ClayColors.outlineLight,
+                  ),
                 ),
                 child: SelectableText(
                   _password,

@@ -23,13 +23,13 @@ enum PasswordStrengthLevel {
   Color get color {
     switch (this) {
       case PasswordStrengthLevel.weak:
-        return const Color(0xFFE53935);
+        return const Color(0xFFDC2626);
       case PasswordStrengthLevel.fair:
-        return const Color(0xFFFB8C00);
+        return const Color(0xFFF59E0B);
       case PasswordStrengthLevel.good:
-        return const Color(0xFF43A047);
+        return const Color(0xFF16A34A);
       case PasswordStrengthLevel.strong:
-        return const Color(0xFF1E88E5);
+        return const Color(0xFF0284C7);
     }
   }
 

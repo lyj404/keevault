@@ -24,7 +24,6 @@ class EmptyState extends StatelessWidget {
                   ? ClayColors.primaryContainerDark
                   : colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(ClayLayout.radiusXl),
-              boxShadow: ClayDecoration.outerShadow(brightness),
             ),
             child: Icon(icon, size: 36, color: colorScheme.primary),
           ),
