@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "secure_storage_channel.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -75,6 +76,10 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  // Replace the flutter_secure_storage plugin's keyring access on Linux (see
+  // secure_storage_channel.h for why).
+  register_secure_storage_channel(
+      fl_engine_get_binary_messenger(fl_view_get_engine(view)));
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 

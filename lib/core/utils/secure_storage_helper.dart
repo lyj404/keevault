@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'logger.dart';
+import 'secure_store.dart';
 
 class SecureStorageWriteException implements Exception {
   final String key;
@@ -13,7 +13,7 @@ class SecureStorageWriteException implements Exception {
   String toString() => 'SecureStorageWriteException(key: $key, cause: $cause)';
 }
 
-/// A wrapper around [FlutterSecureStorage] that gracefully handles
+/// A wrapper around [SecureStore] that gracefully handles
 /// Windows DPAPI corruption errors (CryptUnprotectData failure).
 ///
 /// On Windows, the secure storage file can become unreadable after
@@ -22,11 +22,13 @@ class SecureStorageWriteException implements Exception {
 /// a one-time cost that cannot be suppressed. This wrapper catches
 /// the thrown exception so the app continues working.
 class SecureStorageHelper {
-  final FlutterSecureStorage _storage;
   static Future<void> _pending = Future.value();
 
-  const SecureStorageHelper([FlutterSecureStorage? storage])
-    : _storage = storage ?? const FlutterSecureStorage();
+  final SecureStore? _override;
+
+  const SecureStorageHelper([this._override]);
+
+  SecureStore get _storage => _override ?? defaultSecureStore;
 
   Future<T> _serialize<T>(Future<T> Function() action) {
     final completer = Completer<T>();

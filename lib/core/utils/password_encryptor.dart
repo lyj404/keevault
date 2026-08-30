@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'secure_store.dart';
 
 /// Encrypts and decrypts WebDAV passwords using AES-256-GCM
 /// with a device-bound key stored in secure storage.
@@ -39,11 +40,11 @@ class PasswordEncryptor {
   /// never be decrypted again.
   static Future<Uint8List>? _keyCreation;
 
-  final FlutterSecureStorage _storage;
+  final SecureStore _storage;
   Uint8List? _cachedKey;
 
-  PasswordEncryptor([FlutterSecureStorage? storage])
-      : _storage = storage ?? const FlutterSecureStorage();
+  PasswordEncryptor([SecureStore? storage])
+    : _storage = storage ?? defaultSecureStore;
 
   /// Returns the device-bound encryption key, generating one if needed.
   Future<Uint8List> _getOrCreateKey() async {

@@ -9,6 +9,7 @@ import 'core/providers/global_container.dart';
 import 'core/utils/clipboard_utils.dart';
 import 'core/utils/legacy_migration.dart';
 import 'core/utils/logger.dart';
+import 'core/utils/secure_store.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
@@ -19,6 +20,7 @@ import 'features/database/providers/database_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  initSecureStoreBackend();
   await LegacyMigration.run();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
