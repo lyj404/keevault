@@ -1,13 +1,13 @@
 import AuthenticationServices
 import UIKit
 
-/// KeeVault Credential Provider Extension entry point.
+/// KeeStone Credential Provider Extension entry point.
 ///
 /// On `prepareCredentialList(forServiceIdentifiers:)` it loads the encrypted
 /// snapshot from the App Group container (written by the main app while the
 /// vault is unlocked), matches the requested web domain, and shows a list.
 /// Tapping a row returns an `ASPasswordCredential`. If the snapshot is missing
-/// (vault locked / autofill disabled) it offers a button to open KeeVault.
+/// (vault locked / autofill disabled) it offers a button to open KeeStone.
 class CredentialProviderViewController: ASCredentialProviderViewController {
     private var candidates: [Matcher.Candidate] = []
     private var serviceIdentifier: ASCredentialServiceIdentifier?
@@ -30,14 +30,14 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         tableView.reloadData()
     }
 
-    /// KeeVault requires user interaction to fill (no silent fill from a
+    /// KeeStone requires user interaction to fill (no silent fill from a
     /// possibly-stale snapshot).
     override func provideCredentialWithoutUserInteraction(for credentialIdentity: ASPasswordCredentialIdentity) {
         extensionContext.cancelRequest(withError: ASExtensionError.userInteractionRequired)
     }
 
     private func setupUI() {
-        title = "KeeVault"
+        title = "KeeStone"
         view.backgroundColor = .systemGroupedBackground
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
@@ -52,9 +52,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         ])
     }
 
-    private func openKeeVault() {
+    private func openKeeStone() {
         // Ask the host to open the app; the extension cannot pause.
-        let url = URL(string: "keevault://unlock")
+        let url = URL(string: "keestone://unlock")
         if let url = url {
             _ = extensionContext.open(url, completionHandler: nil)
         }
@@ -93,13 +93,13 @@ extension CredentialProviderViewController: UITableViewDataSource, UITableViewDe
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         if snapshotMissing {
-            cell.textLabel?.text = "Open KeeVault to unlock"
+            cell.textLabel?.text = "Open KeeStone to unlock"
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
             return cell
         }
         if candidates.isEmpty {
-            cell.textLabel?.text = "Open KeeVault to choose"
+            cell.textLabel?.text = "Open KeeStone to choose"
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
             return cell
@@ -115,7 +115,7 @@ extension CredentialProviderViewController: UITableViewDataSource, UITableViewDe
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if snapshotMissing || candidates.isEmpty {
-            openKeeVault()
+            openKeeStone()
             return
         }
         complete(with: candidates[indexPath.row])

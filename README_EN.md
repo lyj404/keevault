@@ -1,8 +1,8 @@
 [中文](README.md) | **English**
 
-# KeeVault
+# KeeStone
 
-[![Release](https://img.shields.io/github/v/release/lyj404/keevault)](https://github.com/lyj404/keevault/releases)
+[![Release](https://img.shields.io/github/v/release/lyj404/keestone)](https://github.com/lyj404/keestone/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey)]()
 
@@ -23,13 +23,13 @@ A cross-platform KeePass-compatible password manager built with Flutter.
 
 ## Install
 
-Download from [Releases](https://github.com/lyj404/keevault/releases).
+Download from [Releases](https://github.com/lyj404/keestone/releases).
 
 | Platform        | Notes                                                                  |
 | --------------- | ---------------------------------------------------------------------- |
-| Windows         | Download `KeeVault-*-windows-x64.zip`, extract and run `keevault.exe`  |
-| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb`                              |
-| Arch Linux      | `yay -S keevault-bin` or `paru -S keevault-bin`                        |
+| Windows         | Download `KeeStone-*-windows-x64.zip`, extract and run `keestone.exe`  |
+| Debian / Ubuntu | `sudo apt install ./keestone_*_amd64.deb`                              |
+| Arch Linux      | `yay -S keestone-bin` or `paru -S keestone-bin`                        |
 | Android         | Install the APK for your arch (`arm64-v8a` / `armeabi-v7a` / `x86_64`). APKs are not distributed via any app store — download them only from GitHub Releases |
 
 ## Build from Source
@@ -37,8 +37,8 @@ Download from [Releases](https://github.com/lyj404/keevault/releases).
 Requires Flutter / Dart SDK >= 3.13.0
 
 ```bash
-git clone https://github.com/lyj404/keevault
-cd keevault
+git clone https://github.com/lyj404/keestone
+cd keestone
 flutter pub get
 flutter run -d windows    # or linux / android
 ```

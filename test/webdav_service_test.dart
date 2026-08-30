@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/features/settings/data/webdav_config.dart';
-import 'package:keevault/features/settings/data/webdav_service.dart';
+import 'package:keestone/features/settings/data/webdav_config.dart';
+import 'package:keestone/features/settings/data/webdav_service.dart';
 
 void main() {
   test('migrates a legacy WebDAV config without recursive loading', () async {

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kpasslib/kpasslib.dart';
-import 'package:keevault/core/utils/fuzzy_match.dart';
+import 'package:keestone/core/utils/fuzzy_match.dart';
 
 KdbxEntry _makeEntry() {
   final dir = Directory.systemTemp.createTempSync('fuzzy_');

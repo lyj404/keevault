@@ -1,6 +1,6 @@
 import Foundation
 
-/// Reads + decrypts the KeeVault autofill snapshot written by the main app
+/// Reads + decrypts the KeeStone autofill snapshot written by the main app
 /// to the shared App Group container. The AES-256-GCM key lives in the shared
 /// Keychain (same access group the app wrote it with via flutter_secure_storage).
 ///
@@ -9,8 +9,8 @@ import Foundation
 ///   byte  4     : format version (1)
 ///   bytes 5..   : AES-GCM combined = nonce(12) || ciphertext || tag(16)
 final class SnapshotStore {
-    static let appGroupId = "group.com.keevault.keevault"
-    static let fileName = "keevault_autofill_snapshot.bin"
+    static let appGroupId = "group.com.keestone.keestone"
+    static let fileName = "keestone_autofill_snapshot.bin"
     static let keychainAccount = "autofill_snapshot_key"
 
     struct Entry {

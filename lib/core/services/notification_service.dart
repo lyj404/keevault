@@ -125,7 +125,7 @@ class NotificationService {
       // Fallback to notify-send if plugin fails
       try {
         await Process.run('notify-send', [
-          '--app-name=KeeVault',
+          '--app-name=KeeStone',
           '--urgency=normal',
           title,
           body,

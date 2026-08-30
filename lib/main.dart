@@ -7,6 +7,7 @@ import 'app.dart';
 import 'core/crypto/crypto_service.dart';
 import 'core/providers/global_container.dart';
 import 'core/utils/clipboard_utils.dart';
+import 'core/utils/legacy_migration.dart';
 import 'core/utils/logger.dart';
 import 'core/providers/close_behavior_provider.dart';
 import 'core/router/app_router.dart';
@@ -18,6 +19,8 @@ import 'features/database/providers/database_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await LegacyMigration.run();
+
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     await windowManager.ensureInitialized();
 
@@ -25,7 +28,7 @@ void main() async {
       size: Size(900, 680),
       minimumSize: Size(400, 300),
       center: true,
-      title: 'KeeVault',
+      title: 'KeeStone',
     );
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
@@ -43,19 +46,19 @@ void main() async {
   runApp(
     UncontrolledProviderScope(
       container: globalContainer,
-      child: const KeeVaultAppWrapper(),
+      child: const KeeStoneAppWrapper(),
     ),
   );
 }
 
-class KeeVaultAppWrapper extends ConsumerStatefulWidget {
-  const KeeVaultAppWrapper({super.key});
+class KeeStoneAppWrapper extends ConsumerStatefulWidget {
+  const KeeStoneAppWrapper({super.key});
 
   @override
-  ConsumerState<KeeVaultAppWrapper> createState() => _KeeVaultAppWrapperState();
+  ConsumerState<KeeStoneAppWrapper> createState() => _KeeStoneAppWrapperState();
 }
 
-class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
+class _KeeStoneAppWrapperState extends ConsumerState<KeeStoneAppWrapper>
     with WindowListener {
   bool _trayInitialized = false;
   bool _closing = false;
@@ -292,6 +295,6 @@ class _KeeVaultAppWrapperState extends ConsumerState<KeeVaultAppWrapper>
 
   @override
   Widget build(BuildContext context) {
-    return const KeeVaultApp();
+    return const KeeStoneApp();
   }
 }

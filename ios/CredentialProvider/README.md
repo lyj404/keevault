@@ -1,4 +1,4 @@
-# KeeVault Autofill — iOS Credential Provider Extension
+# KeeStone Autofill — iOS Credential Provider Extension
 
 Headless edits cannot add a new Xcode target or wire capabilities, so the
 following one-time setup must be performed in Xcode. The extension source,
@@ -20,8 +20,8 @@ Info.plist, and entitlements files already exist in this directory.
 
 Enable on **both** the Runner app target and the CredentialProvider target:
 
-- **App Groups** → add `group.com.keevault.keevault`
-- **Keychain Sharing** → group name `group.com.keevault.keevault`
+- **App Groups** → add `group.com.keestone.keestone`
+- **Keychain Sharing** → group name `group.com.keestone.keestone`
 
 This makes `Runner.entitlements` and `CredentialProvider.entitlements`
 (provided here) take effect. If Xcode regenerates its own entitlements files,
@@ -31,11 +31,11 @@ present in both.
 ## 3. Access-group alignment (IMPORTANT)
 
 The AES snapshot key is written to the shared Keychain by the Dart side via
-`flutter_secure_storage` with `IOSOptions(groupId: "group.com.keevault.keevault")`,
+`flutter_secure_storage` with `IOSOptions(groupId: "group.com.keestone.keestone")`,
 which sets `kSecAttrAccessGroup` to that literal string. `SnapshotStore.swift`
 reads with the same literal. If on device the extension read fails with
 `errSecItemNotFound`, the actual stored access group is most likely
-team-prefixed (`<TEAMID>group.com.keevault.keevault`). In that case change
+team-prefixed (`<TEAMID>group.com.keestone.keestone`). In that case change
 `SnapshotStore.appGroupId` (used as `kSecAttrAccessGroup`) **and** the Dart
 `_appGroupId` in `lib/features/autofill/services/autofill_snapshot_service.dart`
 to the identical prefixed string, and update the App Group id accordingly.
@@ -43,13 +43,13 @@ Both sides must use the exact same string.
 
 ## 4. URL scheme (optional)
 
-To let the extension offer "Open KeeVault" when the vault is locked, register
-a `keevault` URL scheme on the Runner target and handle it in
+To let the extension offer "Open KeeStone" when the vault is locked, register
+a `keestone` URL scheme on the Runner target and handle it in
 `AppDelegate.swift` (route to the unlock screen). The extension calls
-`keevault://unlock`.
+`keestone://unlock`.
 
 ## 5. Verify
 
 Build to a device, unlock the vault with autofill enabled, then trigger iOS
-autofill in Safari on a login page. KeeVault should appear under
+autofill in Safari on a login page. KeeStone should appear under
 Settings → Passwords → Password Options once enabled.

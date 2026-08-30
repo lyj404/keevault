@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/logger.dart';
 import '../utils/secure_storage_helper.dart';
 
-const _privacyChannel = MethodChannel('com.keevault.keevault/privacy');
+const _privacyChannel = MethodChannel('com.keestone.keestone/privacy');
 
 class PrivacySettings {
   final bool blockScreenshots;

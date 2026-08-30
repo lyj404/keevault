@@ -55,7 +55,7 @@ class ClayLayout {
   }
 }
 
-/// Minimal Neutral color system for KeeVault.
+/// Minimal Neutral color system for KeeStone.
 ///
 /// Zinc gray scale + a single indigo accent (Linear-style):
 /// - Surfaces step via zinc 50/100/200 (light) and 950/900/850/800 (dark).

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/features/database/data/atomic_file_store.dart';
+import 'package:keestone/features/database/data/atomic_file_store.dart';
 
 void main() {
   group('AtomicFileStore', () {
@@ -11,7 +11,7 @@ void main() {
     late String target;
 
     setUp(() async {
-      directory = await Directory.systemTemp.createTemp('keevault_atomic_');
+      directory = await Directory.systemTemp.createTemp('keestone_atomic_');
       target = '${directory.path}${Platform.pathSeparator}vault.kdbx';
     });
 
@@ -21,7 +21,7 @@ void main() {
 
     Future<List<String>> artifactNames() async =>
         (await directory.list().toList())
-            .where((e) => e is File && e.path.contains('.keevault.'))
+            .where((e) => e is File && e.path.contains('.keestone.'))
             .map((e) => e.path)
             .toList();
 
@@ -63,7 +63,7 @@ void main() {
         () async {
       await File(target).writeAsBytes([1, 2, 3], flush: true);
       // Legacy fixed-name manifest (pre-token layout).
-      await File('$target.keevault.transaction.json').writeAsString(
+      await File('$target.keestone.transaction.json').writeAsString(
         jsonEncode({
           'target': target,
           'temp': '$target.t',

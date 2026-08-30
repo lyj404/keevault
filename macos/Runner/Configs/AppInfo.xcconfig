@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = keevault
+PRODUCT_NAME = keestone
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.keevault.keevault
+PRODUCT_BUNDLE_IDENTIFIER = com.keestone.keestone
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.keevault. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.keestone. All rights reserved.

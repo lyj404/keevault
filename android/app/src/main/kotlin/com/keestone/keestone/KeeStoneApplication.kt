@@ -1,11 +1,11 @@
-package com.keevault.keevault
+package com.keestone.keestone
 
 import android.app.Application
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 
-class KeeVaultApplication : Application() {
+class KeeStoneApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
@@ -17,6 +17,6 @@ class KeeVaultApplication : Application() {
     }
 
     companion object {
-        const val ENGINE_ID = "keevault.prewarmed_engine"
+        const val ENGINE_ID = "keestone.prewarmed_engine"
     }
 }

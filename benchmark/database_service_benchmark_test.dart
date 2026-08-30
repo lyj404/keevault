@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kpasslib/kpasslib.dart';
-import 'package:keevault/features/database/data/database_service.dart';
+import 'package:keestone/features/database/data/database_service.dart';
 
 /// Run explicitly with:
 /// flutter test benchmark/database_service_benchmark_test.dart
@@ -11,7 +11,7 @@ import 'package:keevault/features/database/data/database_service.dart';
 void main() {
   test('DatabaseService 5000-entry baseline', () async {
     final directory = await Directory.systemTemp.createTemp(
-      'keevault_database_benchmark_',
+      'keestone_database_benchmark_',
     );
     final path = '${directory.path}${Platform.pathSeparator}benchmark.kdbx';
     final service = DatabaseService();

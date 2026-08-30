@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/core/services/external_url_service.dart';
+import 'package:keestone/core/services/external_url_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('com.keevault.keevault/external_url');
+  const channel = MethodChannel('com.keestone.keestone/external_url');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 
@@ -25,14 +25,14 @@ void main() {
       });
 
       final opened = await ExternalUrlService.openUrl(
-        Uri.parse('https://github.com/lyj404/keevault/releases/latest'),
+        Uri.parse('https://github.com/lyj404/keestone/releases/latest'),
       );
 
       expect(opened, isTrue);
       expect(calls, hasLength(1));
       expect(calls.single.method, 'openUrl');
       expect(calls.single.arguments, <String, dynamic>{
-        'url': 'https://github.com/lyj404/keevault/releases/latest',
+        'url': 'https://github.com/lyj404/keestone/releases/latest',
       });
     });
   }

@@ -21,9 +21,9 @@ class WindowsNotificationHelper {
     if (_classRegistered) return;
 
     _hInstance = GetModuleHandle(nullptr);
-    const className = 'KeeVaultNotifyWnd';
+    const className = 'KeeStoneNotifyWnd';
     _classNamePtr = className.toNativeUtf16();
-    _windowTitlePtr = 'KeeVault Notify'.toNativeUtf16();
+    _windowTitlePtr = 'KeeStone Notify'.toNativeUtf16();
 
     final wc = calloc<WNDCLASS>();
     try {

@@ -57,7 +57,7 @@ class TrayServiceLinux implements TrayServiceBase {
 
     // Create StatusNotifierItem client
     _client = StatusNotifierItemClient(
-      id: 'keevault',
+      id: 'keestone',
       iconName: iconPath,
       menu: menu,
     );

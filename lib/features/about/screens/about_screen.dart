@@ -14,13 +14,13 @@ class AboutScreen extends StatefulWidget {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
-  static const String _appName = 'KeeVault';
-  static const String _githubUrl = 'https://github.com/lyj404/keevault';
-  static const String _issuesUrl = 'https://github.com/lyj404/keevault/issues';
+  static const String _appName = 'KeeStone';
+  static const String _githubUrl = 'https://github.com/lyj404/keestone';
+  static const String _issuesUrl = 'https://github.com/lyj404/keestone/issues';
   static const String _licenseUrl =
-      'https://github.com/lyj404/keevault/blob/main/LICENSE';
+      'https://github.com/lyj404/keestone/blob/main/LICENSE';
   static const String _releasesApiUrl =
-      'https://api.github.com/repos/lyj404/keevault/releases/latest';
+      'https://api.github.com/repos/lyj404/keestone/releases/latest';
 
   String _version = '';
   String _buildNumber = '';

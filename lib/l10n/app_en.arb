@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appTitle": "KeeVault",
+  "appTitle": "KeeStone",
   "appSubtitle": "KeePass-compatible password manager",
 
   "openLocalDatabase": "Open Local Database",

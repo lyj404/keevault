@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/features/sync/data/sync_service.dart';
+import 'package:keestone/features/sync/data/sync_service.dart';
 
 void main() {
   group('encodeDavPath', () {

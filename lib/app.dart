@@ -20,14 +20,14 @@ import 'features/sync/providers/sync_provider.dart';
 import 'features/totp/data/totp_service.dart';
 import 'l10n/app_localizations.dart';
 
-class KeeVaultApp extends ConsumerStatefulWidget {
-  const KeeVaultApp({super.key});
+class KeeStoneApp extends ConsumerStatefulWidget {
+  const KeeStoneApp({super.key});
 
   @override
-  ConsumerState<KeeVaultApp> createState() => _KeeVaultAppState();
+  ConsumerState<KeeStoneApp> createState() => _KeeStoneAppState();
 }
 
-class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
+class _KeeStoneAppState extends ConsumerState<KeeStoneApp>
     with WidgetsBindingObserver {
   final _focusNode = FocusNode();
   bool _backgroundPrivacyVisible = false;
@@ -242,7 +242,7 @@ class _KeeVaultAppState extends ConsumerState<KeeVaultApp>
           textDirection: TextDirection.ltr,
           children: [
             MaterialApp.router(
-              title: 'KeeVault',
+              title: 'KeeStone',
               theme: AppTheme.light(locale: effectiveLocale),
               darkTheme: AppTheme.dark(locale: effectiveLocale),
               themeMode: themeMode,

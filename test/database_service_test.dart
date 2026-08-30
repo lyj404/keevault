@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kpasslib/kpasslib.dart';
-import 'package:keevault/features/database/data/database_service.dart';
+import 'package:keestone/features/database/data/database_service.dart';
 
 void main() {
   group('DatabaseService lifecycle and search', () {
@@ -11,7 +11,7 @@ void main() {
     late DatabaseService service;
 
     setUp(() async {
-      directory = await Directory.systemTemp.createTemp('keevault_database_');
+      directory = await Directory.systemTemp.createTemp('keestone_database_');
       databasePath = '${directory.path}${Platform.pathSeparator}vault.kdbx';
       service = DatabaseService();
     });

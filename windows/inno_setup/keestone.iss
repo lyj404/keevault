@@ -1,5 +1,5 @@
-; KeeVault Inno Setup Script
-; Usage: iscc.exe /DAPP_VERSION=0.5.9 /DSOURCE_DIR=..\..\build\windows\x64\runner\Release keevault.iss
+; KeeStone Inno Setup Script
+; Usage: iscc.exe /DAPP_VERSION=0.5.9 /DSOURCE_DIR=..\..\build\windows\x64\runner\Release keestone.iss
 
 #ifndef SOURCE_DIR
   #define SOURCE_DIR "..\..\build\windows\x64\runner\Release"
@@ -9,10 +9,10 @@
   #define APP_VERSION "0.0.0"
 #endif
 
-#define APP_NAME "KeeVault"
-#define APP_PUBLISHER "KeeVault"
-#define APP_URL "https://github.com/lyj404/keevault"
-#define APP_EXE_NAME "keevault.exe"
+#define APP_NAME "KeeStone"
+#define APP_PUBLISHER "KeeStone"
+#define APP_URL "https://github.com/lyj404/keestone"
+#define APP_EXE_NAME "keestone.exe"
 
 [Setup]
 AppId={{B2A1D3E4-5F6C-7D8E-9A0B-1C2D3E4F5A6B}
@@ -25,7 +25,7 @@ DefaultDirName={autopf}\{#APP_NAME}
 DefaultGroupName={#APP_NAME}
 LicenseFile=..\..\LICENSE
 OutputDir=..\..\build\windows\installer
-OutputBaseFilename=KeeVault-v{#APP_VERSION}-windows-x64-setup
+OutputBaseFilename=KeeStone-v{#APP_VERSION}-windows-x64-setup
 SetupIconFile=..\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\{#APP_EXE_NAME}
 Compression=lzma2

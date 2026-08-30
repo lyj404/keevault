@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/core/utils/password_generator.dart';
+import 'package:keestone/core/utils/password_generator.dart';
 
 void main() {
   group('PasswordGenerator.generate', () {

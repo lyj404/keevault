@@ -23,13 +23,13 @@ class AtomicFileStore {
     final directory = target.parent;
     await directory.create(recursive: true);
     final token = '${DateTime.now().microsecondsSinceEpoch}_$pid';
-    final temp = File('${target.path}.keevault.$token.tmp');
-    final rollback = File('${target.path}.keevault.$token.rollback');
+    final temp = File('${target.path}.keestone.$token.tmp');
+    final rollback = File('${target.path}.keestone.$token.rollback');
     // The manifest carries the commit token so concurrent commits to the same
     // target each keep their own transaction state instead of corrupting a
     // single shared manifest (which previously mixed stage/sha256 data from
     // both writers and could recover the wrong version after a crash).
-    final manifest = File('${target.path}.keevault.$token.transaction.json');
+    final manifest = File('${target.path}.keestone.$token.transaction.json');
     final hash = validationHash ?? await _sha256(bytes);
 
     final data = <String, dynamic>{
@@ -109,8 +109,10 @@ class AtomicFileStore {
   }
 
   /// Finds the manifest for [targetPath] across concurrent commits by picking
-  /// the newest `*.keevault.<token>.transaction.json` in the target directory.
-  /// Also matches the legacy fixed-name manifest written by older versions.
+  /// the newest `*.keestone.<token>.transaction.json` in the target directory.
+  /// Also matches manifests written before the app was renamed (`.keevault.`
+  /// marker and the pre-tokenization fixed name) so in-flight transactions
+  /// from an upgraded install still recover.
   Future<File?> _findManifest(String targetPath) async {
     final directory = File(targetPath).parent;
     final base = _baseName(targetPath);
@@ -125,9 +127,11 @@ class AtomicFileStore {
       if (entry is! File) continue;
       final name = _baseName(entry.path);
       final isTokenized =
-          name.startsWith('$base.keevault.') &&
+          (name.startsWith('$base.keestone.') ||
+              name.startsWith('$base.keevault.')) &&
           name.endsWith('.transaction.json');
-      final isLegacy = name == '$base.keevault.transaction.json';
+      final isLegacy = name == '$base.keestone.transaction.json' ||
+          name == '$base.keevault.transaction.json';
       if (!isTokenized && !isLegacy) continue;
       if (newest == null ||
           entry.path.compareTo(newest.path) > 0) {

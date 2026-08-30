@@ -7,4 +7,4 @@ override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release
 
 override_dh_auto_install:
-	dh_auto_install -- DESTDIR=$(CURDIR)/debian/keevault
+	dh_auto_install -- DESTDIR=$(CURDIR)/debian/keestone

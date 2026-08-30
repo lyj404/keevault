@@ -118,7 +118,7 @@ class _WideLayout extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        'KeeVault',
+                        'KeeStone',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/features/backup/data/backup_service.dart';
+import 'package:keestone/features/backup/data/backup_service.dart';
 
 void main() {
   group('BackupService integrity verification', () {
@@ -11,7 +11,7 @@ void main() {
     late BackupService service;
 
     setUp(() async {
-      directory = await Directory.systemTemp.createTemp('keevault_backup_');
+      directory = await Directory.systemTemp.createTemp('keestone_backup_');
       service = BackupService(backupDirectory: directory);
     });
 

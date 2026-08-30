@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
   s.name             = 'kreepto'
   s.version          = '0.1.0'
-  s.summary          = 'KeeVault native crypto engine (Rust).'
+  s.summary          = 'KeeStone native crypto engine (Rust).'
   s.description      = <<-DESC
   Rust implementation of KDBX crypto primitives (argon2, aes, chacha20, salsa20)
   exposed to Flutter via dart:ffi. Bundled as a dylib in the macOS app so that
   DynamicLibrary.open('libkreepto.dylib') resolves the FFI symbols.
                        DESC
-  s.homepage         = 'https://github.com/lyj404/keevault'
+  s.homepage         = 'https://github.com/lyj404/keestone'
   s.license          = { :type => 'Apache-2.0', :file => '../LICENSE' }
   s.author           = { 'lyj404' => 'lyj404@proton.me' }
   s.source           = { :path => '.' }

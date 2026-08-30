@@ -1,7 +1,7 @@
 {
   "@@locale": "zh",
 
-  "appTitle": "KeeVault",
+  "appTitle": "KeeStone",
   "appSubtitle": "KeePass 兼容的密码管理器",
 
   "openLocalDatabase": "打开本地数据库",

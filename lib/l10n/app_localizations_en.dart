@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'KeeVault';
+  String get appTitle => 'KeeStone';
 
   @override
   String get appSubtitle => 'KeePass-compatible password manager';

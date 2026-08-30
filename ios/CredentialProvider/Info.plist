@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>KeeVault Autofill</string>
+	<string>KeeStone Autofill</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,9 +25,9 @@
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<!-- Restrict autofill to the listed web domains only when present; -->
-			<!-- empty means KeeVault may offer for any domain. -->
+			<!-- empty means KeeStone may offer for any domain. -->
 			<key>ASCredentialProviderExtensionConfigurationDescription</key>
-			<string>KeeVault autofill credentials</string>
+			<string>KeeStone autofill credentials</string>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.authentication-services-credential-provider-ui</string>

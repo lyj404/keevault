@@ -1,8 +1,8 @@
 **中文** | [English](README_EN.md)
 
-# KeeVault
+# KeeStone
 
-[![Release](https://img.shields.io/github/v/release/lyj404/keevault)](https://github.com/lyj404/keevault/releases)
+[![Release](https://img.shields.io/github/v/release/lyj404/keestone)](https://github.com/lyj404/keestone/releases)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey)]()
 
@@ -23,13 +23,13 @@
 
 ## 安装
 
-从 [Releases](https://github.com/lyj404/keevault/releases) 下载对应平台安装包。
+从 [Releases](https://github.com/lyj404/keestone/releases) 下载对应平台安装包。
 
 | 平台            | 说明                                                           |
 | --------------- | -------------------------------------------------------------- |
-| Windows         | 下载 `KeeVault-*-windows-x64.zip`，解压运行 `keevault.exe`     |
-| Debian / Ubuntu | `sudo apt install ./keevault_*_amd64.deb`                      |
-| Arch Linux      | `yay -S keevault-bin` 或 `paru -S keevault-bin`                |
+| Windows         | 下载 `KeeStone-*-windows-x64.zip`，解压运行 `keestone.exe`     |
+| Debian / Ubuntu | `sudo apt install ./keestone_*_amd64.deb`                      |
+| Arch Linux      | `yay -S keestone-bin` 或 `paru -S keestone-bin`                |
 | Android         | 下载对应架构 APK（`arm64-v8a` / `armeabi-v7a` / `x86_64`）安装。APK 未上架任何应用商店，请仅从 GitHub Releases 下载 |
 
 ## 从源码构建
@@ -37,8 +37,8 @@
 需要 Flutter / Dart SDK >= 3.13.0
 
 ```bash
-git clone https://github.com/lyj404/keevault
-cd keevault
+git clone https://github.com/lyj404/keestone
+cd keestone
 flutter pub get
 flutter run -d windows    # 或 linux / android
 ```

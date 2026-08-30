@@ -1,4 +1,4 @@
-name: keevault
+name: keestone
 description: "A KeePass-compatible password manager built with Flutter."
 publish_to: 'none'
 version: 0.8.4+16

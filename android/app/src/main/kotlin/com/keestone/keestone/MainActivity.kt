@@ -1,4 +1,4 @@
-package com.keevault.keevault
+package com.keestone.keestone
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -12,14 +12,14 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
     override fun provideFlutterEngine(context: Context): FlutterEngine? {
-        return FlutterEngineCache.getInstance().get(KeeVaultApplication.ENGINE_ID)
+        return FlutterEngineCache.getInstance().get(KeeStoneApplication.ENGINE_ID)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.keevault.keevault/privacy",
+            "com.keestone.keestone/privacy",
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "setSecureScreen" -> {
@@ -39,7 +39,7 @@ class MainActivity : FlutterFragmentActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.keevault.keevault/external_url",
+            "com.keestone.keestone/external_url",
         ).setMethodCallHandler { call, result ->
             if (call.method != "openUrl") {
                 result.notImplemented()

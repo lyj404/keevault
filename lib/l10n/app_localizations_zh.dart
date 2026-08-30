@@ -10,7 +10,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'KeeVault';
+  String get appTitle => 'KeeStone';
 
   @override
   String get appSubtitle => 'KeePass 兼容的密码管理器';

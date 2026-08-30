@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:keevault/features/totp/data/totp_service.dart';
+import 'package:keestone/features/totp/data/totp_service.dart';
 
 void main() {
   group('TotpService URI parsing', () {

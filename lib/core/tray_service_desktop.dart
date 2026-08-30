@@ -40,7 +40,7 @@ class TrayServiceDesktop implements TrayServiceBase {
 
     try {
       await _tray.initSystemTray(
-        title: 'KeeVault',
+        title: 'KeeStone',
         iconPath: iconPath,
       );
     } catch (e) {

@@ -440,7 +440,7 @@ class SyncService {
     final result = await downloadWithInfo(config);
     if (result == null) throw Exception('remote_database_not_exist');
     final dir = await getApplicationDocumentsDirectory();
-    final cacheDir = Directory('${dir.path}/keevault_cloud_cache');
+    final cacheDir = Directory('${dir.path}/keestone_cloud_cache');
     if (!await cacheDir.exists()) {
       await cacheDir.create(recursive: true);
     }
@@ -466,7 +466,7 @@ class SyncService {
     final dotIndex = normalized.lastIndexOf('.');
     final stem = dotIndex > 0 ? normalized.substring(0, dotIndex) : normalized;
     final cleaned = stem.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    return cleaned.isEmpty ? 'keevault_sync' : cleaned;
+    return cleaned.isEmpty ? 'keestone_sync' : cleaned;
   }
 
   String _normalizedExtension(String filename) {

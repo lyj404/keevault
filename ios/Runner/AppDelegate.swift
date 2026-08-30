@@ -11,7 +11,7 @@ import UIKit
 
     if let controller = window?.rootViewController as? FlutterViewController {
       let urlChannel = FlutterMethodChannel(
-        name: "com.keevault.keevault/external_url",
+        name: "com.keestone.keestone/external_url",
         binaryMessenger: controller.binaryMessenger
       )
       urlChannel.setMethodCallHandler { call, result in
@@ -43,12 +43,12 @@ import UIKit
       //   writeFile {path, bytes}     -> Bool
       //   deleteFile {path}           -> Bool
       let appGroupChannel = FlutterMethodChannel(
-        name: "com.keevault.keevault/app_group",
+        name: "com.keestone.keestone/app_group",
         binaryMessenger: controller.binaryMessenger
       )
       appGroupChannel.setMethodCallHandler { call, result in
         let fm = FileManager.default
-        let appGroupId = "group.com.keevault.keevault"
+        let appGroupId = "group.com.keestone.keestone"
         switch call.method {
         case "getContainerPath":
           let url = fm.containerURL(forSecurityApplicationGroupIdentifier: appGroupId)

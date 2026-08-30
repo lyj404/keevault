@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 class ExternalUrlService {
   ExternalUrlService._();
 
-  static const _channel = MethodChannel('com.keevault.keevault/external_url');
+  static const _channel = MethodChannel('com.keestone.keestone/external_url');
 
   static Future<bool> openUrl(Uri uri) async {
     if ((uri.scheme != 'http' && uri.scheme != 'https') ||

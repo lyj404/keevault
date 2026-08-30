@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 /// Call [init] once during app startup before using the logger.
 class FileLogOutput extends LogOutput {
   static const _maxSize = 2 * 1024 * 1024; // 2 MB
-  static const _fileName = 'keevault-error.log';
+  static const _fileName = 'keestone-error.log';
 
   final Level _minLevel;
   IOSink? _sink;
@@ -80,7 +80,7 @@ class FileLogOutput extends LogOutput {
     if (Platform.isLinux) {
       // Use XDG_DATA_HOME (~/.local/share) directly to avoid APPLICATION_ID prefix.
       final xdg = Platform.environment['XDG_DATA_HOME'];
-      base = xdg ?? '${Platform.environment['HOME']}/.local/share/keevault';
+      base = xdg ?? '${Platform.environment['HOME']}/.local/share/keestone';
     } else if (Platform.isAndroid) {
       final ext = await getExternalStorageDirectory();
       base = ext?.path ?? (await getApplicationSupportDirectory()).path;
