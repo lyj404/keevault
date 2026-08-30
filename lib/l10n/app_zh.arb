@@ -1,15 +1,12 @@
 {
   "@@locale": "zh",
-
   "appTitle": "KeeStone",
   "appSubtitle": "KeePass 兼容的密码管理器",
-
   "openLocalDatabase": "打开本地数据库",
   "createNewDatabase": "创建新数据库",
   "openCloudDatabase": "打开云端数据库",
   "recentOpened": "最近打开",
   "cloudPrefix": "云端",
-
   "syncingCloudDatabase": "正在同步云端数据库...",
   "downloadingFromCloud": "正在从云端下载...",
   "uploadingToCloud": "正在同步到云端...",
@@ -20,10 +17,17 @@
   "cloudNoDatabaseCreateFirst": "云端还没有数据库，请先在本地创建并保存后同步",
   "cloudNoDatabaseSaveFirst": "云端还没有数据库，请先保存本地数据库后同步",
   "downloadFailed": "下载失败: {error}",
-  "@downloadFailed": { "placeholders": { "error": {} } },
+  "@downloadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "syncFailedWithError": "同步失败: {error}",
-  "@syncFailedWithError": { "placeholders": { "error": {} } },
-
+  "@syncFailedWithError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "cancel": "取消",
   "goToSettings": "去设置",
   "save": "保存",
@@ -31,7 +35,6 @@
   "confirm": "确定",
   "move": "移动",
   "close": "关闭",
-
   "unlockDatabase": "解锁数据库",
   "cloudDatabase": "云端数据库",
   "masterPassword": "主密码",
@@ -41,8 +44,11 @@
   "passwordError": "密码错误",
   "fileFormatIncorrect": "文件格式不正确或已损坏",
   "openFailed": "打开失败: {msg}",
-  "@openFailed": { "placeholders": { "msg": {} } },
-
+  "@openFailed": {
+    "placeholders": {
+      "msg": {}
+    }
+  },
   "createDatabase": "创建数据库",
   "databaseName": "数据库名称",
   "pleaseEnterName": "请输入名称",
@@ -52,14 +58,16 @@
   "create": "创建",
   "saveDatabase": "保存数据库",
   "myDatabase": "我的数据库",
-
   "error": "错误: {e}",
-  "@error": { "placeholders": { "e": {} } },
+  "@error": {
+    "placeholders": {
+      "e": {}
+    }
+  },
   "cloudNewVersion": "云端有新版本",
   "cloudModifiedSyncLatest": "检测到云端数据库已被其他设备修改，是否同步最新版本？",
   "ignore": "忽略",
   "sync": "同步",
-
   "deleteEntry": "删除条目",
   "moveToRecycleBin": "确定将此条目移至回收站？",
   "permanentDelete": "永久删除",
@@ -72,7 +80,11 @@
   "cannotDeleteNonEmptyGroup": "不能删除非空分组",
   "deleteGroup": "删除分组",
   "deleteGroupConfirm": "确定删除分组「{name}」？",
-  "@deleteGroupConfirm": { "placeholders": { "name": {} } },
+  "@deleteGroupConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "renameGroup": "重命名分组",
   "groupName": "分组名称",
   "saved": "已保存",
@@ -92,7 +104,6 @@
   "overwriteCloud": "覆盖云端",
   "overwrittenToCloud": "已覆盖同步到云端",
   "syncFailed": "同步失败",
-
   "search": "搜索",
   "back": "返回",
   "addEntry": "添加条目",
@@ -102,11 +113,14 @@
   "syncToCloud": "同步到云端",
   "downloadFromCloud": "从云端下载",
   "settings": "设置",
+  "settingsCategoryGeneral": "常规",
+  "settingsCategoryAppearance": "外观",
+  "settingsCategorySecurity": "安全",
+  "settingsCategorySync": "同步",
+  "settingsCategoryDatabase": "数据库",
   "closeDatabase": "关闭数据库",
-
   "rootDirectory": "根目录",
   "thisGroupIsEmpty": "此分组为空",
-
   "newEntry": "新建条目",
   "title": "标题",
   "username": "用户名",
@@ -116,13 +130,10 @@
   "generatePassword": "生成密码",
   "newGroup": "新建分组",
   "rename": "重命名",
-
   "syncedToCloud": "已同步到云端",
   "syncedFromCloud": "已从云端同步",
-
   "copyUsername": "复制用户名",
   "copyPassword": "复制密码",
-
   "entry": "条目",
   "entryNotFound": "未找到该条目",
   "entryDetail": "条目详情",
@@ -134,16 +145,18 @@
   "untitled": "(未命名)",
   "copy": "复制",
   "copiedField": "已复制{label}",
-  "@copiedField": { "placeholders": { "label": {} } },
+  "@copiedField": {
+    "placeholders": {
+      "label": {}
+    }
+  },
   "copiedPassword": "已复制密码",
   "copiedUsername": "已复制用户名",
   "hide": "隐藏",
   "show": "显示",
-
   "searchEntries": "搜索条目...",
   "enterKeywords": "输入关键词搜索",
   "noResults": "未找到匹配结果",
-
   "webdavSync": "WebDAV 同步",
   "webdavProfiles": "WebDAV 配置档案",
   "webdavProfile": "WebDAV 档案",
@@ -151,7 +164,11 @@
   "newProfile": "新建档案",
   "selectWebDavProfile": "选择 WebDAV 档案",
   "deleteProfileConfirm": "确定删除档案「{name}」？",
-  "@deleteProfileConfirm": { "placeholders": { "name": {} } },
+  "@deleteProfileConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "cannotDeleteLastProfile": "至少保留一个 WebDAV 档案",
   "autoSyncOnSave": "保存时自动同步到云端",
   "serverAddress": "服务器地址",
@@ -171,9 +188,7 @@
   "profile": "档案",
   "pleaseCreateWebDavProfile": "请先创建一个 WebDAV 档案",
   "profileRequired": "请选择 WebDAV 档案",
-
   "moveToGroup": "移动到分组",
-
   "generatePasswordTitle": "生成密码",
   "copied": "复制",
   "regenerate": "重新生成",
@@ -196,31 +211,42 @@
   "wordCount": "单词数",
   "separatorLabel": "分隔符",
   "appendDigit": "追加数字",
-
   "recycleBin": "回收站",
-
   "noPasswordCannotReload": "无密码信息，无法重新加载",
-
   "authFailedCheckCredentials": "认证失败，请检查用户名和密码",
   "serverConnectedPathNotAccessible": "服务器已连接，但路径「{path}」不可访问",
-  "@serverConnectedPathNotAccessible": { "placeholders": { "path": {} } },
+  "@serverConnectedPathNotAccessible": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "pathNotExistTitle": "路径不存在",
   "pathNotExistMessage": "路径「{path}」不存在。数据库文件将在首次同步时生成。",
-  "@pathNotExistMessage": { "placeholders": { "path": {} } },
+  "@pathNotExistMessage": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "reenterPath": "重新输入",
   "createPath": "创建目录",
   "creatingPath": "创建中...",
   "pathCreated": "目录已创建",
   "pathCreateFailed": "创建失败: {msg}",
-  "@pathCreateFailed": { "placeholders": { "msg": {} } },
+  "@pathCreateFailed": {
+    "placeholders": {
+      "msg": {}
+    }
+  },
   "connectionFailedMsg": "连接失败: {msg}",
-  "@connectionFailedMsg": { "placeholders": { "msg": {} } },
+  "@connectionFailedMsg": {
+    "placeholders": {
+      "msg": {}
+    }
+  },
   "networkFailedCheckServer": "网络连接失败，请检查服务器地址",
   "remoteDatabaseNotExist": "远程数据库不存在",
-
   "pleaseConfigureWebDAVFirst": "请先配置 WebDAV",
   "cloudDatabaseNotExist": "云端数据库不存在",
-
   "language": "语言",
   "followSystem": "跟随系统",
   "theme": "主题",
@@ -228,10 +254,8 @@
   "darkTheme": "深色模式",
   "chinese": "中文",
   "english": "English",
-
   "groups": "个分组",
   "entries": "个条目",
-
   "closeBehavior": "关闭窗口时",
   "askEveryTime": "每次询问",
   "minimizeToTray": "最小化到系统托盘",
@@ -241,7 +265,6 @@
   "rememberChoice": "记住我的选择",
   "showMainWindow": "显示主窗口",
   "exit": "退出",
-
   "autoLock": "自动锁定",
   "autoLockDescription": "无操作后自动锁定数据库",
   "autoSave": "自动保存",
@@ -250,7 +273,6 @@
   "disabled": "关闭",
   "minute": "分钟",
   "minutes": "分钟",
-
   "databaseBackup": "数据库备份",
   "autoBackup": "自动备份",
   "autoBackupDescription": "保存和同步前自动备份数据库",
@@ -268,10 +290,17 @@
   "backupDeleted": "备份已删除",
   "backupRetention": "备份数量",
   "backupRetentionInfo": "保留最近 {count} 个备份",
-  "@backupRetentionInfo": { "placeholders": { "count": {} } },
+  "@backupRetentionInfo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "backupRetentionCount": "保留 {count} 个备份",
-  "@backupRetentionCount": { "placeholders": { "count": {} } },
-
+  "@backupRetentionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "about": "关于",
   "version": "版本",
   "build": "构建",
@@ -285,7 +314,6 @@
   "alreadyLatest": "已是最新版本",
   "licenses": "许可证",
   "openSourceLicenses": "开源许可协议",
-
   "changeMasterPassword": "修改主密码",
   "currentPassword": "当前密码",
   "pleaseEnterCurrentPassword": "请输入当前密码",
@@ -293,14 +321,12 @@
   "pleaseEnterNewPassword": "请输入新密码",
   "confirmNewPassword": "确认新密码",
   "passwordChanged": "主密码已修改",
-
   "history": "历史记录",
   "noHistory": "暂无历史记录",
   "restoreVersion": "恢复此版本",
   "restoreVersionConfirm": "确定将条目恢复到此版本？当前状态会先保存到历史记录。",
   "versionRestored": "已恢复到历史版本",
   "currentVersion": "当前版本",
-
   "attachments": "附件",
   "addAttachment": "添加附件",
   "deleteAttachment": "删除附件",
@@ -310,7 +336,6 @@
   "attachmentSaved": "附件已保存",
   "saveAttachment": "保存附件",
   "noAttachments": "暂无附件",
-
   "customFields": "自定义字段",
   "addCustomField": "添加字段",
   "fieldName": "字段名称",
@@ -319,40 +344,59 @@
   "unprotectField": "取消保护",
   "fieldNameEmpty": "字段名称不能为空",
   "fieldNameDuplicate": "字段名称重复: {name}",
-  "@fieldNameDuplicate": { "placeholders": { "name": {} } },
+  "@fieldNameDuplicate": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "fieldNameReserved": "字段名称 \"{name}\" 是保留名称",
-  "@fieldNameReserved": { "placeholders": { "name": {} } },
+  "@fieldNameReserved": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "deleteCustomFieldConfirm": "确定删除字段 \"{name}\"？",
-  "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
-
+  "@deleteCustomFieldConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "backupPasswordDifferent": "备份使用了不同的密码（可能修改过主密码），请输入备份时的密码",
   "backupPasswordHint": "请输入备份时的主密码",
-
   "importCsv": "导入 CSV",
   "exportCsv": "导出 CSV",
   "exportKdbx": "导出 KDBX",
   "importCsvTitle": "导入 CSV 文件",
   "importSuccess": "成功导入 {count} 个条目",
-  "@importSuccess": { "placeholders": { "count": {} } },
+  "@importSuccess": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importFailed": "导入失败: {error}",
-  "@importFailed": { "placeholders": { "error": {} } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "exportSuccess": "导出成功",
   "exportFailed": "导出失败",
   "noEntriesToExport": "没有可导出的条目",
   "noEntriesInCsv": "CSV 文件中未找到有效条目",
-
   "expiration": "过期时间",
   "noExpiration": "永不过期",
   "expired": "已过期",
   "expiresOn": "过期于 {date}",
-  "@expiresOn": { "placeholders": { "date": {} } },
-
+  "@expiresOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "keyFile": "密钥文件",
   "selectKeyFile": "选择密钥文件（可选）",
   "keyFileSelected": "已选择密钥文件",
   "changeKeyFile": "更换",
   "removeKeyFile": "移除密钥文件",
-
   "setupTotp": "设置 TOTP",
   "totpUriLabel": "粘贴 otpauth:// 链接",
   "totpParseUri": "解析链接",
@@ -376,20 +420,16 @@
   "scanQrHint": "将摄像头对准 TOTP 二维码",
   "toggleFlashlight": "切换闪光灯",
   "switchCamera": "切换摄像头",
-
   "expirationReminder": "过期提醒",
   "expirationReminderDescription": "密码即将过期时通知提醒",
   "daysBeforeExpiry": "天前提醒",
-
   "tags": "标签",
   "addTag": "添加标签",
   "filterByTag": "按标签筛选",
   "allTags": "全部标签",
   "noTags": "无标签",
-
   "shortcutSearch": "搜索",
   "shortcutSave": "保存",
-
   "biometricUnlock": "指纹解锁",
   "biometricUnlockDescription": "使用指纹或面部识别解锁数据库",
   "authenticateToEnableBiometric": "验证身份以启用指纹解锁",
@@ -402,10 +442,14 @@
   "unlockWithBiometric": "使用指纹解锁",
   "authenticateToUnlock": "验证身份以解锁数据库",
   "noStoredPassword": "没有存储的密码，请先使用密码解锁",
-
   "syncRetry": "重试",
   "syncRetrying": "重试中... ({attempt}/{maxAttempts})",
-  "@syncRetrying": { "placeholders": { "attempt": {}, "maxAttempts": {} } },
+  "@syncRetrying": {
+    "placeholders": {
+      "attempt": {},
+      "maxAttempts": {}
+    }
+  },
   "syncErrorNetwork": "网络连接失败，请检查网络和服务器设置。",
   "syncErrorAuth": "认证失败，请在设置中检查用户名和密码。",
   "syncErrorNotFound": "远程数据库不存在，请在设置中检查远程路径。",
@@ -433,7 +477,6 @@
   "batchDeleteConfirm": "确定删除选中的 {count} 个条目吗？",
   "batchTagTitle": "编辑标签",
   "batchTagHint": "输入标签名称",
-
   "groupsTab": "分组",
   "entriesTab": "条目",
   "totpTab": "TOTP",
@@ -442,7 +485,6 @@
   "noTotpEntries": "暂无配置 TOTP 的条目",
   "unsavedChanges": "有未保存的更改",
   "allSaved": "所有更改已保存",
-
   "strengthWeak": "弱",
   "strengthFair": "一般",
   "strengthGood": "良好",

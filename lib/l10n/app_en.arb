@@ -1,15 +1,12 @@
 {
   "@@locale": "en",
-
   "appTitle": "KeeStone",
   "appSubtitle": "KeePass-compatible password manager",
-
   "openLocalDatabase": "Open Local Database",
   "createNewDatabase": "Create New Database",
   "openCloudDatabase": "Open Cloud Database",
   "recentOpened": "Recent",
   "cloudPrefix": "Cloud",
-
   "syncingCloudDatabase": "Syncing cloud database...",
   "downloadingFromCloud": "Downloading from cloud...",
   "uploadingToCloud": "Uploading to cloud...",
@@ -21,7 +18,6 @@
   "cloudNoDatabaseSaveFirst": "No cloud database found. Please save a local database first, then sync.",
   "downloadFailed": "Download failed: {error}",
   "syncFailedWithError": "Sync failed: {error}",
-
   "cancel": "Cancel",
   "goToSettings": "Go to Settings",
   "save": "Save",
@@ -29,7 +25,6 @@
   "confirm": "OK",
   "move": "Move",
   "close": "Close",
-
   "unlockDatabase": "Unlock Database",
   "cloudDatabase": "Cloud Database",
   "masterPassword": "Master Password",
@@ -39,7 +34,6 @@
   "passwordError": "Incorrect password",
   "fileFormatIncorrect": "File format is incorrect or corrupted",
   "openFailed": "Open failed: {msg}",
-
   "createDatabase": "Create Database",
   "databaseName": "Database Name",
   "pleaseEnterName": "Please enter a name",
@@ -49,13 +43,11 @@
   "create": "Create",
   "saveDatabase": "Save Database",
   "myDatabase": "My Database",
-
   "error": "Error: {e}",
   "cloudNewVersion": "New version on cloud",
   "cloudModifiedSyncLatest": "Cloud database has been modified by another device. Sync the latest version?",
   "ignore": "Ignore",
   "sync": "Sync",
-
   "deleteEntry": "Delete Entry",
   "moveToRecycleBin": "Move this entry to the recycle bin?",
   "permanentDelete": "Permanent Delete",
@@ -87,7 +79,6 @@
   "overwriteCloud": "Overwrite Cloud",
   "overwrittenToCloud": "Overwritten to cloud",
   "syncFailed": "Sync failed",
-
   "search": "Search",
   "back": "Back",
   "addEntry": "Add Entry",
@@ -97,11 +88,14 @@
   "syncToCloud": "Sync to Cloud",
   "downloadFromCloud": "Download from Cloud",
   "settings": "Settings",
+  "settingsCategoryGeneral": "General",
+  "settingsCategoryAppearance": "Appearance",
+  "settingsCategorySecurity": "Security",
+  "settingsCategorySync": "Sync",
+  "settingsCategoryDatabase": "Database",
   "closeDatabase": "Close Database",
-
   "rootDirectory": "Root",
   "thisGroupIsEmpty": "This group is empty",
-
   "newEntry": "New Entry",
   "title": "Title",
   "username": "Username",
@@ -111,13 +105,10 @@
   "generatePassword": "Generate Password",
   "newGroup": "New Group",
   "rename": "Rename",
-
   "syncedToCloud": "Synced to cloud",
   "syncedFromCloud": "Synced from cloud",
-
   "copyUsername": "Copy Username",
   "copyPassword": "Copy Password",
-
   "entry": "Entry",
   "entryNotFound": "Entry not found",
   "entryDetail": "Entry Details",
@@ -133,11 +124,9 @@
   "copiedUsername": "Copied username",
   "hide": "Hide",
   "show": "Show",
-
   "searchEntries": "Search entries...",
   "enterKeywords": "Enter keywords to search",
   "noResults": "No matching results",
-
   "webdavSync": "WebDAV Sync",
   "webdavProfiles": "WebDAV Profiles",
   "webdavProfile": "WebDAV Profile",
@@ -164,9 +153,7 @@
   "profile": "Profile",
   "pleaseCreateWebDavProfile": "Please create a WebDAV profile first",
   "profileRequired": "Please select a WebDAV profile",
-
   "moveToGroup": "Move to Group",
-
   "generatePasswordTitle": "Generate Password",
   "copied": "Copy",
   "regenerate": "Regenerate",
@@ -189,29 +176,32 @@
   "wordCount": "Word Count",
   "separatorLabel": "Separator",
   "appendDigit": "Append digit",
-
   "recycleBin": "Recycle Bin",
-
   "noPasswordCannotReload": "No password available, cannot reload",
-
   "authFailedCheckCredentials": "Authentication failed, please check username and password",
   "serverConnectedPathNotAccessible": "Server connected, but path '{path}' is not accessible",
   "pathNotExistTitle": "Path Not Found",
   "pathNotExistMessage": "Path '{path}' does not exist. The database file will be created on first sync.",
-  "@pathNotExistMessage": { "placeholders": { "path": {} } },
+  "@pathNotExistMessage": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "reenterPath": "Re-enter",
   "createPath": "Create",
   "creatingPath": "Creating...",
   "pathCreated": "Directory created",
   "pathCreateFailed": "Create failed: {msg}",
-  "@pathCreateFailed": { "placeholders": { "msg": {} } },
+  "@pathCreateFailed": {
+    "placeholders": {
+      "msg": {}
+    }
+  },
   "connectionFailedMsg": "Connection failed: {msg}",
   "networkFailedCheckServer": "Network connection failed, please check server address",
   "remoteDatabaseNotExist": "Remote database does not exist",
-
   "pleaseConfigureWebDAVFirst": "Please configure WebDAV first",
   "cloudDatabaseNotExist": "Cloud database does not exist",
-
   "language": "Language",
   "followSystem": "Follow System",
   "theme": "Theme",
@@ -219,10 +209,8 @@
   "darkTheme": "Dark",
   "chinese": "中文",
   "english": "English",
-
   "groups": "groups",
   "entries": "entries",
-
   "closeBehavior": "On Window Close",
   "askEveryTime": "Ask Every Time",
   "minimizeToTray": "Minimize to System Tray",
@@ -232,7 +220,6 @@
   "rememberChoice": "Remember my choice",
   "showMainWindow": "Show Main Window",
   "exit": "Exit",
-
   "autoLock": "Auto Lock",
   "autoLockDescription": "Lock database after inactivity",
   "autoSave": "Auto Save",
@@ -241,7 +228,6 @@
   "disabled": "Disabled",
   "minute": "min",
   "minutes": "min",
-
   "databaseBackup": "Database Backup",
   "autoBackup": "Auto Backup",
   "autoBackupDescription": "Backup before every save and cloud sync",
@@ -259,10 +245,17 @@
   "backupDeleted": "Backup deleted",
   "backupRetention": "Backup Retention",
   "backupRetentionInfo": "Keeping latest {count} backups",
-  "@backupRetentionInfo": { "placeholders": { "count": {} } },
+  "@backupRetentionInfo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "backupRetentionCount": "Keep {count} backups",
-  "@backupRetentionCount": { "placeholders": { "count": {} } },
-
+  "@backupRetentionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "about": "About",
   "version": "Version",
   "build": "Build",
@@ -276,7 +269,6 @@
   "reportIssueDescription": "Report bugs or suggestions",
   "licenses": "Licenses",
   "openSourceLicenses": "Open source licenses",
-
   "changeMasterPassword": "Change Master Password",
   "currentPassword": "Current Password",
   "pleaseEnterCurrentPassword": "Please enter current password",
@@ -284,14 +276,12 @@
   "pleaseEnterNewPassword": "Please enter new password",
   "confirmNewPassword": "Confirm New Password",
   "passwordChanged": "Master password changed",
-
   "history": "History",
   "noHistory": "No history yet",
   "restoreVersion": "Restore this version",
   "restoreVersionConfirm": "Restore entry to this version? The current state will be saved to history first.",
   "versionRestored": "Restored to historical version",
   "currentVersion": "Current version",
-
   "attachments": "Attachments",
   "addAttachment": "Add Attachment",
   "deleteAttachment": "Delete Attachment",
@@ -301,7 +291,6 @@
   "attachmentSaved": "Attachment saved",
   "saveAttachment": "Save Attachment",
   "noAttachments": "No attachments",
-
   "customFields": "Custom Fields",
   "addCustomField": "Add Field",
   "fieldName": "Field Name",
@@ -310,40 +299,59 @@
   "unprotectField": "Unprotect Field",
   "fieldNameEmpty": "Field name cannot be empty",
   "fieldNameDuplicate": "Duplicate field name: {name}",
-  "@fieldNameDuplicate": { "placeholders": { "name": {} } },
+  "@fieldNameDuplicate": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "fieldNameReserved": "Field name \"{name}\" is reserved",
-  "@fieldNameReserved": { "placeholders": { "name": {} } },
+  "@fieldNameReserved": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "deleteCustomFieldConfirm": "Delete field \"{name}\"?",
-  "@deleteCustomFieldConfirm": { "placeholders": { "name": {} } },
-
+  "@deleteCustomFieldConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "backupPasswordDifferent": "Backup uses a different password (master password may have been changed). Please enter the backup password.",
   "backupPasswordHint": "Enter the master password from when the backup was created",
-
   "importCsv": "Import CSV",
   "exportCsv": "Export CSV",
   "exportKdbx": "Export KDBX",
   "importCsvTitle": "Import CSV File",
   "importSuccess": "Successfully imported {count} entries",
-  "@importSuccess": { "placeholders": { "count": {} } },
+  "@importSuccess": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importFailed": "Import failed: {error}",
-  "@importFailed": { "placeholders": { "error": {} } },
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "exportSuccess": "Export successful",
   "exportFailed": "Export failed",
   "noEntriesToExport": "No entries to export",
   "noEntriesInCsv": "No valid entries found in CSV file",
-
   "expiration": "Expiration",
   "noExpiration": "No Expiration",
   "expired": "Expired",
   "expiresOn": "Expires on {date}",
-  "@expiresOn": { "placeholders": { "date": {} } },
-
+  "@expiresOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "keyFile": "Key File",
   "selectKeyFile": "Select Key File (optional)",
   "keyFileSelected": "Key file selected",
   "changeKeyFile": "Change",
   "removeKeyFile": "Remove Key File",
-
   "setupTotp": "Setup TOTP",
   "totpUriLabel": "Paste otpauth:// URI",
   "totpParseUri": "Parse URI",
@@ -367,20 +375,16 @@
   "scanQrHint": "Point camera at a TOTP QR code",
   "toggleFlashlight": "Toggle Flashlight",
   "switchCamera": "Switch Camera",
-
   "expirationReminder": "Expiration Reminder",
   "expirationReminderDescription": "Notify when passwords are about to expire",
   "daysBeforeExpiry": "days before expiry",
-
   "tags": "Tags",
   "addTag": "Add Tag",
   "filterByTag": "Filter by Tag",
   "allTags": "All Tags",
   "noTags": "No Tags",
-
   "shortcutSearch": "Search",
   "shortcutSave": "Save",
-
   "biometricUnlock": "Biometric Unlock",
   "biometricUnlockDescription": "Unlock with fingerprint or face recognition",
   "authenticateToEnableBiometric": "Authenticate to enable biometric unlock",
@@ -393,10 +397,14 @@
   "unlockWithBiometric": "Unlock with Biometric",
   "authenticateToUnlock": "Authenticate to unlock database",
   "noStoredPassword": "No stored password. Please unlock with password first.",
-
   "syncRetry": "Retry",
   "syncRetrying": "Retrying... ({attempt}/{maxAttempts})",
-  "@syncRetrying": { "placeholders": { "attempt": {}, "maxAttempts": {} } },
+  "@syncRetrying": {
+    "placeholders": {
+      "attempt": {},
+      "maxAttempts": {}
+    }
+  },
   "syncErrorNetwork": "Network connection failed. Please check your internet and server settings.",
   "syncErrorAuth": "Authentication failed. Please check your username and password in settings.",
   "syncErrorNotFound": "Remote database not found. Please check the remote path in settings.",
@@ -424,7 +432,6 @@
   "batchDeleteConfirm": "Delete {count} selected entries?",
   "batchTagTitle": "Edit tags",
   "batchTagHint": "Enter tag name",
-
   "groupsTab": "Groups",
   "entriesTab": "Entries",
   "totpTab": "TOTP",
@@ -433,7 +440,6 @@
   "noTotpEntries": "No entries with TOTP configured",
   "unsavedChanges": "Unsaved changes",
   "allSaved": "All changes saved",
-
   "strengthWeak": "Weak",
   "strengthFair": "Fair",
   "strengthGood": "Good",

@@ -292,6 +292,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get settingsCategoryGeneral => 'General';
+
+  @override
+  String get settingsCategoryAppearance => 'Appearance';
+
+  @override
+  String get settingsCategorySecurity => 'Security';
+
+  @override
+  String get settingsCategorySync => 'Sync';
+
+  @override
+  String get settingsCategoryDatabase => 'Database';
+
+  @override
   String get closeDatabase => 'Close Database';
 
   @override

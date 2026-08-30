@@ -286,6 +286,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
+  String get settingsCategoryGeneral => '常规';
+
+  @override
+  String get settingsCategoryAppearance => '外观';
+
+  @override
+  String get settingsCategorySecurity => '安全';
+
+  @override
+  String get settingsCategorySync => '同步';
+
+  @override
+  String get settingsCategoryDatabase => '数据库';
+
+  @override
   String get closeDatabase => '关闭数据库';
 
   @override

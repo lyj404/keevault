@@ -626,6 +626,36 @@ abstract class AppLocalizations {
   /// **'设置'**
   String get settings;
 
+  /// No description provided for @settingsCategoryGeneral.
+  ///
+  /// In zh, this message translates to:
+  /// **'常规'**
+  String get settingsCategoryGeneral;
+
+  /// No description provided for @settingsCategoryAppearance.
+  ///
+  /// In zh, this message translates to:
+  /// **'外观'**
+  String get settingsCategoryAppearance;
+
+  /// No description provided for @settingsCategorySecurity.
+  ///
+  /// In zh, this message translates to:
+  /// **'安全'**
+  String get settingsCategorySecurity;
+
+  /// No description provided for @settingsCategorySync.
+  ///
+  /// In zh, this message translates to:
+  /// **'同步'**
+  String get settingsCategorySync;
+
+  /// No description provided for @settingsCategoryDatabase.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据库'**
+  String get settingsCategoryDatabase;
+
   /// No description provided for @closeDatabase.
   ///
   /// In zh, this message translates to:

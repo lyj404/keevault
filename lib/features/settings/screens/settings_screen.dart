@@ -22,6 +22,8 @@ import '../data/webdav_config.dart';
 import '../providers/settings_provider.dart';
 import '../../sync/providers/sync_provider.dart';
 
+part 'settings_layouts.dart';
+
 /// User's choice when prompted that the remote path does not exist.
 enum _PathNotExistChoice { reenter, create }
 
@@ -80,11 +82,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final currentLocale = ref.watch(localeProvider);
-    final currentThemeMode = ref.watch(themeModeProvider);
+
+    // Desktop: category sidebar + detail panes. Mobile: single column.
+    if (ClayLayout.isWide(context)) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.settings)),
+        body: _SettingsWideLayout(
+          categories: [
+            _SettingsCategorySpec(
+              icon: Icons.tune_rounded,
+              label: l10n.settingsCategoryGeneral,
+              content: _pane(context, _generalCards()),
+            ),
+            _SettingsCategorySpec(
+              icon: Icons.palette_outlined,
+              label: l10n.settingsCategoryAppearance,
+              content: _pane(context, _appearanceCards()),
+            ),
+            _SettingsCategorySpec(
+              icon: Icons.shield_outlined,
+              label: l10n.settingsCategorySecurity,
+              content: _pane(context, _securityCards()),
+            ),
+            _SettingsCategorySpec(
+              icon: Icons.cloud_upload_rounded,
+              label: l10n.settingsCategorySync,
+              content: _pane(context, _syncCards()),
+            ),
+            _SettingsCategorySpec(
+              icon: Icons.storage_rounded,
+              label: l10n.settingsCategoryDatabase,
+              content: _pane(context, _databaseCards()),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final children = [
+      ..._withGaps(_generalCards()),
+      const SizedBox(height: 16),
+      ..._withGaps(_appearanceCards()),
+      const SizedBox(height: 16),
+      ..._withGaps(_securityCards()),
+      const SizedBox(height: 16),
+      Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _withGaps(_syncCards()),
+        ),
+      ),
+      const SizedBox(height: 16),
+      ..._withGaps(_databaseCards()),
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -93,925 +145,863 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           constraints: const BoxConstraints(maxWidth: 480),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Language switcher card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.language_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.language,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        DropdownButton<String>(
-                          value: currentLocale?.languageCode ?? 'system',
-                          underline: const SizedBox.shrink(),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'system',
-                              child: Text(l10n.followSystem),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'zh',
-                              child: Text('中文'),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'en',
-                              child: Text('English'),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v == null) return;
-                            if (v == 'system') {
-                              ref.read(localeProvider.notifier).setLocale(null);
-                            } else {
-                              ref
-                                  .read(localeProvider.notifier)
-                                  .setLocale(Locale(v));
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Theme switcher card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            currentThemeMode == ThemeMode.dark
-                                ? Icons.dark_mode_rounded
-                                : currentThemeMode == ThemeMode.light
-                                ? Icons.light_mode_rounded
-                                : Icons.brightness_auto_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.theme,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        DropdownButton<ThemeMode>(
-                          value: currentThemeMode,
-                          underline: const SizedBox.shrink(),
-                          items: [
-                            DropdownMenuItem(
-                              value: ThemeMode.system,
-                              child: Text(l10n.followSystem),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeMode.light,
-                              child: Text(l10n.lightTheme),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeMode.dark,
-                              child: Text(l10n.darkTheme),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) {
-                              ref
-                                  .read(themeModeProvider.notifier)
-                                  .setThemeMode(v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Close behavior card (desktop only)
-                  if (Platform.isWindows ||
-                      Platform.isLinux ||
-                      Platform.isMacOS) ...[
-                    const SizedBox(height: 16),
-                    _SectionCard(
-                      brightness: brightness,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: ClayDecoration.iconContainer(
-                              brightness: brightness,
-                            ),
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: 20,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.closeBehavior,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                          DropdownButton<CloseBehavior>(
-                            value: ref.watch(closeBehaviorProvider),
-                            underline: const SizedBox.shrink(),
-                            items: [
-                              DropdownMenuItem(
-                                value: CloseBehavior.ask,
-                                child: Text(l10n.askEveryTime),
-                              ),
-                              DropdownMenuItem(
-                                value: CloseBehavior.minimizeToTray,
-                                child: Text(l10n.minimizeToTray),
-                              ),
-                              DropdownMenuItem(
-                                value: CloseBehavior.exit,
-                                child: Text(l10n.exitApp),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                ref
-                                    .read(closeBehaviorProvider.notifier)
-                                    .setCloseBehavior(v);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-
-                  // Privacy protection card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.privacy_tip_outlined,
-                              color: colorScheme.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.privacyProtection,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.blockScreenshots),
-                          subtitle: Text(l10n.blockScreenshotsDescription),
-                          value: ref.watch(privacyProvider).blockScreenshots,
-                          onChanged: (value) => ref
-                              .read(privacyProvider.notifier)
-                              .setBlockScreenshots(value),
-                        ),
-                        SwitchListTile.adaptive(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l10n.hideInBackground),
-                          subtitle: Text(l10n.hideInBackgroundDescription),
-                          value: ref.watch(privacyProvider).hideInBackground,
-                          onChanged: (value) => ref
-                              .read(privacyProvider.notifier)
-                              .setHideInBackground(value),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Auto-lock card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.lock_clock_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.autoLock,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                l10n.autoLockDescription,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        DropdownButton<int>(
-                          value: ref.watch(autoLockProvider),
-                          underline: const SizedBox.shrink(),
-                          items: [
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text(l10n.disabled),
-                            ),
-                            DropdownMenuItem(
-                              value: 1,
-                              child: Text('1 ${l10n.minute}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 5,
-                              child: Text('5 ${l10n.minutes}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 15,
-                              child: Text('15 ${l10n.minutes}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 30,
-                              child: Text('30 ${l10n.minutes}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 60,
-                              child: Text('60 ${l10n.minutes}'),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) {
-                              ref.read(autoLockProvider.notifier).setMinutes(v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Auto-save card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.save_outlined,
-                          size: 20,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.autoSave,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                l10n.autoSaveDescription,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        DropdownButton<int>(
-                          value: ref.watch(autoSaveProvider),
-                          underline: const SizedBox.shrink(),
-                          items: [
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text(l10n.disabled),
-                            ),
-                            DropdownMenuItem(
-                              value: 15,
-                              child: Text('15 ${l10n.seconds}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 30,
-                              child: Text('30 ${l10n.seconds}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 60,
-                              child: Text('60 ${l10n.seconds}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 120,
-                              child: Text('120 ${l10n.seconds}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 300,
-                              child: Text('300 ${l10n.seconds}'),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) {
-                              ref.read(autoSaveProvider.notifier).setSeconds(v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Expiration reminder card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.notifications_active_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.expirationReminder,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                l10n.expirationReminderDescription,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        DropdownButton<int>(
-                          value: ref.watch(expirationReminderProvider),
-                          underline: const SizedBox.shrink(),
-                          items: [
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text(l10n.disabled),
-                            ),
-                            DropdownMenuItem(
-                              value: 1,
-                              child: Text('1 ${l10n.daysBeforeExpiry}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 3,
-                              child: Text('3 ${l10n.daysBeforeExpiry}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 7,
-                              child: Text('7 ${l10n.daysBeforeExpiry}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 14,
-                              child: Text('14 ${l10n.daysBeforeExpiry}'),
-                            ),
-                            DropdownMenuItem(
-                              value: 30,
-                              child: Text('30 ${l10n.daysBeforeExpiry}'),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) {
-                              ref
-                                  .read(expirationReminderProvider.notifier)
-                                  .setDays(v);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Unlock method card (Android/iOS, requires biometric support)
-                  if ((Platform.isAndroid || Platform.isIOS) &&
-                      ref.watch(biometricAvailableProvider).valueOrNull ==
-                          true) ...[
-                    _SectionCard(
-                      brightness: brightness,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 38,
-                                height: 38,
-                                decoration: ClayDecoration.iconContainer(
-                                  brightness: brightness,
-                                ),
-                                child: Icon(
-                                  Icons.lock_open_rounded,
-                                  size: 20,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  l10n.unlockMethod,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              _UnlockMethodChip(
-                                icon: Icons.password_rounded,
-                                label: l10n.unlockByPassword,
-                                selected:
-                                    ref.watch(unlockMethodProvider) ==
-                                    UnlockMethod.password,
-                                onTap: () => _setUnlockMethod(
-                                  UnlockMethod.password,
-                                  l10n,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              _UnlockMethodChip(
-                                icon: Icons.fingerprint_rounded,
-                                label: l10n.unlockByBiometric,
-                                selected:
-                                    ref.watch(unlockMethodProvider) ==
-                                    UnlockMethod.biometric,
-                                onTap: () => _setUnlockMethod(
-                                  UnlockMethod.biometric,
-                                  l10n,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Change master password card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.key_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.changeMasterPassword,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(10),
-                              onTap: () => showChangePasswordDialog(context),
-                              child: Icon(
-                                Icons.chevron_right_rounded,
-                                size: 20,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Backup management card
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: ClayDecoration.iconContainer(
-                            brightness: brightness,
-                          ),
-                          child: Icon(
-                            Icons.backup_rounded,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.databaseBackup,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(10),
-                              onTap: () => context.push('/backup'),
-                              child: Icon(
-                                Icons.chevron_right_rounded,
-                                size: 20,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // WebDAV card — toggle + profile selector
-                  _SectionCard(
-                    brightness: brightness,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: ClayDecoration.iconContainer(
-                                brightness: brightness,
-                              ),
-                              child: Icon(
-                                Icons.cloud_upload_rounded,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.webdavSync,
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  Text(
-                                    l10n.autoSyncOnSave,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch(
-                              value: _enabled,
-                              onChanged: (v) => setState(() => _enabled = v),
-                              activeThumbColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                initialValue: _selectedProfileId,
-                                decoration: InputDecoration(
-                                  labelText: l10n.webdavProfile,
-                                  border: const OutlineInputBorder(),
-                                ),
-                                items: _profiles
-                                    .map(
-                                      (profile) => DropdownMenuItem<String>(
-                                        value: profile.id,
-                                        child: Text(profile.name),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  if (value == null) return;
-                                  _selectProfile(value);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              onPressed: _createNewProfile,
-                              icon: const Icon(Icons.add_rounded, size: 20),
-                              tooltip: l10n.newProfile,
-                            ),
-                            IconButton(
-                              onPressed: _profiles.length <= 1
-                                  ? null
-                                  : _deleteCurrentProfile,
-                              icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 20,
-                              ),
-                              tooltip: l10n.delete,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  if (_enabled) ...[
-                    const SizedBox(height: 16),
-                    // Config card
-                    _SectionCard(
-                      brightness: brightness,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _profileNameController,
-                            decoration: InputDecoration(
-                              labelText: l10n.profileName,
-                            ),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? l10n.pleaseEnterName
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _urlController,
-                            decoration: InputDecoration(
-                              labelText: l10n.serverAddress,
-                              hintText: l10n.serverAddressHint,
-                              helperText: l10n.serverAddressHelper,
-                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty) {
-                                return l10n.pleaseEnterServerAddress;
-                              }
-                              final uri = Uri.tryParse(v.trim());
-                              if (uri == null ||
-                                  !uri.hasAuthority ||
-                                  (uri.scheme != 'http' &&
-                                      uri.scheme != 'https')) {
-                                return l10n.webDavInvalidUrl;
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _userController,
-                            decoration: InputDecoration(
-                              labelText: l10n.username,
-                            ),
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? l10n.pleaseEnterUsername
-                                : null,
-                          ),
-                          const SizedBox(height: 12),
-                          PasswordTextField(
-                            controller: _passwordController,
-                            labelText: l10n.password,
-                            showPrefixIcon: false,
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? l10n.pleaseEnterPassword
-                                : null,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            l10n.appPasswordHelper,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _pathController,
-                            decoration: InputDecoration(
-                              labelText: l10n.remotePathOptional,
-                              hintText: l10n.remotePathHint,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _filenameController,
-                            decoration: InputDecoration(
-                              labelText: l10n.filename,
-                              hintText: 'database.kdbx',
-                            ),
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? l10n.pleaseEnterName
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    // Test connection
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _testing ? null : _testConnection,
-                            icon: _testing
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.wifi_find_rounded, size: 18),
-                            label: Text(
-                              _testing ? l10n.testing : l10n.testConnection,
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (_connectionOk != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _connectionOk!
-                              ? ClayColors.secondary.withValues(alpha: 0.1)
-                              : ClayColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _connectionOk!
-                                  ? Icons.check_circle_rounded
-                                  : Icons.error_rounded,
-                              size: 18,
-                              color: _connectionOk!
-                                  ? ClayColors.secondary
-                                  : ClayColors.error,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _connectionOk!
-                                    ? l10n.connectionSuccess
-                                    : (_connectionError ??
-                                          l10n.connectionFailed),
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      color: _connectionOk!
-                                          ? ClayColors.secondary
-                                          : ClayColors.error,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-                    // Save button
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: ClayColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: FilledButton(
-                        onPressed: _save,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: Text(l10n.save),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Detail pane for the desktop layout: independently scrollable, content
+  /// centered at a readable measure.
+  Widget _pane(BuildContext context, List<Widget> cards) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _withGaps(cards),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _withGaps(List<Widget> cards) => [
+    for (var i = 0; i < cards.length; i++) ...[
+      if (i > 0) const SizedBox(height: 16),
+      cards[i],
+    ],
+  ];
+
+  // --- General -----------------------------------------------------------
+
+  List<Widget> _generalCards() {
+    final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    return [
+      _languageCard(brightness, l10n),
+      _autoSaveCard(brightness, l10n),
+      _expirationReminderCard(brightness, l10n),
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+        _closeBehaviorCard(brightness, l10n),
+    ];
+  }
+
+  Widget _languageCard(Brightness brightness, AppLocalizations l10n) {
+    final currentLocale = ref.watch(localeProvider);
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.language_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.language,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: currentLocale?.languageCode ?? 'system',
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: 'system', child: Text(l10n.followSystem)),
+              const DropdownMenuItem(value: 'zh', child: Text('中文')),
+              const DropdownMenuItem(value: 'en', child: Text('English')),
+            ],
+            onChanged: (v) {
+              if (v == null) return;
+              if (v == 'system') {
+                ref.read(localeProvider.notifier).setLocale(null);
+              } else {
+                ref.read(localeProvider.notifier).setLocale(Locale(v));
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _autoSaveCard(Brightness brightness, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Icon(Icons.save_outlined, size: 20, color: colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.autoSave,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  l10n.autoSaveDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<int>(
+            value: ref.watch(autoSaveProvider),
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+              DropdownMenuItem(value: 15, child: Text('15 ${l10n.seconds}')),
+              DropdownMenuItem(value: 30, child: Text('30 ${l10n.seconds}')),
+              DropdownMenuItem(value: 60, child: Text('60 ${l10n.seconds}')),
+              DropdownMenuItem(value: 120, child: Text('120 ${l10n.seconds}')),
+              DropdownMenuItem(value: 300, child: Text('300 ${l10n.seconds}')),
+            ],
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(autoSaveProvider.notifier).setSeconds(v);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _expirationReminderCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.notifications_active_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.expirationReminder,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  l10n.expirationReminderDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<int>(
+            value: ref.watch(expirationReminderProvider),
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+              DropdownMenuItem(
+                value: 1,
+                child: Text('1 ${l10n.daysBeforeExpiry}'),
+              ),
+              DropdownMenuItem(
+                value: 3,
+                child: Text('3 ${l10n.daysBeforeExpiry}'),
+              ),
+              DropdownMenuItem(
+                value: 7,
+                child: Text('7 ${l10n.daysBeforeExpiry}'),
+              ),
+              DropdownMenuItem(
+                value: 14,
+                child: Text('14 ${l10n.daysBeforeExpiry}'),
+              ),
+              DropdownMenuItem(
+                value: 30,
+                child: Text('30 ${l10n.daysBeforeExpiry}'),
+              ),
+            ],
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(expirationReminderProvider.notifier).setDays(v);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _closeBehaviorCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.close_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.closeBehavior,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<CloseBehavior>(
+            value: ref.watch(closeBehaviorProvider),
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: CloseBehavior.ask, child: Text(l10n.askEveryTime)),
+              DropdownMenuItem(
+                value: CloseBehavior.minimizeToTray,
+                child: Text(l10n.minimizeToTray),
+              ),
+              DropdownMenuItem(value: CloseBehavior.exit, child: Text(l10n.exitApp)),
+            ],
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(closeBehaviorProvider.notifier).setCloseBehavior(v);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Appearance --------------------------------------------------------
+
+  List<Widget> _appearanceCards() {
+    final l10n = AppLocalizations.of(context)!;
+    return [_themeCard(Theme.of(context).brightness, l10n)];
+  }
+
+  Widget _themeCard(Brightness brightness, AppLocalizations l10n) {
+    final currentThemeMode = ref.watch(themeModeProvider);
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              currentThemeMode == ThemeMode.dark
+                  ? Icons.dark_mode_rounded
+                  : currentThemeMode == ThemeMode.light
+                  ? Icons.light_mode_rounded
+                  : Icons.brightness_auto_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.theme,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<ThemeMode>(
+            value: currentThemeMode,
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.followSystem)),
+              DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.lightTheme)),
+              DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.darkTheme)),
+            ],
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(themeModeProvider.notifier).setThemeMode(v);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Security ----------------------------------------------------------
+
+  List<Widget> _securityCards() {
+    final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    return [
+      _autoLockCard(brightness, l10n),
+      _privacyCard(brightness, l10n),
+      if ((Platform.isAndroid || Platform.isIOS) &&
+          ref.watch(biometricAvailableProvider).valueOrNull == true)
+        _unlockMethodCard(brightness, l10n),
+    ];
+  }
+
+  Widget _autoLockCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.lock_clock_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.autoLock,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  l10n.autoLockDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<int>(
+            value: ref.watch(autoLockProvider),
+            underline: const SizedBox.shrink(),
+            items: [
+              DropdownMenuItem(value: 0, child: Text(l10n.disabled)),
+              DropdownMenuItem(value: 1, child: Text('1 ${l10n.minute}')),
+              DropdownMenuItem(value: 5, child: Text('5 ${l10n.minutes}')),
+              DropdownMenuItem(value: 15, child: Text('15 ${l10n.minutes}')),
+              DropdownMenuItem(value: 30, child: Text('30 ${l10n.minutes}')),
+              DropdownMenuItem(value: 60, child: Text('60 ${l10n.minutes}')),
+            ],
+            onChanged: (v) {
+              if (v != null) {
+                ref.read(autoLockProvider.notifier).setMinutes(v);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _privacyCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.privacy_tip_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                l10n.privacyProtection,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.blockScreenshots),
+            subtitle: Text(l10n.blockScreenshotsDescription),
+            value: ref.watch(privacyProvider).blockScreenshots,
+            onChanged: (value) =>
+                ref.read(privacyProvider.notifier).setBlockScreenshots(value),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.hideInBackground),
+            subtitle: Text(l10n.hideInBackgroundDescription),
+            value: ref.watch(privacyProvider).hideInBackground,
+            onChanged: (value) =>
+                ref.read(privacyProvider.notifier).setHideInBackground(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _unlockMethodCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: ClayDecoration.iconContainer(brightness: brightness),
+                child: Icon(
+                  Icons.lock_open_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  l10n.unlockMethod,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _UnlockMethodChip(
+                icon: Icons.password_rounded,
+                label: l10n.unlockByPassword,
+                selected: ref.watch(unlockMethodProvider) == UnlockMethod.password,
+                onTap: () => _setUnlockMethod(UnlockMethod.password, l10n),
+              ),
+              const SizedBox(width: 10),
+              _UnlockMethodChip(
+                icon: Icons.fingerprint_rounded,
+                label: l10n.unlockByBiometric,
+                selected:
+                    ref.watch(unlockMethodProvider) == UnlockMethod.biometric,
+                onTap: () => _setUnlockMethod(UnlockMethod.biometric, l10n),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Sync (WebDAV) -----------------------------------------------------
+
+  List<Widget> _syncCards() {
+    final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    final cards = <Widget>[
+      _webdavToggleCard(brightness, l10n),
+      if (_enabled) ...[
+        _webdavConfigCard(brightness, l10n),
+        ..._webdavActions(l10n),
+      ],
+    ];
+    return [
+      Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _withGaps(cards),
+        ),
+      ),
+    ];
+  }
+
+  Widget _webdavToggleCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: ClayDecoration.iconContainer(brightness: brightness),
+                child: Icon(
+                  Icons.cloud_upload_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.webdavSync,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      l10n.autoSyncOnSave,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _enabled,
+                onChanged: (v) => setState(() => _enabled = v),
+                activeThumbColor: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedProfileId,
+                  decoration: InputDecoration(
+                    labelText: l10n.webdavProfile,
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: _profiles
+                      .map(
+                        (profile) => DropdownMenuItem<String>(
+                          value: profile.id,
+                          child: Text(profile.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) return;
+                    _selectProfile(value);
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: _createNewProfile,
+                icon: const Icon(Icons.add_rounded, size: 20),
+                tooltip: l10n.newProfile,
+              ),
+              IconButton(
+                onPressed: _profiles.length <= 1 ? null : _deleteCurrentProfile,
+                icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                tooltip: l10n.delete,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _webdavConfigCard(Brightness brightness, AppLocalizations l10n) {
+    return _SectionCard(
+      brightness: brightness,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _profileNameController,
+            decoration: InputDecoration(labelText: l10n.profileName),
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? l10n.pleaseEnterName
+                : null,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _urlController,
+            decoration: InputDecoration(
+              labelText: l10n.serverAddress,
+              hintText: l10n.serverAddressHint,
+              helperText: l10n.serverAddressHelper,
+            ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) {
+                return l10n.pleaseEnterServerAddress;
+              }
+              final uri = Uri.tryParse(v.trim());
+              if (uri == null ||
+                  !uri.hasAuthority ||
+                  (uri.scheme != 'http' && uri.scheme != 'https')) {
+                return l10n.webDavInvalidUrl;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _userController,
+            decoration: InputDecoration(labelText: l10n.username),
+            validator: (v) =>
+                (v == null || v.isEmpty) ? l10n.pleaseEnterUsername : null,
+          ),
+          const SizedBox(height: 12),
+          PasswordTextField(
+            controller: _passwordController,
+            labelText: l10n.password,
+            showPrefixIcon: false,
+            validator: (v) =>
+                (v == null || v.isEmpty) ? l10n.pleaseEnterPassword : null,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.appPasswordHelper,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _pathController,
+            decoration: InputDecoration(
+              labelText: l10n.remotePathOptional,
+              hintText: l10n.remotePathHint,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _filenameController,
+            decoration: InputDecoration(
+              labelText: l10n.filename,
+              hintText: 'database.kdbx',
+            ),
+            validator: (v) => (v == null || v.isEmpty)
+                ? l10n.pleaseEnterName
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _webdavActions(AppLocalizations l10n) {
+    return [
+      // Test connection
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _testing ? null : _testConnection,
+              icon: _testing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.wifi_find_rounded, size: 18),
+              label: Text(_testing ? l10n.testing : l10n.testConnection),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ClayLayout.radiusLg),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      if (_connectionOk != null)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: _connectionOk!
+                ? ClayColors.secondary.withValues(alpha: 0.1)
+                : ClayColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _connectionOk!
+                    ? Icons.check_circle_rounded
+                    : Icons.error_rounded,
+                size: 18,
+                color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _connectionOk!
+                      ? l10n.connectionSuccess
+                      : (_connectionError ?? l10n.connectionFailed),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: _connectionOk! ? ClayColors.secondary : ClayColors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      const SizedBox(height: 8),
+      // Save button
+      Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: ClayColors.primary.withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FilledButton(
+          onPressed: _save,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          child: Text(l10n.save),
+        ),
+      ),
+    ];
+  }
+
+  // --- Database ----------------------------------------------------------
+
+  List<Widget> _databaseCards() {
+    final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    return [_changePasswordCard(brightness, l10n), _backupCard(brightness, l10n)];
+  }
+
+  Widget _changePasswordCard(Brightness brightness, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.key_rounded,
+              size: 20,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.changeMasterPassword,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => showChangePasswordDialog(context),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _backupCard(Brightness brightness, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return _SectionCard(
+      brightness: brightness,
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: ClayDecoration.iconContainer(brightness: brightness),
+            child: Icon(
+              Icons.backup_rounded,
+              size: 20,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.databaseBackup,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => context.push('/backup'),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1426,4 +1416,3 @@ class _SectionCard extends StatelessWidget {
     return SectionCard(children: [child]);
   }
 }
-
