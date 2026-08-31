@@ -33,6 +33,11 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     result.success(null)
                 }
+                "moveTaskToBack" -> {
+                    runOnUiThread {
+                        result.success(moveTaskToBack(true))
+                    }
+                }
                 else -> result.notImplemented()
             }
         }

@@ -16,6 +16,7 @@ import '../../../core/widgets/entry_list_tile.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/move_to_group_dialog.dart';
 import '../../../core/widgets/attachments_section.dart';
+import '../../../core/services/background_service.dart';
 import '../../../core/widgets/toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../database/data/database_service.dart'
@@ -294,9 +295,18 @@ class _ExplorerBodyState extends ConsumerState<_ExplorerBody>
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (ref.read(mobileTabIndexProvider) != 0) {
+          // Any non-Entries tab returns to the Entries tab first.
+          ref.read(mobileTabIndexProvider.notifier).state = 0;
+          return;
+        }
         final pop = _popPath(ref);
         if (pop != null) {
           pop();
+        } else if (BackgroundService.isSupported) {
+          // Mobile: back at the root group sends the app to the background
+          // instead of leaving the database screen.
+          BackgroundService.moveToBackground();
         } else {
           context.go('/welcome');
         }
